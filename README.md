@@ -32,8 +32,7 @@ Fill in the sections below yourself, then:
 
 # [Microsoft Ignite 2026](https://ignite.microsoft.com)
 
-## 🔥BRKXXX: SESSION TITLE
-
+## 🔥PREL40: Build data-rich apps in Microsoft Fabric
 ### Session description
 
 Add your session description here. Keep it concise — 2-3 sentences about what attendees will learn and why it matters.
