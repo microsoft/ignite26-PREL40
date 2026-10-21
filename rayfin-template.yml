@@ -1,0 +1,12 @@
+apiVersion: v1
+metadata:
+  name: ignite26-prel40
+  displayName: Microsoft Ignite 2026 PREL40 lab
+  description: >-
+    Templates for PREL40, Build data-rich apps in Microsoft Fabric. Scaffold
+    with: npx rayfin init home-loan-desk -t
+    https://github.com/microsoft/ignite26-PREL40.git#<tag> --yes
+entries:
+  - name: home-loan-desk
+    path: ./src/home-loan-desk
+    description: Home Loan Operations Desk lab starter

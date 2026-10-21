@@ -1,0 +1,29 @@
+id: home-loan-desk
+name: home-loan-desk
+version: 1.0.0
+services:
+  connectors:
+    enabled: true
+  auth:
+    enabled: true
+    fabric:
+      enabled: true
+      externalEntraExchange: true
+    password:
+      enabled: false
+    allowedRedirectUris:
+      - http://localhost:5173
+  data:
+    enabled: true
+    path: packages/data
+    buildCommand: npm run build
+    dialect: "mssql"
+  staticHosting:
+    enabled: true
+    path: packages/frontend
+    folder: dist
+    buildCommand: npm run build:fabric
+    indexDocument: index.html
+    assetAccess: protected
+    embedded:
+      only: false

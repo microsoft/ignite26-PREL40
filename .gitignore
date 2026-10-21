@@ -430,3 +430,14 @@ FodyWeavers.xsd
 
 # Local development notes
 /TODO.md
+
+# PREL40 Rayfin starter template (src/home-loan-desk)
+# Re-include the npm workspace packages hidden by the NuGet "packages" rule above.
+!src/home-loan-desk/packages/*
+# CLI-managed files: `rayfin init` reinstalls them in every scaffolded project.
+src/home-loan-desk/.agents/skills/rayfin/
+src/home-loan-desk/.agents/skills/rayfin-connectors/
+src/home-loan-desk/.agents/skills/rayfin-functions/
+src/home-loan-desk/.mcp.json
+src/home-loan-desk/rayfin/.lockfile.json
+src/home-loan-desk/rayfin/.project.json
