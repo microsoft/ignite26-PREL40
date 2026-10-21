@@ -441,3 +441,6 @@ src/home-loan-desk/.agents/skills/rayfin-functions/
 src/home-loan-desk/.mcp.json
 src/home-loan-desk/rayfin/.lockfile.json
 src/home-loan-desk/rayfin/.project.json
+
+# Skillable instructions, generated from docs/instructions by the lab-instructions skill
+/docs/skillable.md
