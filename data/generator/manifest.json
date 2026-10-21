@@ -1,0 +1,138 @@
+{
+  "generatorVersion": "1.0.0",
+  "seed": 4040,
+  "asOfDate": "2026-10-30",
+  "submissionWindow": {
+    "from": "2026-08-02",
+    "to": "2026-10-30"
+  },
+  "stalledAfterDays": 7,
+  "currency": "USD",
+  "counts": {
+    "applications": 200,
+    "branches": 5,
+    "products": 3,
+    "dates": 184,
+    "appCases": 9,
+    "appNotes": 13,
+    "appTasks": 6,
+    "appChecklistItems": 32
+  },
+  "referenceValues": {
+    "Open applications": 172,
+    "Requested amount in pipeline": 52776000,
+    "Average days in current stage": 5.95,
+    "Stalled applications": 48
+  },
+  "byStage": [
+    {
+      "stage": "Submitted",
+      "applications": 26,
+      "stalled": 0
+    },
+    {
+      "stage": "Document collection",
+      "applications": 53,
+      "stalled": 31
+    },
+    {
+      "stage": "Property assessment",
+      "applications": 32,
+      "stalled": 6
+    },
+    {
+      "stage": "Internal review",
+      "applications": 38,
+      "stalled": 8
+    },
+    {
+      "stage": "Offer issued",
+      "applications": 23,
+      "stalled": 3
+    },
+    {
+      "stage": "Closed",
+      "applications": 16,
+      "stalled": 0
+    },
+    {
+      "stage": "Withdrawn",
+      "applications": 12,
+      "stalled": 0
+    }
+  ],
+  "plantedCases": [
+    {
+      "caseNumber": "HL-1042",
+      "applicationId": "a03fa768-7686-5358-b219-5d129624a891",
+      "assignedTo": "attendee",
+      "stage": "document-collection",
+      "daysInStage": 11,
+      "stalled": true
+    },
+    {
+      "caseNumber": "HL-1088",
+      "applicationId": "537ed1ae-cd19-5e82-ba2d-9b939ddfbacf",
+      "assignedTo": "attendee",
+      "stage": "internal-review",
+      "daysInStage": 3,
+      "stalled": false
+    },
+    {
+      "caseNumber": "HL-1103",
+      "applicationId": "c52a71f1-d0c7-51b7-820b-60961f2cdd36",
+      "assignedTo": "colleague",
+      "stage": "document-collection",
+      "daysInStage": 9,
+      "stalled": true
+    },
+    {
+      "caseNumber": "HL-1029",
+      "applicationId": "2f53630c-a8ab-5573-acc1-62b357483659",
+      "assignedTo": "attendee",
+      "stage": "property-assessment",
+      "daysInStage": 14,
+      "stalled": true
+    },
+    {
+      "caseNumber": "HL-1064",
+      "applicationId": "0be0a24c-7d53-5a33-b73e-023f653bda99",
+      "assignedTo": "attendee",
+      "stage": "document-collection",
+      "daysInStage": 8,
+      "stalled": true
+    },
+    {
+      "caseNumber": "HL-1017",
+      "applicationId": "db183a2b-706f-5c0b-92ba-a8e71fde0111",
+      "assignedTo": "attendee",
+      "stage": "submitted",
+      "daysInStage": 2,
+      "stalled": false
+    },
+    {
+      "caseNumber": "HL-1121",
+      "applicationId": "15789ddc-244f-5397-8a9d-724a518b2e95",
+      "assignedTo": "attendee",
+      "stage": "offer-issued",
+      "daysInStage": 3,
+      "stalled": false
+    },
+    {
+      "caseNumber": "HL-1135",
+      "applicationId": "749b5d29-6ea3-5b85-9074-e0cdf0db41a9",
+      "assignedTo": "attendee",
+      "stage": "document-collection",
+      "daysInStage": 4,
+      "stalled": false
+    },
+    {
+      "caseNumber": "HL-1156",
+      "applicationId": "ee888b7d-f813-591b-bd96-970536ce430a",
+      "assignedTo": "attendee",
+      "stage": "property-assessment",
+      "daysInStage": 5,
+      "stalled": false
+    }
+  ]
+}
