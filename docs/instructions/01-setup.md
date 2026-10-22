@@ -1,13 +1,12 @@
-# Exercise 1: Setup Your Environment
+# Exercise 1: Set up your environment
 
 Before you can build, deploy, and explore the work-order app, you need to get your environment ready by signing in to GitHub, GitHub Copilot, and Microsoft Fabric.
 
 This lab uses a pre-configured virtual machine with all necessary tools installed. The already pre-installed tools include:
 
+- GitHub Copilot app
 - Node.js 24
 - npm
-- Visual Studio Code
-- GitHub Copilot CLI
 
 ## Task 1: Sign in to GitHub through the lab SSO portal
 
@@ -22,25 +21,15 @@ In this exercise, you will sign in to GitHub through Contoso DIY's enterprise SS
 
 1. After a successful sign-in, you will be redirected to the GitHub homepage. **Keep this browser tab open** as you will need this active session for the next steps.
 
-## Task 2: Sign in to GitHub Copilot in the terminal
+## Task 2: Sign in to the GitHub Copilot app
 
-1. In the virtual machine, from the taskbar, select **Windows Terminal** to open a new terminal window.
+1. In the virtual machine, open the **GitHub Copilot app** from the taskbar.
 
-1. In the terminal, start the Copilot CLI by running: `copilot`.
+1. In the GitHub Copilot app, select **Sign in to GitHub**. This will copy the device code to your clipboard and open a browser window for authentication.
 
-1. When prompted with "Do you trust the files in this folder?", select **Yes, and remember this folder for future sessions** by navigating with the arrow keys and pressing Enter.
+1. In the browser window that opens, use the active GitHub SSO session from Task 1 to complete the sign-in if asked, then paste your device code when prompted with CTRL+V and press **Enter**.
 
-1. Run the following command in the Copilot CLI to start the login process: `/login`.
-
-1. When prompted to choose a sign-in method, select **Github.com**.
-
-1. Press any key to open the browser and sign in using the SSO session from Task 1. The device code is copied to your clipboard automatically, so paste it into the browser when asked.
-
-1. After a successful sign-in, return to the terminal and confirm that you see "Signed in successfully" in the output.
-
-1. *(Optional)*  If the Copilot CLI prompts you that an update is available, run: `/update` to update to the latest version.
-
-1. Exit the Copilot CLI by running: `/exit`. You will start it again in the next exercise when you use it to generate code.
+1. Return to the GitHub Copilot app and confirm that it is ready for you to start a conversation.
 
 ## Task 3: Sign in to Microsoft Fabric
 
@@ -51,15 +40,15 @@ In this exercise, you will sign in to GitHub through Contoso DIY's enterprise SS
     - **Email**: `@lab.CloudPortalCredential(User1).Username`
     - **TAP**: `@lab.CloudPortalCredential(User1).AccessToken`
 
-    > [!Tip]
+    > [!TIP]
     > Since you already used these credentials to sign in to the GitHub SSO portal, you may not be prompted to enter them again and will be signed in automatically.
 
 1. After a successful sign-in, you will land on the Microsoft Fabric homepage. **Keep this browser tab open** as you will need this active session for the next steps.
 
-    > [!Important]
-    > If the page title and icon in the bottom left corner of the page say "Power BI", you need to switch to the Fabric portal. Click on the **Power BI** icon in the bottom left corner, then select **Fabric** to switch to the Microsoft Fabric portal.
+    > [!IMPORTANT]
+    > If the page title and icon in the bottom left corner of the page say "Power BI", you need to switch to the Fabric portal. Select the **Power BI** icon in the bottom left corner, then select **Fabric** to switch to the Microsoft Fabric portal.
 
-## Task 4: Create a Workspace in Fabric
+## Task 4: Create a workspace in Microsoft Fabric
 
 This lab deploys your work-order app to a Microsoft Fabric workspace.
 
@@ -75,14 +64,14 @@ A workspace is a container for all the Fabric items related to your project, suc
 
 ---
 
-## Verify Your Setup
+## Verify your setup
 
-Navigate back to the Windows Terminal and run the following commands to verify that your environment is set up correctly:
+In the GitHub Copilot app, start a new chat and enter this prompt:
 
-```shell
-node --version
-npm --version
-copilot --version
 ```
+/lab-check-setup
+```
+
+This command will check all prerequisites for the lab and confirm that your setup is correct.
 
 Select **Next →** to start the second exercise.
