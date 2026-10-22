@@ -12,25 +12,29 @@ In the virtual machine, sign into Windows using the following credentials:
 - Username: +++@lab.VirtualMachine(Win11-Pro-Base).Username+++
 - Password: +++@lab.VirtualMachine(Win11-Pro-Base).Password+++
 
-## Lab Overview
+## Lab overview
 
-This lab demonstrates how to go from zero to production with a full-stack enterprise app using Fabric Apps, the Rayfin SDK, and GitHub Copilot CLI. It shows how a managed backend in Microsoft Fabric can provide database, authentication, hosting, schema management, and deployment so builders can focus on product features instead of infrastructure plumbing.
+This lab demonstrates how to build a data-rich internal application with Microsoft Fabric, the Rayfin SDK, and the GitHub Copilot app. You'll combine consistent portfolio metrics from a Fabric semantic model with secure operational data and application behavior managed by Rayfin.
 
-The scenario centers on Contoso DIY, a home-improvement retailer expanding into home services. After customers choose products for projects like painting, hanging, or repairs, Contoso wants to connect them with qualified service pros who can complete the work in the field. To support this new business line, Contoso needs a work-order management app that allows:
+The scenario centers on **Contoso Home Loans**. Its operations staff can see the loan application backlog, but they still move between reports, shared folders, and case notes to understand why an application is stalled and what administrative work should happen next. You'll grow a secure starter into **Home Loan Operations Desk**, an app that helps a loan officer:
 
-- Managers to create work orders
-- Managers to assign jobs to service pros
-- Service pros to create profiles with their skills
-- Service pros to accept and complete assigned jobs
-- The business to track operational data and turn it into insights
+- Review shared portfolio metrics and identify stalled applications
+- Work with private case notes, tasks, and document checklists
+- Upload property photos and plans to protected storage
+- Generate an AI-assisted handoff brief from authorized case information
+- Save a human-reviewed administrative task to move a case forward
 
-Through the exercises, you'll explore how Contoso DIY:
+Through the exercises, you'll:
 
-- Bootstraps a production-ready field-services app from a template and uses Fabric Apps and Rayfin SDK to model service pros, work orders, authentication, data, and hosting declaratively
-- Provisions a managed Fabric backend with a SQL database, authentication, and static hosting with a single command and no cloud configuration
-- Uses GitHub Copilot CLI and the Rayfin agent skill to add features across the schema and user interface, applying schema changes locally and in production without hand-writing migrations
-- Seeds the deployed app with realistic data and uses Microsoft Fabric intelligence, semantic models, and data agents to ask natural-language questions about operational data
+- Create and populate a Fabric SQL database, then build a Direct Lake semantic model with shared pipeline measures
+- Deploy and extend a Rayfin app with authentication, protected hosting, a managed SQL database, and private file storage
+- Connect the app to the semantic model to explore the portfolio and find cases that need attention
+- Prove that Rayfin access policies protect case records and files from unauthenticated or unauthorized access
+- Use a server function, secrets, and a model in Microsoft Foundry to create a validated handoff brief
+- Review the deployed app's operational metrics in Microsoft Fabric
 
-You'll walk in the Contoso DIY team's shoes to build, ship, evolve, and analyze a real enterprise app. The exercises are designed to be completed in order because each step builds on the app, data model, deployment, and resources created in the previous exercises, so make sure you complete each exercise before moving on to the next one.
+You'll walk in the shoes of a loan officer at Contoso Home Loans who is responsible for keeping applications moving. You'll use portfolio insights to find stalled cases, secure case tools to gather missing information, and an AI-assisted handoff brief to prepare the next administrative action for human review.
+
+Complete the exercises in order because each one builds on the app, data model, deployment, and resources created in the previous exercises.
 
 Select **Next →** to start the lab.
