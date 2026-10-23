@@ -16,7 +16,7 @@ The template handles the setup for you, so you can focus on the lab.
 
 1. Navigate back to your browser where you have the Microsoft Fabric portal open.
 
-1. In the left-hand navigation pane, select **Workspaces** and then select the `Lab514-workorders-@lab.LabInstance.Id` workspace you created in Exercise 1.
+1. In the left-hand navigation pane, select **Workspaces** and then select the `PREL40-homeloans-@lab.LabInstance.Id` workspace you created in Exercise 1.
 
 1. Once the workspace loads, copy the URL from the browser address bar. Remove anything after the workspace ID. The URL should look like `https://app.fabric.microsoft.com/groups/<workspace-id>`.
 

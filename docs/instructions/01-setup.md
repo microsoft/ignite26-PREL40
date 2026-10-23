@@ -1,6 +1,6 @@
 # Exercise 1: Set up your environment
 
-Before you can build, deploy, and explore the work-order app, you need to get your environment ready by signing in to GitHub, GitHub Copilot, and Microsoft Fabric.
+Before you can build, deploy, and explore the Home Loan Operations Desk app, you need to get your environment ready by signing in to GitHub, GitHub Copilot, and Microsoft Fabric.
 
 This lab uses a pre-configured virtual machine with all necessary tools installed. The already pre-installed tools include:
 
@@ -50,13 +50,13 @@ In this exercise, you will sign in to GitHub through Caldova Home Loans' enterpr
 
 ## Task 4: Create a workspace in Microsoft Fabric
 
-This lab deploys your work-order app to a Microsoft Fabric workspace.
+This lab creates the portfolio database, the semantic model, and the Home Loan Operations Desk app in a Microsoft Fabric workspace.
 
-A workspace is a container for all the Fabric items related to your project, such as databases, notebooks, and deployed applications.
+A workspace is a container for all the Fabric items related to your project, such as databases, semantic models, and deployed apps.
 
 1. In the Fabric portal, select **Workspaces** from the left-hand navigation pane. Then select **+ New workspace**.
 
-1. Name the workspace `Lab514-workorders-@lab.LabInstance.Id`.
+1. Name the workspace `PREL40-homeloans-@lab.LabInstance.Id`.
 
 1. Expand the **Advanced** section and scroll to the **Workspace type** setting and ensure that **Fabric** is selected.
 

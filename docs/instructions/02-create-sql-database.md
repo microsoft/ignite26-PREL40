@@ -13,7 +13,7 @@ By completing this exercise, you will:
 
 Create an empty SQL database to hold the portfolio data.
 
-1. In the Microsoft Fabric portal, select **Workspaces** in the left-hand navigation pane, then select the lab workspace you created in Exercise 1.
+1. In the Microsoft Fabric portal, select **Workspaces** in the left-hand navigation pane, then select the **PREL40-homeloans-@lab.LabInstance.Id** workspace you created in Exercise 1.
 
 1. In the workspace, select **+ New item**, enter +++SQL database+++ in the search box, then select **SQL database**.
 

@@ -41,7 +41,7 @@ Let's take a look at the deployed app and database in the Microsoft Fabric porta
 
 1. Open the Microsoft Fabric portal at `https://app.fabric.microsoft.com`.
 
-1. Open the **Lab514-workorders-@lab.LabInstance.Id** workspace you created in Exercise 1.
+1. Open the **PREL40-homeloans-@lab.LabInstance.Id** workspace you created in Exercise 1.
 
 1. Confirm that the workspace contains a **Fabric data app** item and a **SQL Database** item. The **ServicePro** and **WorkOrder** tables are stored in the SQL Database item.
 
