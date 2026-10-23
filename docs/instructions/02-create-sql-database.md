@@ -15,9 +15,9 @@ Create an empty SQL database to hold the portfolio data.
 
 1. In the Microsoft Fabric portal, select **Workspaces** in the left-hand navigation pane, then select the lab workspace you created in Exercise 1.
 
-1. In the workspace, select **+ New item**, enter `SQL database` in the search box, then select **SQL database**.
+1. In the workspace, select **+ New item**, enter +++SQL database+++ in the search box, then select **SQL database**.
 
-1. Name the database `CaldovaHomeLoans`, then select **Create**.
+1. Name the database +++CaldovaHomeLoans+++, then select **Create**.
 
 1. Wait for the database to be provisioned. When it's ready, the database home page opens with the **Explorer** pane on the left.
 
@@ -27,14 +27,14 @@ Run the seed script to create the four portfolio tables and fill them with data.
 
 1. On the virtual machine, open **File Explorer**, enter `C:\LabFiles\data` in the address bar, and press **Enter**.
 
-1. Right-click **portfolio-seed.sql**, select **Open with**, then select **Notepad**.
+1. Right-click **portfolio-seed.sql** then select **Edit in Notepad**
 
 1. In Notepad, press **Ctrl+A** to select the whole script, then press **Ctrl+C** to copy it.
 
     > [!NOTE]
     > The script creates the **Branch**, **LoanProduct**, **Date**, and **LoanApplication** tables. If they already exist, it drops and re-creates them, so it's safe to run again. All branches, amounts, and applications are synthetic.
 
-1. Return to the **CaldovaHomeLoans** database in Microsoft Edge and select **New SQL query** in the toolbar.
+1. Return to the **CaldovaHomeLoans** database in Microsoft Edge and select **New Query** in the toolbar.
 
 1. Select the query editor, then press **Ctrl+V** to paste the script.
 
@@ -52,13 +52,13 @@ Run the seed script to create the four portfolio tables and fill them with data.
     | Submitted | 26 |
     | Withdrawn | 12 |
 
-1. In the **Explorer** pane, select the **Refresh** button, then expand **Schemas** > **dbo** > **Tables**. Confirm that you see the **Branch**, **Date**, **LoanApplication**, and **LoanProduct** tables.
+1. In the **Explorer** pane, select the **Refresh** button, then expand **CaldovaHomeLoans** > **dbo** > **Tables**. Confirm that you see the **Branch**, **Date**, **LoanApplication**, and **LoanProduct** tables.
 
 ## Task 3: Run a test query
 
-Look up one application with its branch and product to confirm that the tables join correctly.
+We'll look up one application with its branch and product to confirm that the tables join correctly.
 
-1. Select **New SQL query** in the toolbar.
+1. Select **New Query** in the toolbar.
 
 1. Paste the following query into the new query tab:
 
@@ -85,9 +85,9 @@ Look up one application with its branch and product to confirm that the tables j
 
 ## Task 4: Check the data in OneLake
 
-Every SQL database in Fabric replicates its data to OneLake. The semantic model you build later reads this copy through the SQL analytics endpoint.
+Every SQL database in Fabric replicates its data to OneLake. The semantic model you'll build after reads this copy through the SQL analytics endpoint.
 
-1. In the query editor toolbar, open the replication menu, then select **Monitor replication**.
+1. Look for the  **Replication** tab next to **Home** and select it, then select **Monitor replication**.
 
 1. Confirm that the four tables are listed as replicated. If a table is still pending, wait a few seconds and select **Refresh**.
 
@@ -95,7 +95,7 @@ Every SQL database in Fabric replicates its data to OneLake. The semantic model 
 
 1. In the dropdown at the top right of the editor, switch from **SQL database** to **SQL analytics endpoint**.
 
-1. In the **Explorer** pane, expand **Schemas** > **dbo** > **Tables**, then select **LoanApplication**.
+1. In the **Explorer** pane, expand **CaldovaHomeLoans** > **Schemas** > **dbo** > **Tables**, then select **LoanApplication**.
 
 1. Confirm that a preview of the loan applications appears. This data is read from the OneLake copy, not from the database itself.
 
