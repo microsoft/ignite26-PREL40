@@ -164,4 +164,4 @@ Run DAX queries against the model to confirm that the measures return the refere
     > [!NOTE]
     > Document collection holds 31 of the 48 stalled applications. That's the bottleneck you'll investigate in the app, starting with case HL-1042.
 
-Select **Next →** to continue.
+Select **Next →** to check what you've learned about the data and the semantic model.
