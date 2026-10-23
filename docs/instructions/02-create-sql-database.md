@@ -85,15 +85,19 @@ We'll look up one application with its branch and product to confirm that the ta
 
 ## Task 4: Check the data in OneLake
 
-Every SQL database in Fabric replicates its data to OneLake. The semantic model you'll build after reads this copy through the SQL analytics endpoint.
+Every SQL database in Fabric replicates its data to OneLake. The semantic model you build in the next exercise reads this OneLake copy, and the SQL analytics endpoint lets you query it.
 
 1. Look for the  **Replication** tab next to **Home** and select it, then select **Monitor replication**.
+
+    ![Replication tab](../../img/fabric-replication-tab.png)
 
 1. Confirm that the four tables are listed as replicated. If a table is still pending, wait a few seconds and select **Refresh**.
 
 1. Close the **Monitor replication** page.
 
 1. In the dropdown at the top right of the editor, switch from **SQL database** to **SQL analytics endpoint**.
+
+    ![SQL analytics endpoint dropdown](../../img/fabric-sql-analytics-endpoint-dropdown.png)
 
 1. In the **Explorer** pane, expand **CaldovaHomeLoans** > **Schemas** > **dbo** > **Tables**, then select **LoanApplication**.
 
@@ -102,4 +106,4 @@ Every SQL database in Fabric replicates its data to OneLake. The semantic model 
     > [!TIP]
     > The SQL analytics endpoint is read-only. Changes always go to the SQL database, and Fabric replicates them to OneLake automatically.
 
-Select **Next →** to continue with the next exercise.
+Select **Next →** to build the semantic model on top of this data.

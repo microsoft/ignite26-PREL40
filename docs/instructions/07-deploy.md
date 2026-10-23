@@ -1,6 +1,6 @@
-# Exercise 6: Verify the Production Deployment on Microsoft Fabric
+# Exercise 7: Verify the Production Deployment on Microsoft Fabric
 
-In Exercise 5, you ran **npx rayfin up** to provision the Rayfin backend in Microsoft Fabric. That command also built the frontend by running **npm run build:fabric**, uploaded the compiled app to Microsoft Fabric's managed static hosting, and deployed the schema.
+In Exercise 6, you ran **npx rayfin up** to provision the Rayfin backend in Microsoft Fabric. That command also built the frontend by running **npm run build:fabric**, uploaded the compiled app to Microsoft Fabric's managed static hosting, and deployed the schema.
 
 In this exercise, you will verify the live deployment created by **rayfin up**. There is no separate production publishing step for this lab: each **rayfin up** updates the deployment associated with your selected Microsoft Fabric workspace.
 
@@ -13,7 +13,7 @@ You will:
 
 ## Task 1: Open the live app
 
-1. In the terminal output from the **npx rayfin up** command you ran in Exercise 5, find the **static hosting URL** printed by the CLI. The URL should look similar to `https://<random-prefix>.webapp.rayfin….com`.
+1. In the terminal output from the **npx rayfin up** command you ran in Exercise 6, find the **static hosting URL** printed by the CLI. The URL should look similar to `https://<random-prefix>.webapp.rayfin….com`.
 
     ![Rayfin up command output](../../img/rayfin-up.png)
 
@@ -22,7 +22,7 @@ You will:
 
 1. Open the hosting URL in a new browser tab. The app displays the same auth page as your local frontend, including the **Sign in with Microsoft** button, because both use the same Fabric backend.
 
-1. Select **Sign in with Microsoft** just like you did in Exercise 5.
+1. Select **Sign in with Microsoft** just like you did in Exercise 6.
 
 1. After authentication completes, confirm that you land in the Service Pro view.
 

@@ -1,6 +1,6 @@
-# Exercise 4: Explore the App Template
+# Exercise 5: Explore the App Template
 
-In this exercise, you will quickly inspect the app you created in Exercise 3.
+In this exercise, you will quickly inspect the app you created in Exercise 4.
 
 You will look at:
 

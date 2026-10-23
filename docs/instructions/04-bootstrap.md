@@ -1,4 +1,4 @@
-# Exercise 3: Bootstrap App from Template
+# Exercise 4: Bootstrap App from Template
 
 In this exercise, you'll create a new Rayfin project from the **Field Services** template.
 
