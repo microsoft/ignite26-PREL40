@@ -4,7 +4,7 @@ Synthetic data for the PREL40 lab. All applicants, branches, amounts, and docume
 
 | Path | What it is |
 | --- | --- |
-| [`portfolio-seed.sql`](portfolio-seed.sql) | Creates and fills the `ContosoHomeLoans` SQL database in Fabric: `LoanApplication`, `Branch`, `LoanProduct`, and `Date`. Run the whole script in the database's query editor. It's safe to run again. |
+| [`portfolio-seed.sql`](portfolio-seed.sql) | Creates and fills the `CaldovaHomeLoans` SQL database in Fabric: `LoanApplication`, `Branch`, `LoanProduct`, and `Date`. Run the whole script in the database's query editor. It's safe to run again. |
 | [`samples/`](samples/) | Files for HL-1042's missing checklist item, uploaded during the storage step: a floor plan (PDF) and a current-state kitchen image (JPEG). |
 | [`generator/`](generator/) | The scripts that produce the files above and the app's lab fixtures. Attendees never run them. |
 

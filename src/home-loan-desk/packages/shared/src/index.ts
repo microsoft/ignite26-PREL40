@@ -70,7 +70,7 @@ export const FIELD_LIMITS = {
  */
 export const LAB_COLLEAGUE = {
   name: 'Morgan Lee',
-  email: 'morgan.lee@contoso.example',
+  email: 'morgan.lee@caldova.example',
 } as const;
 
 /**

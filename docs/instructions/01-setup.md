@@ -10,7 +10,7 @@ This lab uses a pre-configured virtual machine with all necessary tools installe
 
 ## Task 1: Sign in to GitHub through the lab SSO portal
 
-In this exercise, you will sign in to GitHub through Contoso DIY's enterprise SSO portal. Contoso DIY purchases GitHub Enterprise for its organization, which includes managed access to GitHub Copilot for employees through the company's enterprise plan.
+In this exercise, you will sign in to GitHub through Caldova Home Loans' enterprise SSO portal. Caldova Home Loans purchases GitHub Enterprise for its organization, which includes managed access to GitHub Copilot for employees through the company's enterprise plan.
 
 1. In the virtual machine, open Microsoft Edge and navigate to: `https://github.com/enterprises/skillable-events/sso`
 

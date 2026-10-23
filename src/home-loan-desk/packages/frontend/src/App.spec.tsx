@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { labFixtures } from '@/lab/fixtures.generated';
 import { planLabRecords, type LabStore } from '@/lab/seeder';
 
-const OFFICER = 'avery.officer@contoso.example';
+const OFFICER = 'avery.officer@caldova.example';
 // The gate check and the data load both resolve before content shows; allow for slow CI.
 const WAIT = { timeout: 5000 };
 

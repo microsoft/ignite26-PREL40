@@ -85,7 +85,7 @@ function contentStream() {
   const c = Math.cos(angle).toFixed(4);
   const s = Math.sin(angle).toFixed(4);
   ops.push(`BT /F2 24 Tf 0.78 0.16 0.16 rg ${c} ${s} -${s} ${c} 104 92 Tm (SYNTHETIC SAMPLE) Tj ET`);
-  ops.push(`BT /F2 12 Tf 0.78 0.16 0.16 rg ${c} ${s} -${s} ${c} 116 74 Tm (Contoso Home Loans lab) Tj ET`);
+  ops.push(`BT /F2 12 Tf 0.78 0.16 0.16 rg ${c} ${s} -${s} ${c} 116 74 Tm (Caldova Home Loans lab) Tj ET`);
 
   ops.push(text(48, 18, 9, 'Synthetic document for the Microsoft Ignite PREL40 lab. Fictional applicant and property; not a real plan.', { gray: 0.4 }));
   return ops.join('\n');

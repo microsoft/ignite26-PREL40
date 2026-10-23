@@ -2,7 +2,7 @@
 
 The lab starter for **PREL40: Build data-rich apps in Microsoft Fabric** (Microsoft Ignite 2026).
 
-Home Loan Operations Desk is an internal Fabric App for loan officers at the fictional Contoso Home Loans. It connects shared portfolio metrics to private case work. This starter is a working, secure app that you extend during the lab with the GitHub Copilot app and the Rayfin plugin.
+Home Loan Operations Desk is an internal Fabric App for loan officers at the fictional Caldova Home Loans. It connects shared portfolio metrics to private case work. This starter is a working, secure app that you extend during the lab with the GitHub Copilot app and the Rayfin plugin.
 
 > All applicants, amounts, and documents are synthetic. The app supports administrative case processing only: it doesn't assess creditworthiness, recommend approval or rejection, or make lending decisions.
 

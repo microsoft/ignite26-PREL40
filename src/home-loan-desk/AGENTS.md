@@ -8,7 +8,7 @@ Turn on only the capabilities the app needs, preserve the protected default and 
 ## PREL40 lab context: read this first
 
 This project is the **Home Loan Operations Desk** lab starter for Microsoft Ignite 2026 PREL40.
-It is an internal app for loan officers at the fictional Contoso Home Loans, built for administrative case processing.
+It is an internal app for loan officers at the fictional Caldova Home Loans, built for administrative case processing.
 It never assesses creditworthiness, recommends approval or rejection, or makes a lending decision.
 All data is synthetic.
 
@@ -41,7 +41,7 @@ Every entity is scoped by the signed-in officer's **email claim**:
 
 - `CaseWorkspace`: create when `created_by_email` is the caller (intake); read, update, and delete only when the stored `assigned_officer_email` is the caller; update can't change `created_by_email`.
 - `CaseNote`, `CaseTask`, `ChecklistItem`: every action only when the stored `officer_email` is the caller; update can't change `case_id` (or a checklist item's `category`).
-- HL-1103 belongs to `morgan.lee@contoso.example`, who never signs in. Attendees must not be able to read it, through the app or the API.
+- HL-1103 belongs to `morgan.lee@caldova.example`, who never signs in. Attendees must not be able to read it, through the app or the API.
 
 Never weaken a rule, add a client-side filter in place of a rule, or broaden access to make something work.
 Give every new entity or storage folder an explicit `@authenticated` rule scoped the same way, and stamp records from the session email (`useOfficerEmail`).

@@ -7,7 +7,7 @@
 
 ## The story
 
-Contoso Home Loans has enough data to report on its application pipeline, but its staff still move between reports, shared folders, and case notes to get work done. The operations desk can see a backlog without knowing which administrative steps are holding it up. Loan officers have to reconstruct a case before handing it to a colleague.
+Caldova Home Loans has enough data to report on its application pipeline, but its staff still move between reports, shared folders, and case notes to get work done. The operations desk can see a backlog without knowing which administrative steps are holding it up. Loan officers have to reconstruct a case before handing it to a colleague.
 
 Attendees grow a working, secure Rayfin starter into **Home Loan Operations Desk**: an app that connects shared portfolio metrics from a semantic model to private case work, property photos, and an AI-assisted handoff brief.
 
@@ -32,7 +32,7 @@ Use the same cases throughout the lab instead of inventing new examples for each
 | --- | --- | --- |
 | **HL-1042: Alex Rivera** | Home-improvement loan of USD 85,000 for a kitchen renovation and rear extension. It has spent 11 calendar days in Document collection. Contractor quote and proof of income are Received; **Renovation plans / current-state photos** is Required. The case notes contain a planted contradiction: one note says the applicant emailed the plans on a given date, while a later note records that nothing arrived. Assigned to the attendee. | Find it in the stalled list, open it, upload the supplied plan and photo, see the checklist turn to Received, generate a brief that flags the contradiction, and save a human-reviewed task. |
 | **HL-1088: Jordan Chen** | Home-purchase application with every checklist item Received, waiting for Internal review. Assigned to the attendee. | Optional AI contrast: the brief must report no missing items and suggest the internal review, never an approval. A complete checklist isn't a lending decision. |
-| **HL-1103: Casey Brooks** | Stalled for 9 days in Document collection. Assigned to a fictional colleague, Morgan Lee (`morgan.lee@contoso.example`), who never signs in. | Access proof: the row exists in the app database, but the attendee can't retrieve it through the app or the API, even by ID. |
+| **HL-1103: Casey Brooks** | Stalled for 9 days in Document collection. Assigned to a fictional colleague, Morgan Lee (`morgan.lee@caldova.example`), who never signs in. | Access proof: the row exists in the app database, but the attendee can't retrieve it through the app or the API, even by ID. |
 
 The seed also creates **six more cases assigned to the attendee**, spread across stages and including two more stalled cases, so My Cases looks like a real workload.
 
@@ -94,7 +94,7 @@ Define measures, names, and format strings once, in the model. The app queries t
 
 **Part 1 path:**
 
-- The attendee creates the SQL database `ContosoHomeLoans` in their workspace from the Fabric portal.
+- The attendee creates the SQL database `CaldovaHomeLoans` in their workspace from the Fabric portal.
 - They run one committed script, `data/portfolio-seed.sql`, in the query editor. It creates the four tables and inserts the deterministic rows.
 - From the SQL database they choose **New semantic model**, which creates the default Direct Lake model over the SQL analytics endpoint.
 - In web modeling they create the three relationships, mark `Date` as the date table, and add the four measures from DAX snippets in the instructions.
@@ -235,7 +235,7 @@ The blocks total **225 minutes**, with **15 minutes** of margin in the four-hour
 | Minutes | Step |
 | --- | --- |
 | 15 | Copilot app and Rayfin plugin, `rayfin login`, scaffold from the pinned tag, and start `npm run rayfin:up`. The deploy runs while the attendee moves on. |
-| 15 | Create `ContosoHomeLoans`, run `data/portfolio-seed.sql`, and look at the OneLake/SQL analytics endpoint. |
+| 15 | Create `CaldovaHomeLoans`, run `data/portfolio-seed.sql`, and look at the OneLake/SQL analytics endpoint. |
 | 25 | New semantic model, relationships, date table, four measures, and reference values. |
 | 5 | Checkpoint: open the hosted app, watch **Preparing data**, and see My Cases. |
 
@@ -291,7 +291,7 @@ The CLI installs the version-matched Rayfin skill and MCP configuration and pres
 ```text
 Build the PREL40 starter template, "Home Loan Operations Desk", in
 src/home-loan-desk, using .prep/scenario.md as the contract. It is an internal
-app for loan officers at the fictional Contoso Home Loans that assists
+app for loan officers at the fictional Caldova Home Loans that assists
 administrative case processing, not lending decisions.
 
 Start from the Rayfin universal-app template and apply the data-modeling,
@@ -321,7 +321,7 @@ Build a working, secure, deliberately incomplete starter:
   behind a "Preparing data" progress screen, and #/seed with a non-destructive
   Restore and a confirmed "Reset my lab cases". Deterministic UUIDs; treat a
   primary-key conflict as already present. Seed the attendee's eight cases and
-  HL-1103 for morgan.lee@contoso.example. Never mark HL-1042's photos/plans item
+  HL-1103 for morgan.lee@caldova.example. Never mark HL-1042's photos/plans item
   Received.
 
 Also build data/generator (fixed seed, stable UUIDs, explicit as-of date in a

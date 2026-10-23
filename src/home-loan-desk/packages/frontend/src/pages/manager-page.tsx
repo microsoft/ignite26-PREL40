@@ -40,7 +40,7 @@ export function ManagerPage() {
           Operations portfolio
         </h1>
         <p className="max-w-3xl text-300 text-muted-foreground">
-          Shared, pseudonymous pipeline metrics from the Contoso Home Loans semantic model, as of its
+          Shared, pseudonymous pipeline metrics from the Caldova Home Loans semantic model, as of its
           snapshot date. This page is a view for the signed-in officer, not a manager role: it never
           grants access to anyone's private case work.
         </p>

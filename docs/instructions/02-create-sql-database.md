@@ -1,6 +1,6 @@
 # Exercise 2: Create and seed the portfolio database
 
-Contoso Home Loans keeps a snapshot of its loan application pipeline in a SQL database. In this exercise, you create that database in Microsoft Fabric, load 200 synthetic loan applications into it, and run a test query to confirm the data is ready for the semantic model.
+Caldova Home Loans keeps a snapshot of its loan application pipeline in a SQL database. In this exercise, you create that database in Microsoft Fabric, load 200 synthetic loan applications into it, and run a test query to confirm the data is ready for the semantic model.
 
 By completing this exercise, you will:
 
@@ -17,7 +17,7 @@ Create an empty SQL database to hold the portfolio data.
 
 1. In the workspace, select **+ New item**, enter `SQL database` in the search box, then select **SQL database**.
 
-1. Name the database `ContosoHomeLoans`, then select **Create**.
+1. Name the database `CaldovaHomeLoans`, then select **Create**.
 
 1. Wait for the database to be provisioned. When it's ready, the database home page opens with the **Explorer** pane on the left.
 
@@ -34,7 +34,7 @@ Run the seed script to create the four portfolio tables and fill them with data.
     > [!NOTE]
     > The script creates the **Branch**, **LoanProduct**, **Date**, and **LoanApplication** tables. If they already exist, it drops and re-creates them, so it's safe to run again. All branches, amounts, and applications are synthetic.
 
-1. Return to the **ContosoHomeLoans** database in Microsoft Edge and select **New SQL query** in the toolbar.
+1. Return to the **CaldovaHomeLoans** database in Microsoft Edge and select **New SQL query** in the toolbar.
 
 1. Select the query editor, then press **Ctrl+V** to paste the script.
 

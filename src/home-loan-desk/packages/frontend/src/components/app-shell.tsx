@@ -29,7 +29,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </span>
             <span className="flex flex-col">
               <span className="text-200 font-semibold uppercase tracking-wider text-muted-foreground">
-                Contoso Home Loans
+                Caldova Home Loans
               </span>
               <span className="text-400 font-semibold text-foreground">Operations Desk</span>
             </span>

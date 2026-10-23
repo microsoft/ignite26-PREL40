@@ -12,7 +12,7 @@ import {
   type LabStore,
 } from './seeder';
 
-const OFFICER = 'avery.officer@contoso.example';
+const OFFICER = 'avery.officer@caldova.example';
 
 type Row = Record<string, unknown> & { id: string };
 

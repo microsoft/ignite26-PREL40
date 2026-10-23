@@ -16,7 +16,7 @@ In the virtual machine, sign into Windows using the following credentials:
 
 This lab demonstrates how to build a data-rich internal application with Microsoft Fabric, the Rayfin SDK, and the GitHub Copilot app. You'll combine consistent portfolio metrics from a Fabric semantic model with secure operational data and application behavior managed by Rayfin.
 
-The scenario centers on **Contoso Home Loans**. Its operations staff can see the loan application backlog, but they still move between reports, shared folders, and case notes to understand why an application is stalled and what administrative work should happen next. You'll grow a secure starter into **Home Loan Operations Desk**, an app that helps a loan officer:
+The scenario centers on **Caldova Home Loans**. Its operations staff can see the loan application backlog, but they still move between reports, shared folders, and case notes to understand why an application is stalled and what administrative work should happen next. You'll grow a secure starter into **Home Loan Operations Desk**, an app that helps a loan officer:
 
 - Review shared portfolio metrics and identify stalled applications
 - Work with private case notes, tasks, and document checklists
@@ -33,7 +33,7 @@ Through the exercises, you'll:
 - Use a server function, secrets, and a model in Microsoft Foundry to create a validated handoff brief
 - Review the deployed app's operational metrics in Microsoft Fabric
 
-You'll walk in the shoes of a loan officer at Contoso Home Loans who is responsible for keeping applications moving. You'll use portfolio insights to find stalled cases, secure case tools to gather missing information, and an AI-assisted handoff brief to prepare the next administrative action for human review.
+You'll walk in the shoes of a loan officer at Caldova Home Loans who is responsible for keeping applications moving. You'll use portfolio insights to find stalled cases, secure case tools to gather missing information, and an AI-assisted handoff brief to prepare the next administrative action for human review.
 
 Complete the exercises in order because each one builds on the app, data model, deployment, and resources created in the previous exercises.
 
