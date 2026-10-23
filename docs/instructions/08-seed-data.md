@@ -1,6 +1,6 @@
-# Exercise 7: Seed Data for Analysis
+# Exercise 8: Seed Data for Analysis
 
-In Exercise 6, you implemented and deployed a schema-backed comments feature. In this exercise, you will seed the backend with a richer dataset for the analysis-focused steps that follow.
+In Exercise 7, you implemented and deployed a schema-backed comments feature. In this exercise, you will seed the backend with a richer dataset for the analysis-focused steps that follow.
 
 Seeding data provides a realistic set of service pros, work orders, and statuses so the next analysis-focused exercises have meaningful data to query.
 

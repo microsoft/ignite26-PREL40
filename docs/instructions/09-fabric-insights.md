@@ -1,6 +1,6 @@
-# Exercise 8: Explore Data with Fabric Intelligence
+# Exercise 9: Explore Data with Fabric Intelligence
 
-In Exercise 7, you seeded the database with a realistic production dataset. In this exercise, you will use Microsoft Fabric intelligence capabilities to query that data using natural language.
+In Exercise 8, you seeded the database with a realistic production dataset. In this exercise, you will use Microsoft Fabric intelligence capabilities to query that data using natural language.
 
 The Microsoft Fabric SQL Database provisioned by Rayfin is a first-class citizen in your Fabric workspace. You will build a Power BI semantic model over it, publish it to Fabric, and create a **Fabric data agent** that lets you ask questions like "Which Service Pro has the most completed jobs?" without writing a single line of SQL.
 
@@ -31,7 +31,7 @@ A semantic model gives the data agent a clean, well-described view of your data 
 
 1. Select the **ServicePros**, **WorkOrders**, and **WorkOrderComments** tables to include in the model and select **Confirm** to create the model.
 
-	> [!Tip]
+    > [!Tip]
     > If you don't see the **WordOrderComments** table when creating a semantic model please wait a few minutes, refresh your page and create the semantic model again.
 
     ![Select tables for semantic model](../../img/fabric-select-tables-semantic-model.png)
