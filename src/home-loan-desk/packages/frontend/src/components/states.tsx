@@ -17,7 +17,7 @@ export function LoadingState({
   return (
     <div className="space-y-200" role="status" aria-busy="true" aria-label={label}>
       {Array.from({ length: rows }, (_, i) => (
-        <div key={i} className="h-12 animate-pulse rounded-lg bg-muted" />
+        <div key={i} className="h-12 animate-pulse rounded-md bg-muted" />
       ))}
     </div>
   );
@@ -31,8 +31,8 @@ export interface EmptyStateProps {
 
 export function EmptyState({ title, hint, action }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center gap-200 rounded-lg border border-dashed border-border px-600 py-800 text-center">
-      <p className="text-400 font-semibold text-foreground">{title}</p>
+    <div className="flex flex-col items-center gap-200 rounded-xl border border-dashed border-input px-600 py-800 text-center">
+      <p className="font-heading text-400 font-semibold text-foreground">{title}</p>
       {hint ? <div className="max-w-md text-300 text-muted-foreground">{hint}</div> : null}
       {action ? <div className="mt-200">{action}</div> : null}
     </div>
@@ -49,7 +49,7 @@ export function ErrorState({ message, title = "That didn't work", onRetry }: Err
   return (
     <div
       role="alert"
-      className="flex items-start gap-300 rounded-lg border border-destructive/40 bg-destructive/5 px-400 py-300 text-foreground"
+      className="flex items-start gap-300 rounded-lg border border-destructive/35 bg-destructive/[0.06] px-400 py-300 text-foreground"
     >
       <AlertTriangle aria-hidden="true" className="mt-100 icon-size-200 shrink-0 text-destructive" />
       <div className="min-w-0 flex-1 text-300">
@@ -92,14 +92,14 @@ export function ConfirmAction({
       role="alertdialog"
       aria-modal="false"
       aria-label={confirmLabel}
-      className="flex flex-wrap items-center gap-300 rounded-lg border border-destructive/40 bg-destructive/5 px-400 py-300 text-300"
+      className="flex flex-wrap items-center gap-300 rounded-lg border border-destructive/35 bg-destructive/[0.06] px-400 py-300 text-300"
     >
       <span className="min-w-0 flex-1">{message}</span>
       <button
         type="button"
         onClick={onCancel}
         disabled={pending}
-        className="rounded-md px-300 py-100 font-medium text-foreground hover:bg-accent disabled:opacity-50"
+        className="h-8 rounded-md px-300 font-medium text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
       >
         Cancel
       </button>
@@ -107,7 +107,7 @@ export function ConfirmAction({
         type="button"
         onClick={onConfirm}
         disabled={pending}
-        className="rounded-md bg-destructive px-300 py-100 font-medium text-destructive-foreground disabled:opacity-50"
+        className="h-8 rounded-md bg-destructive px-300 font-medium text-destructive-foreground hover:bg-destructive/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
       >
         {pending ? pendingLabel : confirmLabel}
       </button>

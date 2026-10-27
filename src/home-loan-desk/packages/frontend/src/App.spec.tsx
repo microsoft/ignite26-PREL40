@@ -20,6 +20,7 @@ const myChecklist = planned
 const store: { current: LabStore } = { current: undefined as unknown as LabStore };
 
 vi.mock('@/hooks/use-officer-email', () => ({ useOfficerEmail: () => OFFICER }));
+vi.mock('@/hooks/auth.context', () => ({ useAuth: () => ({ signOut: async () => {}, isSigningOut: false }) }));
 vi.mock('@/lib/rayfin-client', () => ({ getRayfinClient: async () => ({}) }));
 vi.mock('@/lab/lab-store', () => ({ createRayfinLabStore: () => store.current }));
 vi.mock('@/services/cases', () => ({
@@ -95,7 +96,7 @@ describe('App', () => {
     render(<App />);
 
     expect(await screen.findByRole('heading', { name: 'Alex Rivera' }, WAIT)).toBeVisible();
-    expect(await screen.findByText('Upload coming soon', {}, WAIT)).toBeVisible();
+    expect(await screen.findByText('Upload only', {}, WAIT)).toBeVisible();
     expect(screen.getByRole('button', { name: /Generate handoff brief/ })).toBeDisabled();
   });
 

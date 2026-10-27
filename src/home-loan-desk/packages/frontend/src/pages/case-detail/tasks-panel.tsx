@@ -45,7 +45,7 @@ export function TasksPanel({
   };
 
   return (
-    <Panel title="Tasks" description="Administrative follow-ups for this case.">
+    <Panel title="Tasks" description={open.length ? `${open.length} open` : undefined}>
       {firstLoad ? <LoadingState rows={2} label="Loading tasks" /> : null}
       {tasks.status === 'error' && tasks.error ? (
         <ErrorState message={tasks.error} onRetry={() => void tasks.refresh()} />
@@ -54,7 +54,7 @@ export function TasksPanel({
         <>
           {tasks.error ? <ErrorState message={tasks.error} onRetry={tasks.clearError} /> : null}
           {tasks.items.length === 0 ? (
-            <EmptyState title="No tasks" hint="Add the next administrative step below." />
+            <EmptyState title="No tasks yet" />
           ) : (
             <ul className="flex flex-col gap-200">
               {[...open, ...done].map((task) => (
@@ -77,7 +77,7 @@ export function TasksPanel({
                       {task.title}
                     </span>
                     {task.due_on ? (
-                      <span className="block text-200 text-muted-foreground">Due {formatDateOnly(task.due_on)}</span>
+                      <span className="block text-200 tabular-nums text-muted-foreground">Due {formatDateOnly(task.due_on)}</span>
                     ) : null}
                   </label>
                 </li>
@@ -96,7 +96,7 @@ export function TasksPanel({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           maxLength={FIELD_LIMITS.taskTitle}
-          placeholder="e.g. Review the newly received floor plan"
+          placeholder="Next step on this case"
           className={buttonStyles.input}
         />
         <div className="flex flex-wrap items-end gap-300">

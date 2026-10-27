@@ -10,6 +10,7 @@ import { createRoot } from 'react-dom/client';
 import { Root } from './Root';
 import { bootstrapAuth } from './services/rayfin-auth.service';
 
+import '@fontsource-variable/geist';
 import './global.css';
 
 const rayfinAuthService = await bootstrapAuth();

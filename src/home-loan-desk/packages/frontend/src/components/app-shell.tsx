@@ -1,89 +1,73 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
-import { Landmark, Moon, Search, Sun } from 'lucide-react';
+import { Lock, Search } from 'lucide-react';
 import { Link, NavLink, useNavigate } from 'react-router';
 
-import { useTheme } from '@/hooks/theme.context';
-import { useOfficerEmail } from '@/hooks/use-officer-email';
+import { AccountMenu } from '@/components/account-menu';
+import { GitHubMark, Wordmark } from '@/components/brand';
 import { cn } from '@/lib/utils';
 
-const NAV_ITEMS = [
-  { to: '/cases', label: 'My cases' },
-  { to: '/manager', label: 'Portfolio' },
-  { to: '/seed', label: 'Lab data' },
-] as const;
+const LAB_REPOSITORY_URL = 'https://github.com/microsoft/ignite26-PREL40';
+
+/** Set `enabled: true` on Portfolio once the semantic model is connected. */
+const NAV_ITEMS: readonly { to: string; label: string; enabled: boolean }[] = [
+  { to: '/cases', label: 'My cases', enabled: true },
+  { to: '/manager', label: 'Portfolio', enabled: false },
+];
+
+const focusRing =
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-nav';
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const email = useOfficerEmail();
-  const { isDark, toggleTheme } = useTheme();
-
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="border-b border-border bg-card">
-        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-600 gap-y-300 px-400 py-300">
-          <Link
-            to="/cases"
-            className="flex items-center gap-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <span aria-hidden="true" className="rounded-lg bg-primary p-200 text-primary-foreground">
-              <Landmark className="icon-size-300" />
-            </span>
-            <span className="flex flex-col">
-              <span className="text-200 font-semibold uppercase tracking-wider text-muted-foreground">
-                Caldova Home Loans
-              </span>
-              <span className="text-400 font-semibold text-foreground">Operations Desk</span>
-            </span>
+      <header className="sticky top-0 z-30 bg-nav text-nav-foreground">
+        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-600 px-400 sm:px-600">
+          <Link to="/cases" aria-label="Caldova Operations Desk, my cases" className={cn('flex h-14 items-center rounded-md', focusRing)}>
+            <Wordmark compactOnMobile onNav />
           </Link>
 
-          <nav aria-label="Main" className="flex items-center gap-100">
-            {NAV_ITEMS.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  cn(
-                    'rounded-md px-300 py-200 text-300 font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                    isActive
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                  )
-                }
-              >
-                {item.label}
-              </NavLink>
-            ))}
+          <nav aria-label="Main" className="order-last -mx-200 flex w-full items-center gap-100 pb-200 md:order-none md:mx-0 md:w-auto md:pb-0">
+            {NAV_ITEMS.map((item) =>
+              item.enabled ? (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={({ isActive }) =>
+                    cn(
+                      'rounded-md px-300 py-100 text-300 font-medium transition-colors',
+                      focusRing,
+                      isActive ? 'bg-nav-active text-nav-foreground' : 'text-nav-muted hover:bg-nav-hover hover:text-nav-foreground'
+                    )
+                  }
+                >
+                  {item.label}
+                </NavLink>
+              ) : (
+                <span
+                  key={item.to}
+                  role="link"
+                  aria-disabled="true"
+                  title="Coming soon"
+                  className="flex cursor-not-allowed items-center gap-100 rounded-md px-300 py-100 text-300 font-medium text-nav-muted/50 select-none"
+                >
+                  {item.label}
+                  <Lock aria-hidden="true" className="icon-size-100" />
+                  <span className="sr-only">(coming soon)</span>
+                </span>
+              )
+            )}
           </nav>
 
-          <div className="ml-auto flex flex-wrap items-center gap-300">
+          <div className="ml-auto flex h-14 items-center gap-300">
             <OpenCaseForm />
-            <button
-              type="button"
-              onClick={toggleTheme}
-              aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
-              className="rounded-md p-200 text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {isDark ? <Sun className="icon-size-200" /> : <Moon className="icon-size-200" />}
-            </button>
-            {email ? (
-              <span
-                title="Signed-in officer"
-                className="max-w-60 truncate rounded-full bg-muted px-300 py-100 text-200 text-muted-foreground"
-              >
-                {email}
-              </span>
-            ) : null}
+            <AccountMenu />
           </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-400 py-600">{children}</main>
+      <main className="mx-auto w-full max-w-6xl flex-1 px-400 py-600 sm:px-600">{children}</main>
 
-      <footer className="border-t border-border">
-        <p className="mx-auto max-w-6xl px-400 py-300 text-200 text-muted-foreground">
-          Synthetic lab data for Microsoft Ignite PREL40. Administrative case processing only: this
-          app does not assess creditworthiness or make lending decisions.
-        </p>
-      </footer>
+      <AppFooter />
     </div>
   );
 }
@@ -106,17 +90,47 @@ function OpenCaseForm() {
       <label htmlFor="open-case" className="sr-only">
         Open case by number
       </label>
-      <div className="flex items-center rounded-md border border-input bg-background focus-within:ring-2 focus-within:ring-ring">
-        <Search aria-hidden="true" className="ml-200 icon-size-200 text-muted-foreground" />
+      <div className="flex h-8 items-center rounded-lg border border-nav-border bg-nav-field transition-colors hover:border-nav-muted/50 focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30">
+        <Search aria-hidden="true" className="ml-200 icon-size-200 text-nav-muted" />
         <input
           id="open-case"
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          placeholder="Open case, e.g. HL-1042"
+          placeholder="Go to case"
           maxLength={16}
-          className="w-44 bg-transparent px-200 py-100 text-300 text-foreground placeholder:text-muted-foreground focus:outline-none"
+          autoComplete="off"
+          spellCheck={false}
+          className="w-24 bg-transparent px-200 text-300 text-nav-foreground tabular-nums placeholder:text-nav-muted focus:outline-none sm:w-36"
         />
       </div>
     </form>
+  );
+}
+
+function AppFooter() {
+  const footerLink =
+    'flex items-center gap-100 rounded-sm transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
+
+  return (
+    <footer className="border-t border-border">
+      <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-x-600 gap-y-100 px-400 py-400 text-center text-200 text-muted-foreground sm:px-600 md:flex-row md:justify-between md:text-left">
+        <p>Caldova Home Loans is a fictional company. All data is synthetic.</p>
+        <ul className="flex items-center gap-500">
+          <li>
+            <a href={LAB_REPOSITORY_URL} target="_blank" rel="noreferrer" className={footerLink}>
+              <GitHubMark className="icon-size-100" />
+              Lab source
+              <span className="sr-only">(opens in a new tab)</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://www.microsoft.com/microsoft-fabric" target="_blank" rel="noreferrer" className={footerLink}>
+              Built with Microsoft Fabric
+              <span className="sr-only">(opens in a new tab)</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </footer>
   );
 }

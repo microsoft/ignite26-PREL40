@@ -56,53 +56,38 @@ export function SeedPage() {
 
   return (
     <section aria-labelledby="seed-heading" className="flex flex-col gap-500">
-      <div className="flex flex-col gap-100">
-        <h1 id="seed-heading" className="text-hero-700 font-semibold text-foreground">
+      <div className="flex flex-wrap items-end justify-between gap-x-800 gap-y-300">
+        <h1 id="seed-heading" className="font-heading text-hero-700 font-semibold tracking-[-0.02em] text-foreground">
           Lab data
         </h1>
-        <p className="max-w-3xl text-300 text-muted-foreground">
-          Synthetic lab fixtures (generator {labFixtures.generator.version}, snapshot{' '}
-          {formatDateOnly(labFixtures.generator.asOfDate)}). Records are created in your browser, as{' '}
-          {email ?? 'you'}, so every access rule applies to them.
+        <p className="text-300 tabular-nums text-muted-foreground">
+          Snapshot {formatDateOnly(labFixtures.generator.asOfDate)} · generator {labFixtures.generator.version}
         </p>
       </div>
 
-      <div className="grid gap-500 lg:grid-cols-2">
-        <Panel title="Assigned to you" description={`${yourCases.length} cases with their notes, tasks, and checklists`}>
-          <p className="font-monospace text-300 text-foreground">{yourCases.map((c) => c.caseNumber).join(' · ')}</p>
+      <div className="grid gap-400 lg:grid-cols-2">
+        <Panel title="Assigned to you" description={`${yourCases.length} cases`}>
+          <CaseNumbers cases={yourCases} />
         </Panel>
-        <Panel
-          title={`Assigned to ${LAB_COLLEAGUE.name}`}
-          description={`${LAB_COLLEAGUE.email} never signs in to this lab`}
-        >
-          <p className="font-monospace text-300 text-foreground">
-            {colleagueCases.map((c) => c.caseNumber).join(' · ')}
-          </p>
-          <p className="text-200 text-muted-foreground">
-            You can log this case at intake, but you can't read, change, or delete it afterwards. Reset never
-            touches it, because you can't see it.
-          </p>
+        <Panel title={`Assigned to ${LAB_COLLEAGUE.name}`} description={LAB_COLLEAGUE.email}>
+          <CaseNumbers cases={colleagueCases} />
         </Panel>
       </div>
 
       <Panel
-        title="Restore missing lab data"
-        description="Creates any lab record you're missing. Never deletes or overwrites anything."
+        title="Restore missing records"
+        description="Creates any lab record you're missing. Nothing is overwritten."
         actions={
           <button type="button" disabled={running} onClick={() => void run('restore')} className={buttonStyles.primary}>
             <DatabaseBackup aria-hidden="true" className="icon-size-200" />
             Restore
           </button>
         }
-      >
-        <p className="text-300 text-muted-foreground">
-          Safe to run any time, for example if a record was deleted during the lab.
-        </p>
-      </Panel>
+      />
 
       <Panel
         title="Reset my lab cases"
-        description="Deletes your lab cases and everything added to them, then recreates the originals."
+        description="Deletes your lab cases and their changes, then recreates the originals."
         actions={
           <button
             type="button"
@@ -128,13 +113,26 @@ export function SeedPage() {
             onCancel={() => setConfirming(false)}
             onConfirm={() => void run('reset')}
           />
-        ) : (
-          <p className="text-300 text-muted-foreground">Use this to start the lab over. It asks for confirmation first.</p>
-        )}
+        ) : null}
       </Panel>
 
       <OperationStatus operation={operation} />
     </section>
+  );
+}
+
+function CaseNumbers({ cases }: { cases: readonly { caseNumber: string }[] }) {
+  return (
+    <ul className="flex flex-wrap gap-200">
+      {cases.map((c) => (
+        <li
+          key={c.caseNumber}
+          className="rounded-full bg-muted px-300 py-100 text-300 font-medium tabular-nums text-foreground"
+        >
+          {c.caseNumber}
+        </li>
+      ))}
+    </ul>
   );
 }
 

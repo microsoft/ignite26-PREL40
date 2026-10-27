@@ -19,11 +19,7 @@ export function ChecklistPanel({ checklist }: { checklist: UseCrudResult<Checkli
   return (
     <Panel
       title="Document checklist"
-      description={
-        checklist.status === 'ready'
-          ? `${received} of ${items.length} received. Receipt is not verification.`
-          : 'Receipt is not verification.'
-      }
+      description={checklist.status === 'ready' ? `${received} of ${items.length} received` : undefined}
     >
       {checklist.status === 'loading' ? <LoadingState rows={4} label="Loading checklist" /> : null}
       {checklist.status === 'error' && checklist.error ? (
@@ -66,23 +62,23 @@ function ChecklistRow({
       {isReceived ? (
         <CheckCircle2 aria-hidden="true" className="icon-size-300 shrink-0 text-success-foreground" />
       ) : (
-        <CircleDashed aria-hidden="true" className="icon-size-300 shrink-0 text-warning-foreground" />
+        <CircleDashed aria-hidden="true" className="icon-size-300 shrink-0 text-muted-foreground" />
       )}
       <div className="min-w-0 flex-1">
         <p className="text-300 font-medium text-foreground">{label}</p>
         <p className="text-200 text-muted-foreground">
           {isReceived
-            ? `Received ${formatDateOnly(item.received_on)}${item.received_via === 'upload' ? ' · uploaded' : ' · recorded'}`
-            : 'Required'}
+            ? `Received ${formatDateOnly(item.received_on)} · ${item.received_via === 'upload' ? 'uploaded' : 'recorded'}`
+            : 'Outstanding'}
         </p>
       </div>
       {!isReceived && uploadOnly ? (
         <span
-          title="Plans and photos arrive as files. Private uploads are added in the storage checkpoint."
-          className="inline-flex items-center gap-100 rounded-full bg-muted px-300 py-100 text-200 text-muted-foreground"
+          title="File uploads aren't enabled yet"
+          className="inline-flex items-center gap-100 rounded-full bg-muted px-200 py-100-nudge text-200 text-muted-foreground"
         >
           <UploadCloud aria-hidden="true" className="icon-size-100" />
-          Upload coming soon
+          Upload only
         </span>
       ) : null}
       {!isReceived && !uploadOnly ? (

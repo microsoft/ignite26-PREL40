@@ -5,6 +5,9 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
+import { BrandedScreen } from './components/brand';
+import { buttonStyles } from './components/styles';
+
 export const ErrorFallback = ({
   error,
   resetErrorBoundary,
@@ -19,21 +22,14 @@ export const ErrorFallback = ({
   if (import.meta.env.DEV) console.error('[ErrorBoundary]', error);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md text-center">
-        <h2 className="mb-2 text-lg font-semibold text-foreground">
-          Something went wrong
-        </h2>
-        <pre className="mb-4 max-h-32 overflow-auto rounded border border-border bg-muted p-3 text-left text-sm text-muted-foreground">
-          {message}
-        </pre>
-        <button
-          onClick={resetErrorBoundary}
-          className="rounded border border-border px-4 py-2 text-sm text-foreground hover:bg-accent"
-        >
-          Try Again
-        </button>
-      </div>
-    </div>
+    <BrandedScreen>
+      <h1 className="font-heading text-500 font-semibold text-card-foreground">Something went wrong</h1>
+      <pre className="max-h-32 overflow-auto rounded-lg bg-muted p-300 text-left text-200 whitespace-pre-wrap text-muted-foreground">
+        {message}
+      </pre>
+      <button type="button" onClick={resetErrorBoundary} className={buttonStyles.secondary}>
+        Try again
+      </button>
+    </BrandedScreen>
   );
 };

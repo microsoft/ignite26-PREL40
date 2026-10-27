@@ -46,7 +46,7 @@ export function NotesPanel({
   };
 
   return (
-    <Panel title="Case notes" description="Private to the officer working the case.">
+    <Panel title="Case notes">
       <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-200">
         <label htmlFor="new-note" className="text-200 font-medium text-foreground">
           Add a note
@@ -58,10 +58,10 @@ export function NotesPanel({
           maxLength={FIELD_LIMITS.noteBody}
           rows={3}
           placeholder="What happened on this case?"
-          className={buttonStyles.input}
+          className={buttonStyles.textarea}
         />
         <div className="flex items-center justify-between gap-300">
-          <span className="text-200 text-muted-foreground">
+          <span className="text-200 tabular-nums text-muted-foreground">
             {draft.length} / {FIELD_LIMITS.noteBody}
           </span>
           <button type="submit" disabled={!body || saving} className={buttonStyles.primary}>
@@ -76,18 +76,18 @@ export function NotesPanel({
         <ErrorState message={notes.error} onRetry={() => void notes.refresh()} />
       ) : null}
       {showList && sorted.length === 0 ? (
-        <EmptyState title="No notes yet" hint="Notes record what happened and who did it." />
+        <EmptyState title="No notes yet" />
       ) : null}
       {showList && sorted.length > 0 ? (
-        <ol className="flex flex-col gap-300">
+        <ol className="flex flex-col gap-400">
           {sorted.map((note) => (
-            <li key={note.id} className="rounded-lg border border-border bg-background p-300">
+            <li key={note.id} className="border-t border-border pt-400">
               <div className="mb-100 flex flex-wrap items-center gap-200 text-200 text-muted-foreground">
-                <time>{formatDateTime(note.created_at)}</time>
+                <time className="tabular-nums">{formatDateTime(note.created_at)}</time>
                 <span aria-hidden="true">·</span>
                 <span className="truncate">{note.author_email}</span>
                 {note.is_ai_generated ? (
-                  <span className="inline-flex items-center gap-100 rounded-full bg-primary/10 px-200 py-100 font-medium text-primary">
+                  <span className="inline-flex items-center gap-100 rounded-full bg-tint px-200 py-100-nudge font-medium text-tint-foreground">
                     <Sparkles aria-hidden="true" className="icon-size-100" />
                     AI-generated
                     {note.reviewed_by_email ? `, reviewed by ${note.reviewed_by_email}` : ''}

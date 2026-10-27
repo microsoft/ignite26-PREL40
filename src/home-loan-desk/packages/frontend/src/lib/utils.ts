@@ -6,7 +6,17 @@
 //-----------------------------------------------------------------------
 
 import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { extendTailwindMerge } from 'tailwind-merge';
+
+// Teach tailwind-merge the custom font-size scale in global.css so `text-200`
+// isn't mistaken for a text color and dropped next to `text-foreground`.
+const twMerge = extendTailwindMerge({
+  extend: {
+    theme: {
+      text: ['100', '200', '300', '400', '500', '600', 'hero-700', 'hero-800', 'hero-900', 'hero-1000'],
+    },
+  },
+});
 
 /**
  * Merge Tailwind CSS class names with conflict resolution.

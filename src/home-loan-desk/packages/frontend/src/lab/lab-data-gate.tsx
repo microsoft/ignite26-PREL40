@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { DatabaseZap } from 'lucide-react';
 
+import { BrandedScreen } from '@/components/brand';
 import { ErrorState } from '@/components/states';
 import { useOfficerEmail } from '@/hooks/use-officer-email';
 import { describeError } from '@/lib/format';
@@ -124,18 +125,14 @@ export function LabDataGate({ children }: { children: ReactNode }) {
   if (state.kind === 'error') {
     return (
       <GateFrame>
-        <h1 className="text-500 font-semibold text-foreground">Lab data isn't ready</h1>
-        <ErrorState
-          title="Preparing your lab cases failed"
-          message={state.message}
-          onRetry={() => setAttempt((n) => n + 1)}
-        />
+        <h1 className="font-heading text-500 font-semibold text-foreground">Couldn't prepare your cases</h1>
+        <ErrorState title="Lab data isn't ready" message={state.message} onRetry={() => setAttempt((n) => n + 1)} />
         <button
           type="button"
           onClick={() => setSkipped(true)}
-          className="self-start text-300 text-primary underline underline-offset-2"
+          className="self-start rounded-sm text-300 text-primary underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          Continue to the app without lab data
+          Continue without lab data
         </button>
       </GateFrame>
     );
@@ -145,7 +142,7 @@ export function LabDataGate({ children }: { children: ReactNode }) {
     return (
       <GateFrame>
         <p role="status" className="text-300 text-muted-foreground">
-          Opening your case desk…
+          Opening your cases…
         </p>
       </GateFrame>
     );
@@ -156,24 +153,20 @@ export function LabDataGate({ children }: { children: ReactNode }) {
   return (
     <GateFrame>
       <div className="flex items-center gap-300">
-        <DatabaseZap aria-hidden="true" className="icon-size-400 text-primary" />
-        <h1 className="text-500 font-semibold text-foreground">Preparing data</h1>
+        <DatabaseZap aria-hidden="true" className="icon-size-300 text-primary" />
+        <h1 className="font-heading text-500 font-semibold text-foreground">Preparing your cases</h1>
       </div>
-      <p className="text-300 text-muted-foreground">
-        Creating your synthetic lab cases, notes, tasks, and checklists. Every record is saved as
-        you, so the app's access rules apply from the start.
-      </p>
       <div
         role="progressbar"
         aria-label="Lab data progress"
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={percent}
-        className="h-200 w-full overflow-hidden rounded-full bg-muted"
+        className="h-100 w-full overflow-hidden rounded-full bg-muted"
       >
-        <div className="h-full bg-primary transition-all" style={{ width: `${percent}%` }} />
+        <div className="h-full bg-primary transition-[width] duration-300 ease-out" style={{ width: `${percent}%` }} />
       </div>
-      <p aria-live="polite" className="text-200 text-muted-foreground">
+      <p aria-live="polite" className="text-200 tabular-nums text-muted-foreground">
         {progress ? `${progress.label} (${progress.done} of ${progress.total})` : 'Starting…'}
       </p>
     </GateFrame>
@@ -181,11 +174,5 @@ export function LabDataGate({ children }: { children: ReactNode }) {
 }
 
 function GateFrame({ children }: { children: ReactNode }) {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-400">
-      <div className="flex w-full max-w-lg flex-col gap-400 rounded-2xl border border-border bg-card p-600 shadow-sm">
-        {children}
-      </div>
-    </div>
-  );
+  return <BrandedScreen>{children}</BrandedScreen>;
 }

@@ -23,43 +23,34 @@ export function BriefPanel({
   return (
     <Panel
       title="Handoff brief"
-      description="An AI summary for the next officer, reviewed by you before it is saved."
-      actions={
-        <button
-          type="button"
-          disabled
-          aria-describedby="brief-not-connected"
-          className={buttonStyles.primary}
-        >
-          <Sparkles aria-hidden="true" className="icon-size-200" />
-          Generate handoff brief
-        </button>
-      }
+      description="A summary for the next officer, reviewed by you before saving."
     >
       <div className="flex flex-col gap-200">
-        <h3 className="text-200 font-semibold uppercase tracking-wider text-muted-foreground">
-          Missing checklist items
-        </h3>
+        <h3 className="text-300 font-medium text-foreground">Missing documents</h3>
         {!checklistReady ? (
-          <p className="text-300 text-muted-foreground">Waiting for the checklist…</p>
+          <p className="text-300 text-muted-foreground">Loading…</p>
         ) : missing.length === 0 ? (
-          <p className="text-300 text-foreground">None. Every required item is recorded as received.</p>
+          <p className="text-300 text-muted-foreground">None outstanding.</p>
         ) : (
-          <ul className="list-disc pl-500 text-300 text-foreground">
+          <ul className="flex flex-col gap-100 text-300 text-foreground">
             {missing.map((item) => (
-              <li key={item.id}>{CHECKLIST_LABELS[item.category] ?? item.category}</li>
+              <li key={item.id} className="flex items-center gap-200">
+                <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-primary" />
+                {CHECKLIST_LABELS[item.category] ?? item.category}
+              </li>
             ))}
           </ul>
         )}
-        <p className="text-200 text-muted-foreground">Computed from the checklist, not by AI.</p>
       </div>
-      <p
-        id="brief-not-connected"
-        className="rounded-lg border border-dashed border-border px-400 py-300 text-300 text-muted-foreground"
-      >
-        Not connected yet. The AI handoff checkpoint adds a server-side function, the Foundry model
-        call, and its secrets. Nothing is generated or sent from this page today.
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-300 border-t border-border pt-400">
+        <p id="brief-not-connected" className="text-200 text-muted-foreground">
+          Not available yet
+        </p>
+        <button type="button" disabled aria-describedby="brief-not-connected" className={buttonStyles.primary}>
+          <Sparkles aria-hidden="true" className="icon-size-200" />
+          Generate handoff brief
+        </button>
+      </div>
     </Panel>
   );
 }

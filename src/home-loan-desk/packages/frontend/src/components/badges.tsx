@@ -4,7 +4,9 @@ import { AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 import { REVIEW_STATUS_LABELS, stageAge } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
-const pill = 'inline-flex items-center gap-100 whitespace-nowrap rounded-full px-200 py-100 text-200 font-medium';
+const pill =
+  'inline-flex items-center gap-100 whitespace-nowrap rounded-full px-200 py-100-nudge text-200 font-medium tabular-nums';
+const quiet = 'inline-flex items-center gap-100 whitespace-nowrap text-200 tabular-nums text-muted-foreground';
 
 /** Time in the current stage at the portfolio snapshot, flagged when stalled. */
 export function StageAgeBadge({
@@ -27,7 +29,7 @@ export function StageAgeBadge({
     );
   }
   return (
-    <span className={cn(pill, 'bg-muted text-muted-foreground')}>
+    <span className={quiet}>
       <Clock aria-hidden="true" className="icon-size-100" />
       {age.days} {age.days === 1 ? 'day' : 'days'}
     </span>
@@ -39,7 +41,7 @@ export function ChecklistSummary({ items }: { items: readonly ChecklistItemRecor
   const received = items.filter((item) => item.status === 'received').length;
   const complete = received === items.length;
   return (
-    <span className={cn(pill, complete ? 'bg-success text-success-foreground' : 'bg-muted text-muted-foreground')}>
+    <span className={complete ? cn(pill, 'bg-success text-success-foreground') : quiet}>
       {complete ? <CheckCircle2 aria-hidden="true" className="icon-size-100" /> : null}
       {received} of {items.length} received
     </span>
@@ -54,10 +56,11 @@ export function ReviewStatusBadge({ status }: { status: ReviewStatus }) {
         status === 'waiting-on-applicant'
           ? 'bg-warning text-warning-foreground'
           : status === 'ready-for-review'
-            ? 'bg-primary/10 text-primary'
+            ? 'bg-tint text-tint-foreground'
             : 'bg-muted text-muted-foreground'
       )}
     >
+      <span aria-hidden="true" className="size-1.5 rounded-full bg-current" />
       {REVIEW_STATUS_LABELS[status] ?? status}
     </span>
   );
