@@ -25,6 +25,10 @@ export interface AuthContextValue {
   isSigningIn: boolean;
   /** Last error from interactive sign-in, if any. */
   signInError: Error | null;
+  /** End the session and return to the sign-in screen. */
+  signOut: () => Promise<void>;
+  /** True while sign-out is in progress. */
+  isSigningOut: boolean;
   /** Whether the app can authenticate, and if not, why. */
   config: AuthConfig;
   /** Last error from silent session resolution, if any. */

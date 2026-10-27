@@ -57,6 +57,12 @@ export interface IAuthService {
    */
   signIn(): Promise<OpaqueSession>;
 
+  /**
+   * End the current session. The SDK clears its stored session even when the
+   * server call fails, so callers can treat this as signed out either way.
+   */
+  signOut(): Promise<void>;
+
   /** Observe sign-out or refresh failure after a session has been established. */
   onSessionChange?(
     listener: (session: OpaqueSession | null) => void
@@ -143,6 +149,8 @@ class UnconfiguredAuthService implements IAuthService {
   async signIn(): Promise<OpaqueSession> {
     throw new Error('Sign-in is unavailable until Rayfin is configured.');
   }
+
+  async signOut(): Promise<void> {}
 }
 
 /**
@@ -214,6 +222,14 @@ class RayfinAuthService implements IAuthService {
     if (this.client.auth.getSession().isAnonymous)
       await this.client.auth.signOut();
     return ensureSignedInWithFabric(this.client.auth, this.fabricOptions);
+  }
+
+  async signOut(): Promise<void> {
+    try {
+      await this.client.auth.signOut();
+    } catch {
+      // The local session is cleared even when revoking it server-side fails.
+    }
   }
 
   onSessionChange(

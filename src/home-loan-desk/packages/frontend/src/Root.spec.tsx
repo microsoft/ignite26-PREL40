@@ -6,9 +6,22 @@ import { Root } from './Root';
 import type { AuthConfig, IAuthService } from './services/rayfin-auth.service';
 
 // The gate is what these tests cover, so stand in a marker for the protected app.
-vi.mock('./App', () => ({
-  default: () => <h1>Your app is taking shape</h1>,
-}));
+vi.mock('./App', async () => {
+  const { useAuth } = await import('./hooks/auth.context');
+  return {
+    default: function ProtectedApp() {
+      const { signOut } = useAuth();
+      return (
+        <>
+          <h1>Your app is taking shape</h1>
+          <button type="button" onClick={() => void signOut()}>
+            Sign out
+          </button>
+        </>
+      );
+    },
+  };
+});
 
 const authenticated: OpaqueSession = {
   user: null,
@@ -22,6 +35,7 @@ function service(config: AuthConfig = { kind: 'ready' }): IAuthService {
     canSignIn: config.kind === 'ready',
     resolveSession: vi.fn(async () => null),
     signIn: vi.fn(async () => authenticated),
+    signOut: vi.fn(async () => {}),
   };
 }
 
@@ -147,6 +161,23 @@ describe('protected app content with standalone sign-in', () => {
       screen.queryByRole('heading', { name: 'Your app is taking shape' })
     ).toBeNull();
     expect(unsubscribe).toHaveBeenCalled();
+  });
+
+  it('returns to sign-in after the officer signs out', async () => {
+    const auth = service();
+    auth.resolveSession = vi.fn(async () => authenticated);
+    render(<Root rayfinAuthService={auth} />);
+    await screen.findByRole('heading', { name: 'Your app is taking shape' });
+    await act(async () =>
+      fireEvent.click(screen.getByRole('button', { name: 'Sign out' }))
+    );
+    expect(auth.signOut).toHaveBeenCalledTimes(1);
+    expect(
+      await screen.findByRole('button', { name: 'Sign in with Microsoft' })
+    ).toBeVisible();
+    expect(
+      screen.queryByRole('heading', { name: 'Your app is taking shape' })
+    ).toBeNull();
   });
 
   it.each<AuthConfig>([
