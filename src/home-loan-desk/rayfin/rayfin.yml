@@ -17,7 +17,7 @@ services:
     enabled: true
     path: packages/data
     buildCommand: npm run build
-    dialect: "mssql"
+    dialect: mssql
   staticHosting:
     enabled: true
     path: packages/frontend
@@ -27,3 +27,7 @@ services:
     assetAccess: protected
     embedded:
       only: false
+  storage:
+    enabled: false
+  functions:
+    enabled: false
