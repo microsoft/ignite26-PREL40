@@ -9,7 +9,7 @@ Build data-rich apps in Microsoft Fabric.
 2. [Create and seed the portfolio database](./instructions/02-create-sql-database.md)
 3. [Build the portfolio semantic model](./instructions/03-create-semantic-model.md)
 4. [Knowledge check: Data and semantic model](./instructions/04-knowledge-check-data.md)
-5. [Bootstrap App from Template](./instructions/05-bootstrap.md)
+5. [Bootstrap and deploy the Home Loan Operations Desk app](./instructions/05-bootstrap.md)
 6. [Explore the App Template](./instructions/06-explore-template.md)
 7. [Run the App Locally](./instructions/07-run-locally.md)
 8. [Verify the Production Deployment on Microsoft Fabric](./instructions/08-deploy.md)
