@@ -9,7 +9,7 @@ Legend: ✅ done, 🚧 in progress, ⬜ not started.
 - ✅ `02-create-sql-database.md`: Create the `CaldovaHomeLoans` SQL database, run `portfolio-seed.sql`, and check the data in OneLake.
 - ✅ `03-create-semantic-model.md`: Create the Direct Lake semantic model with relationships, a date table, and the four shared measures, then check the reference values.
 - ✅ `04-knowledge-check-data.md`: Knowledge check on SQL database replication, the SQL analytics endpoint, and measures.
-- 🚧 `05-bootstrap.md`: Scaffold the Home Loan Operations Desk starter from the pinned template with the Rayfin plugin, and deploy it with `npm run rayfin:up` (using the GH Copilot app).
+- ✅ `05-bootstrap.md`: Scaffold the Home Loan Operations Desk starter from the pinned template with the Rayfin plugin, and deploy it with `npm run rayfin:up` (using the GH Copilot app).
 - ✅ `06-explore-app.md`: Open the deployed app and watch **Preparing data** seed your cases, then ask Copilot for a tour of the starter (routes, entities, access rules, what's missing) and open HL-1042 to see why it's stalled.
 - ⬜ `07-portfolio-analytics.md`: Connect the semantic model and show the four measures, filters, stage distribution, and stalled list tagged **Assigned to you** on `#/manager`.
 - ⬜ `08-access-control.md`: Prove access control: unauthenticated API call, protected hosting, HL-1103 in the database but not in the app, and no impersonation.
