@@ -27,15 +27,21 @@ In this exercise, you will sign in to GitHub through Caldova Home Loans' enterpr
 
 1. In the GitHub Copilot app, select **Sign in to GitHub**. This will copy the device code to your clipboard and open a browser window for authentication.
 
+1. If prompted with a dialog asking for permission to access your GitHub account, select **Authorize GitHub** to continue.
+
 1. In the browser window that opens, use the active GitHub SSO session from Task 1 to complete the sign-in if asked, then paste your device code when prompted with CTRL+V and press **Enter**.
 
 1. Return to the GitHub Copilot app. When asked to start with a local folder or a repository, select **Continue** and confirm that it is ready for you to start a conversation.
 
-## Task 3: Sign in to Microsoft Fabric
+## Task 3: Create a workspace in Microsoft Fabric
+
+This lab creates the portfolio database, the semantic model, and the Home Loan Operations Desk app in a Microsoft Fabric workspace.
+
+A workspace is a container for all the Fabric items related to your project, such as databases, semantic models, and deployed apps.
 
 1. In a new tab on the browser, navigate to the Microsoft Fabric portal at: `https://app.fabric.microsoft.com`.
 
-1. When prompted to sign in, use the following credentials:
+1. If you're prompted to sign in, use the following credentials:
 
     - **Email**: `@lab.CloudPortalCredential(User1).Username`
     - **TAP**: `@lab.CloudPortalCredential(User1).AccessToken`
@@ -43,16 +49,10 @@ In this exercise, you will sign in to GitHub through Caldova Home Loans' enterpr
     > [!TIP]
     > Since you already used these credentials to sign in to the GitHub SSO portal, you may not be prompted to enter them again and will be signed in automatically.
 
-1. After a successful sign-in, you will land on the Microsoft Fabric homepage. **Keep this browser tab open** as you will need this active session for the next steps.
+1. After a successful sign-in, you will land on the Microsoft Fabric homepage. 
 
     > [!IMPORTANT]
     > If the page title and icon in the bottom left corner of the page say "Power BI", you need to switch to the Fabric portal. Select the **Power BI** icon in the bottom left corner, then select **Fabric** to switch to the Microsoft Fabric portal.
-
-## Task 4: Create a workspace in Microsoft Fabric
-
-This lab creates the portfolio database, the semantic model, and the Home Loan Operations Desk app in a Microsoft Fabric workspace.
-
-A workspace is a container for all the Fabric items related to your project, such as databases, semantic models, and deployed apps.
 
 1. In the Fabric portal, select **Workspaces** from the left-hand navigation pane. Then select **+ New workspace**.
 
@@ -60,7 +60,9 @@ A workspace is a container for all the Fabric items related to your project, suc
 
 1. Expand the **Advanced** section and scroll to the **Workspace type** setting and ensure that **Fabric** is selected.
 
-1. Select **Apply** to create the workspace.
+1. Select **Apply** to create the workspace. 
+
+1. **Keep this browser tab open** as you will need it for the next exercises.
 
 ---
 
