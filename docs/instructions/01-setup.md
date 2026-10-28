@@ -29,7 +29,7 @@ In this exercise, you will sign in to GitHub through Caldova Home Loans' enterpr
 
 1. In the browser window that opens, use the active GitHub SSO session from Task 1 to complete the sign-in if asked, then paste your device code when prompted with CTRL+V and press **Enter**.
 
-1. Return to the GitHub Copilot app and confirm that it is ready for you to start a conversation.
+1. Return to the GitHub Copilot app. When asked to start with a local folder or a repository, select **Continue** and confirm that it is ready for you to start a conversation.
 
 ## Task 3: Sign in to Microsoft Fabric
 
