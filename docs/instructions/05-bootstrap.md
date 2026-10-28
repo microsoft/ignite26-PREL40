@@ -1,5 +1,3 @@
-<!-- TODO: review / fix / add screenshots -->
-
 # Exercise 4: Bootstrap and deploy the Home Loan Operations Desk app
 
 With the portfolio data and semantic model in place, it's time to build the app that Caldova Home Loans' loan officers use. In this exercise, you ask the GitHub Copilot app to create the **Home Loan Operations Desk** app from the lab template, then sign in to Rayfin and deploy it to your Microsoft Fabric workspace.
@@ -15,17 +13,20 @@ By completing this exercise, you will:
 
 The Rayfin plugin adds a getting-started skill that teaches the agent how to create a Rayfin project. Once a project exists, the agent switches to the version-matched Rayfin skills and docs that ship inside the project.
 
-1. In the GitHub Copilot app, select the **Customize** tab.
+1. In the GitHub Copilot app, select the **Customize** tab in the left panel.
 
 1. In the search bar, enter `rayfin`.
 
 1. In the results, find the **rayfin** plugin from the **awesome-copilot** marketplace, then select **Install**.
 
-    <!-- TODO: add screenshot of the marketplace showing the rayfin plugin -->
+    ![Rayfin Plugin in Marketplace](../../img/github-copilot-rayfin-plugin-marketplace.png)
 
 1. Confirm that the **rayfin** plugin appears in your installed plugins.
 
-<!-- TODO: add troubleshooting as sometimes awesome-copilot marketplace fails to load -->
+> [!IMPORTANT]
+> It may take some time before the marketplace fully loads, and sometimes results in an empty list if you search for "rayfin". Please wait a bit and try again.
+> If the awesome-copilot marketplace fails to load, try hitting the **refresh** button and wait for it to reload.
+> ![Refresh Marketplace](../../img/github-copilot-refresh-marketplace.png)
 
 ## Task 2: Create the app from the lab template
 
@@ -33,10 +34,17 @@ The lab template is a working, secure starter that we'll use to get faster to th
 
 1. In the GitHub Copilot app, start a new chat.
 
+1. Click on the model picker in the chat area (note that the icon may vary) and enable **Auto** mode.
+
+    ![GitHub Copilot App Model Picker](../../img/github-copilot-model-picker.png)
+
+    > [!TIP]
+    > Enabling **Auto** mode ensures that the agent uses the appropriate model for the task at hand, improving the accuracy and relevance of its responses. You can optimize the model selection for *Efficiency* to opt for faster responses and lower cost, or *Intelligence* to prioritize more accurate responses at a higher cost. We'll use the default *Balance* setting, which balances speed, cost, and accuracy for most tasks.
+
 1. Enter the following prompt, then press **Enter**:
 
     ```text
-    Create a new Rayfin app named home-loan-desk in my user profile folder, using the lab template at C:\LabFiles\template\home-loan-desk. When it's ready, initialize a Git repository and make an initial commit. Then open the folder as a project in the GitHub Copilot app and start a new session in it.
+    Create a new Rayfin app named home-loan-desk in my user profile folder, using the lab template at C:\LabFiles\template\home-loan-desk. When it's ready, initialize a Git repository and make an initial commit. Then open the folder as a project in the GitHub Copilot app.
     ```
 
 1. Watch the agent work. It uses the Rayfin plugin to:
@@ -49,7 +57,19 @@ The lab template is a working, secure starter that we'll use to get faster to th
     > [!NOTE]
     > The initial commit matters: in later exercises, you review each change the agent makes as a clean diff against this starting point.
 
-1. When the agent finishes, switch to the new **home-loan-desk** project session it opened. You continue the lab in this session.
+    > [!TIP]
+    > The project bootstrapping may take up to 10-15 minutes as it will install dependencies and set up the project structure. This is a good time to take a short break if needed.
+
+1. When the agent finishes, create a new session in the **home-loan-desk** project that was added to the list.
+
+    ![Create a new session in the home-loan-desk project](../../img/github-copilot-new-session.png)
+
+1. Select the **New worktree** button and change it to **Current checkout**.
+
+    ![Select New worktree and change to Current checkout](../../img/github-copilot-new-worktree.png)
+
+    > [!TIP]
+    > By default, GitHub Copilot app creates a new worktree for each session. This allows you to work on multiple features simultaneously without interfering with each other. Since we'll work on a single feature at a time in this lab, working directlty in the current project checkout simplifies the workflow.
 
 ## Task 3: Sign in to Rayfin and deploy the app
 
@@ -58,15 +78,19 @@ Deploying creates a Fabric App item in your workspace, provisions a managed SQL 
 1. In the **home-loan-desk** session, enter the following prompt:
 
     ```text
-    Sign me in to Rayfin interactively, then deploy this app to my Fabric workspace PREL40-homeloans-@lab.LabInstance.Id.
+    Sign me in to Rayfin interactively, then deploy this app to my Fabric workspace, without running prior checks or dry run.
+    Return the deployed app URL when done.
+    Workspace URL: <replace with the URL of your Fabric workspace>
     ```
+
+1. Before validating the prompt, open the web browser with the Microsoft Fabric tab, and navigate to your workspace if needed. Copy the URL of your workspace to use in the next step and paste it in the prompt.
+
+1. A confirmation dialog will appear at the bottom asking you if you trust the repository. Select **A. Trust repository** to continue.
 
 1. When a browser window opens to sign in, select the **@lab.CloudPortalCredential(User1).Username** account.
 
     > [!TIP]
     > If you're asked for credentials, use the same email and Temporary Access Pass you used in Exercise 1.
-
-1. Before it deploys, the agent asks you to confirm the target workspace. Check that it's **PREL40-homeloans-@lab.LabInstance.Id**, then confirm.
 
 1. Wait for the deployment to finish. The first deployment takes a few minutes.
 
@@ -76,7 +100,7 @@ Deploying creates a Fabric App item in your workspace, provisions a managed SQL 
 
 1. In Microsoft Edge, open the hosted app URL from the previous task in a new tab.
 
-1. Select **Sign in with Microsoft**. Since you already have an active sign-in session, you're signed in without entering credentials again.
+1. Select **Sign in**. Since you already have an active sign-in session, you're signed in without entering credentials again.
 
 1. If a Microsoft Fabric dialog asks you to allow the app to use your Microsoft Fabric credentials, select **Accept**.
 
@@ -86,5 +110,7 @@ Deploying creates a Fabric App item in your workspace, provisions a managed SQL 
 
     > [!NOTE]
     > All applicants, amounts, and documents are fictional. Case **HL-1103** is assigned to a colleague, so it doesn't appear in your list. You'll come back to it when you test the access rules.
+
+![Screenshot of the deployed app showing My cases](../../img/app-my-cases.png)
 
 Select **Next →** to continue.
