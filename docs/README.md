@@ -10,7 +10,7 @@ Build data-rich apps in Microsoft Fabric.
 3. [Build the portfolio semantic model](./instructions/03-create-semantic-model.md)
 4. [Knowledge check: Data and semantic model](./instructions/04-knowledge-check-data.md)
 5. [Bootstrap and deploy the Home Loan Operations Desk app](./instructions/05-bootstrap.md)
-6. [Explore the App Template](./instructions/06-explore-template.md)
+6. [Explore the Home Loan Operations Desk app](./instructions/06-explore-app.md)
 7. [Run the App Locally](./instructions/07-run-locally.md)
 8. [Verify the Production Deployment on Microsoft Fabric](./instructions/08-deploy.md)
 9. [Add a Feature with Copilot CLI](./instructions/09-new-feature.md)
