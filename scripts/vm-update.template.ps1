@@ -20,6 +20,7 @@ __PAYLOAD_BASE64__
 
     $templateTarget = [IO.Path]::Combine($labRoot, 'template', 'home-loan-desk')
     $dataTarget = Join-Path $labRoot 'data'
+    $checkpointsTarget = Join-Path $labRoot 'checkpoints'
     $skillTarget = [IO.Path]::Combine($copilotHome, 'skills', 'lab-check-setup')
     $settingsPath = Join-Path $copilotHome 'settings.json'
     $versionPath = Join-Path $labRoot 'lab-files.json'
@@ -93,6 +94,7 @@ __PAYLOAD_BASE64__
         if ($unpackError) {
             Add-Result 'Rayfin template' $templateTarget 'FAILED' $unpackError
             Add-Result 'Lab data' $dataTarget 'FAILED' $unpackError
+            Add-Result 'Checkpoints' $checkpointsTarget 'FAILED' $unpackError
             Add-Result 'lab-check-setup skill' $skillTarget 'FAILED' $unpackError
         } else {
             Invoke-Update 'Rayfin template' $templateTarget {
@@ -103,6 +105,9 @@ __PAYLOAD_BASE64__
                 Copy-Item -LiteralPath ([IO.Path]::Combine($staging, 'data', 'portfolio-seed.sql')) -Destination $dataTarget -Force
                 $samples = Copy-Folder ([IO.Path]::Combine($staging, 'data', 'samples')) (Join-Path $dataTarget 'samples')
                 "portfolio-seed.sql and $samples sample files"
+            }
+            Invoke-Update 'Checkpoints' $checkpointsTarget {
+                "$(Copy-Folder (Join-Path $staging 'checkpoints') $checkpointsTarget) files (run npm install before use)"
             }
             Invoke-Update 'lab-check-setup skill' $skillTarget {
                 "$(Copy-Folder ([IO.Path]::Combine($staging, 'skills', 'lab-check-setup')) $skillTarget) files"
