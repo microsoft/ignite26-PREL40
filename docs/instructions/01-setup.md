@@ -71,7 +71,7 @@ A workspace is a container for all the Fabric items related to your project, suc
 In the GitHub Copilot app, start a new chat and enter this prompt:
 
 ```text
-/lab-check-setup
+/check-setup
 ```
 
 This command will check all prerequisites for the lab and confirm that your setup is correct.

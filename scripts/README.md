@@ -6,7 +6,7 @@ The Skillable VM can't clone this private repository, so lab files are pushed to
 | --- | --- |
 | [`publish-vm-update.mjs`](publish-vm-update.mjs) | Packages the lab files, publishes the VM update script as a secret gist, and prints the command to run on the VM. |
 | [`vm-update.template.ps1`](vm-update.template.ps1) | The update script that runs on the VM. The publish script embeds the package in a copy of it. |
-| [`vm-skills/lab-check-setup/`](vm-skills/lab-check-setup/) | The `/lab-check-setup` skill attendees run in the GitHub Copilot app to check their environment. |
+| [`vm-skills/check-setup/`](vm-skills/check-setup/) | The `/check-setup` skill attendees run in the GitHub Copilot app to check their environment. |
 | [`checkpoints/`](checkpoints/) | Scripts that complete earlier exercises in one command, for attendees who are behind or want to jump ahead, and for testers. See its [README](checkpoints/README.md). |
 
 ## What the update installs
@@ -16,7 +16,7 @@ The Skillable VM can't clone this private repository, so lab files are pushed to
 | Rayfin template | `src/home-loan-desk` (files ignored by Git, such as `node_modules`, are left out) | `C:\LabFiles\template\home-loan-desk` |
 | Lab data | `data/portfolio-seed.sql`, `data/samples/` | `C:\LabFiles\data\` |
 | Checkpoints | `scripts/checkpoints/` (without `node_modules`), plus `data/generator/manifest.json` | `C:\LabFiles\checkpoints\` |
-| lab-check-setup skill | `scripts/vm-skills/lab-check-setup/` | `%USERPROFILE%\.copilot\skills\lab-check-setup` |
+| check-setup skill | `scripts/vm-skills/check-setup/` | `%USERPROFILE%\.copilot\skills\check-setup` (the update also removes the old `lab-check-setup` skill) |
 | Copilot permissions | — | `"defaultPermissionMode": "allow-all"` in `%USERPROFILE%\.copilot\settings.json` |
 | Version stamp | Commit and build time | `C:\LabFiles\lab-files.json` |
 
@@ -42,7 +42,7 @@ You need Node.js 22 or later, and the GitHub CLI signed in to an account that ca
 
 1. On the VM, paste the command in a PowerShell window and run it. It works in Windows PowerShell 5.1 and PowerShell 7, and ends with a table showing whether each group was updated.
 
-1. Restart the GitHub Copilot app, start a new chat, and run `/lab-check-setup` to confirm the setup.
+1. Restart the GitHub Copilot app, start a new chat, and run `/check-setup` to confirm the setup.
 
 To build the package without uploading, run `node scripts/publish-vm-update.mjs --no-upload`. The files are written to `scripts/dist/` (ignored by Git).
 

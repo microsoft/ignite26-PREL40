@@ -25,7 +25,7 @@ const GROUPS = [
   { name: 'template', source: 'src/home-loan-desk', target: 'template/home-loan-desk', required: ['rayfin-template.yml', 'package.json'] },
   { name: 'data', source: 'data/portfolio-seed.sql', target: 'data/portfolio-seed.sql' },
   { name: 'data', source: 'data/samples', target: 'data/samples', required: ['HL-1042-floor-plan.pdf', 'HL-1042-kitchen-current.jpg'] },
-  { name: 'skill', source: 'scripts/vm-skills/lab-check-setup', target: 'skills/lab-check-setup', required: ['SKILL.md', 'check-setup.ps1'] },
+  { name: 'skill', source: 'scripts/vm-skills/check-setup', target: 'skills/check-setup', required: ['SKILL.md', 'check-setup.ps1'] },
   { name: 'checkpoints', source: 'scripts/checkpoints', target: 'checkpoints', required: ['checkpoint.mjs', 'package.json', 'package-lock.json'] },
   { name: 'checkpoints', source: 'data/generator/manifest.json', target: 'checkpoints/manifest.json' },
 ];

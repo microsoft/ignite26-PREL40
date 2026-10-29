@@ -1,6 +1,6 @@
 ---
-name: lab-check-setup
-description: Checks that the PREL40 lab environment is ready (GitHub Copilot app, Node.js, npm, Git, and the lab files in C:\LabFiles) and reports a pass/fail table. Run only when the user invokes /lab-check-setup. Do not use for troubleshooting the lab app, Fabric, or Rayfin projects.
+name: check-setup
+description: Checks that the PREL40 lab environment is ready (GitHub Copilot app, Node.js, npm, Git, and the lab files in C:\LabFiles) and reports a pass/fail table. Run only when the user invokes /check-setup. Do not use for troubleshooting the lab app, Fabric, or Rayfin projects.
 disable-model-invocation: true
 allowed-tools: "*"
 ---

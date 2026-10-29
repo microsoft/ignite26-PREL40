@@ -21,7 +21,10 @@ __PAYLOAD_BASE64__
     $templateTarget = [IO.Path]::Combine($labRoot, 'template', 'home-loan-desk')
     $dataTarget = Join-Path $labRoot 'data'
     $checkpointsTarget = Join-Path $labRoot 'checkpoints'
-    $skillTarget = [IO.Path]::Combine($copilotHome, 'skills', 'lab-check-setup')
+    $skillsRoot = Join-Path $copilotHome 'skills'
+    $skills = @('check-setup')
+    # Skills from earlier updates that were renamed or removed.
+    $oldSkills = @('lab-check-setup')
     $settingsPath = Join-Path $copilotHome 'settings.json'
     $versionPath = Join-Path $labRoot 'lab-files.json'
 
@@ -95,7 +98,7 @@ __PAYLOAD_BASE64__
             Add-Result 'Rayfin template' $templateTarget 'FAILED' $unpackError
             Add-Result 'Lab data' $dataTarget 'FAILED' $unpackError
             Add-Result 'Checkpoints' $checkpointsTarget 'FAILED' $unpackError
-            Add-Result 'lab-check-setup skill' $skillTarget 'FAILED' $unpackError
+            foreach ($skill in $skills) { Add-Result "$skill skill" (Join-Path $skillsRoot $skill) 'FAILED' $unpackError }
         } else {
             Invoke-Update 'Rayfin template' $templateTarget {
                 "$(Copy-Folder ([IO.Path]::Combine($staging, 'template', 'home-loan-desk')) $templateTarget) files"
@@ -109,8 +112,17 @@ __PAYLOAD_BASE64__
             Invoke-Update 'Checkpoints' $checkpointsTarget {
                 "$(Copy-Folder (Join-Path $staging 'checkpoints') $checkpointsTarget) files (run npm install before use)"
             }
-            Invoke-Update 'lab-check-setup skill' $skillTarget {
-                "$(Copy-Folder ([IO.Path]::Combine($staging, 'skills', 'lab-check-setup')) $skillTarget) files"
+            foreach ($skill in $skills) {
+                $skillTarget = Join-Path $skillsRoot $skill
+                Invoke-Update "$skill skill" $skillTarget {
+                    "$(Copy-Folder ([IO.Path]::Combine($staging, 'skills', $skill)) $skillTarget) files"
+                }
+            }
+            foreach ($skill in $oldSkills) {
+                $oldTarget = Join-Path $skillsRoot $skill
+                if (Test-Path -LiteralPath $oldTarget) {
+                    Invoke-Update "$skill skill" $oldTarget { Remove-Item -LiteralPath $oldTarget -Recurse -Force; 'Removed (replaced by a newer skill)' }
+                }
             }
         }
 
@@ -133,7 +145,7 @@ __PAYLOAD_BASE64__
 
     $failed = @($results | Where-Object { $_.Status -ne 'OK' }).Count
     if ($failed -eq 0) {
-        Write-Host 'All updates succeeded. Restart the GitHub Copilot app, then run /lab-check-setup in a new chat.' -ForegroundColor Green
+        Write-Host 'All updates succeeded. Restart the GitHub Copilot app, then run /check-setup in a new chat.' -ForegroundColor Green
     } else {
         Write-Host "$failed update(s) failed. Fix the cause shown above, then run the same command again." -ForegroundColor Red
     }
