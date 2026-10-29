@@ -9,7 +9,7 @@ All checkpoints run with the same script, [`checkpoint.mjs`](checkpoint.mjs). Pi
 | Command | Completes | Then continue with |
 | --- | --- | --- |
 | `node checkpoint.mjs --to 3` | Exercises 2 and 3: the SQL database, its data, and the semantic model | Exercise 4 |
-| `node checkpoint.mjs --to 4` | Exercises 2 to 4: everything above, plus the Home Loan Operations Desk app, created and deployed | Exercise 5 |
+| `node checkpoint.mjs --to 4` | Exercises 2 to 4: everything above, plus the Rayfin plugin and the Home Loan Operations Desk app, created and deployed | Exercise 5 |
 
 Each checkpoint also completes the ones before it.
 
@@ -27,7 +27,7 @@ The skill never runs on its own: only when you type the command. To run a checkp
 You need:
 
 - Node.js 22 or later. It's already installed on the lab VM.
-- The Fabric workspace from Exercise 1, named `PREL40-homeloans-...`. Checkpoints don't create it.
+- The Fabric workspace from Exercise 1, named `PREL40-homeloans-...`. If you haven't created it yet, pass `--workspace <name>` and the checkpoint creates it, like Exercise 1 does. See [Checkpoint 3](#checkpoint-3-database-and-semantic-model).
 
 On the lab VM, the checkpoints are in `C:\LabFiles\checkpoints`. Open a terminal there and install the dependencies once:
 
@@ -50,6 +50,7 @@ node checkpoint.mjs --to 3
 
 In your workspace, the checkpoint:
 
+1. Finds your workspace: the one whose name starts with `PREL40-homeloans`, or the one you pass with `--workspace`. If no workspace has the name you pass, it creates it on your Fabric capacity, like Exercise 1 does. For example, `node checkpoint.mjs --to 3 --workspace PREL40-homeloans-1234567`.
 1. Creates the **CaldovaHomeLoans** SQL database, or reuses it if it exists.
 1. Runs `portfolio-seed.sql` and checks the number of applications in each stage.
 1. Waits for the four tables to replicate to OneLake.
@@ -71,6 +72,7 @@ node checkpoint.mjs --to 4
 
 The checkpoint does everything in checkpoint 3, then:
 
+1. Installs the **rayfin** plugin from the **awesome-copilot** marketplace in the GitHub Copilot app, or enables it if it's disabled. It uses the Copilot CLI (`copilot plugin install rayfin@awesome-copilot`), or runs it with `npx` if the CLI isn't installed.
 1. Creates the **home-loan-desk** Rayfin app in your user profile folder (`%USERPROFILE%\home-loan-desk` on the VM) from the lab template in `C:\LabFiles\template\home-loan-desk`, and installs its dependencies.
 1. Initializes a Git repository and makes an initial commit.
 1. Signs you in to Rayfin. If you aren't signed in yet, a browser window opens: pick your lab account.
@@ -78,17 +80,19 @@ The checkpoint does everything in checkpoint 3, then:
 
 If the app folder already exists, the checkpoint keeps it as is and only deploys it again. It takes about five minutes the first time. When it ends with **Done**, it shows the hosted app URL. Before you continue with Exercise 5, do these steps from Exercise 4 in the GitHub Copilot app:
 
+1. If the checkpoint installed the plugin, restart the app so it loads it.
 1. Add the `home-loan-desk` folder as a project.
 1. Create a new session in the **home-loan-desk** project, and change **New worktree** to **Current checkout**.
 
-You don't need the Rayfin plugin from Exercise 4: once the app exists, the agent uses the Rayfin skills inside the project.
+If the plugin install fails, the checkpoint shows a warning and deploys the app anyway. Install the plugin from the app, as in Exercise 4, Task 1.
 
 ## Options
 
 | Option | What it does |
 | --- | --- |
 | `--to <checkpoint>` | Required. How far to go: `3` or `4`. |
-| `-w`, `--workspace <name\|id>` | Use this workspace. By default, the checkpoint picks the one workspace whose name starts with `PREL40-homeloans`. |
+| `-w`, `--workspace <name\|id>` | Use this workspace, or create it if no workspace has this name. By default, the checkpoint picks the one workspace whose name starts with `PREL40-homeloans`. |
+| `--capacity <name\|id>` | Create the workspace on this capacity. By default, the checkpoint uses your one active Fabric capacity, and stops if you have several. |
 | `-t`, `--tenant <id>` | Sign in to this Microsoft Entra tenant. Use it when your Azure CLI default tenant isn't the lab tenant. |
 | `--app-dir <path>` | Create or reuse the app in this folder (checkpoint 4). By default, it's `home-loan-desk` in your user profile folder. |
 | `--sql <path>` | Use another seed script. By default, the checkpoint uses `../data/portfolio-seed.sql` on the VM or `data/portfolio-seed.sql` in the repository. |

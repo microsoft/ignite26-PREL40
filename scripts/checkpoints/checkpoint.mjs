@@ -2,15 +2,17 @@
 // PREL40 lab checkpoints: does the lab exercises for you, so attendees who are behind can catch up,
 // and testers or attendees can jump straight to a later part of the lab.
 //
-//   --to 3  Exercises 2 and 3, in the Fabric workspace you created in Exercise 1:
+//   --to 3  Exercises 2 and 3, in the Fabric workspace you created in Exercise 1
+//           (or in a new one: pass --workspace <name> and the script creates it on your Fabric capacity):
 //           1. creates the CaldovaHomeLoans SQL database (or reuses it) and runs portfolio-seed.sql,
 //           2. creates the CaldovaPortfolio Direct Lake semantic model from ./CaldovaPortfolio.SemanticModel
 //              (or updates it), then refreshes it,
 //           3. checks the measures against the reference values in manifest.json.
 //   --to 4  Everything above, then Exercise 4:
-//           4. creates the home-loan-desk Rayfin app from the lab template, with an initial Git commit
+//           4. installs the rayfin plugin from the awesome-copilot marketplace in the GitHub Copilot app,
+//           5. creates the home-loan-desk Rayfin app from the lab template, with an initial Git commit
 //              (or reuses the folder if it already exists),
-//           5. signs in to Rayfin and deploys the app to the workspace, then checks the hosted URL.
+//           6. signs in to Rayfin and deploys the app to the workspace, then checks the hosted URL.
 //
 // Usage: npm install, then node checkpoint.mjs --to <3|4> [options]. Run with --help for the options.
 // Sign-in: uses the Azure CLI if you're signed in with `az login`, otherwise opens a browser.
@@ -31,6 +33,7 @@ const TABLES = ['Branch', 'Date', 'LoanApplication', 'LoanProduct'];
 const OPEN_EXCLUDED_STAGES = ['Closed', 'Withdrawn'];
 const APP_NAME = 'home-loan-desk';
 const RAYFIN_CLI = '@microsoft/rayfin-cli@1.36.2';
+const RAYFIN_PLUGIN = 'rayfin@awesome-copilot';
 const CHECKPOINTS = {
   3: { label: 'Exercises 2 and 3', next: 'Exercise 4' },
   4: { label: 'Exercises 2 to 4', next: 'Exercise 5' },
@@ -157,23 +160,55 @@ async function listAll(getToken, url) {
 // ---------------------------------------------------------------------------
 // Workspace
 
-async function resolveWorkspace(getToken, wanted) {
+async function resolveWorkspace(getToken, wanted, capacity) {
   const workspaces = (await listAll(getToken, `${FABRIC_API}/workspaces`)).filter((ws) => ws.type === 'Workspace');
   let matches;
   if (wanted && isGuid(wanted)) matches = workspaces.filter((ws) => ws.id.toLowerCase() === wanted.toLowerCase());
   else if (wanted) matches = workspaces.filter((ws) => ws.displayName.toLowerCase() === wanted.toLowerCase());
   else matches = workspaces.filter((ws) => ws.displayName.toLowerCase().startsWith(WORKSPACE_PREFIX.toLowerCase()));
 
-  if (matches.length === 1) return matches[0];
+  if (matches.length === 1) {
+    log(`Using workspace ${matches[0].displayName} (${matches[0].id}).`);
+    return matches[0];
+  }
+  if (matches.length === 0 && wanted && !isGuid(wanted)) return createWorkspace(getToken, wanted, capacity);
   const visible = workspaces.map((ws) => `  ${ws.displayName} (${ws.id})`).join('\n') || '  (none)';
   if (matches.length === 0) {
     const what = wanted ? `"${wanted}"` : `a name starting with ${WORKSPACE_PREFIX}`;
     throw new UserError(
-      `No workspace found with ${what}. Create it in Exercise 1, or pass --workspace.\n` +
+      `No workspace found with ${what}. Create it in Exercise 1, or pass --workspace <name> to create it.\n` +
         `If you signed in to the wrong tenant, pass --tenant <tenant-id>.\nWorkspaces you can see:\n${visible}`,
     );
   }
   throw new UserError(`Several workspaces match. Pass --workspace <name|id>:\n${matches.map((ws) => `  ${ws.displayName} (${ws.id})`).join('\n')}`);
+}
+
+// Like the portal, put the new workspace on the Fabric capacity you can use. Premium Per User capacities
+// (PP SKUs) can't hold Fabric items, so only F SKUs (including trials, FT) count.
+async function pickCapacity(getToken, wanted) {
+  const capacities = await listAll(getToken, `${FABRIC_API}/capacities`);
+  const describe = (list) => list.map((c) => `  ${c.displayName} (${c.id}, ${c.sku}, ${c.region}, ${c.state})`).join('\n') || '  (none)';
+  if (wanted) {
+    const match = capacities.find((c) => c.id.toLowerCase() === wanted.toLowerCase() || c.displayName.toLowerCase() === wanted.toLowerCase());
+    if (!match) throw new UserError(`No capacity found with "${wanted}". Capacities you can use:\n${describe(capacities)}`);
+    return match;
+  }
+  const fabric = capacities.filter((c) => c.state === 'Active' && /^F/i.test(c.sku));
+  if (fabric.length === 1) return fabric[0];
+  if (fabric.length === 0) {
+    throw new UserError(`No active Fabric capacity found to create the workspace on. Capacities you can use:\n${describe(capacities)}`);
+  }
+  throw new UserError(`Several Fabric capacities are available. Pass --capacity <name|id>:\n${describe(fabric)}`);
+}
+
+async function createWorkspace(getToken, name, capacityName) {
+  const capacity = await pickCapacity(getToken, capacityName);
+  log(`Creating workspace ${name} on capacity ${capacity.displayName} (${capacity.sku}, ${capacity.region})...`);
+  const { json } = await request(getToken, 'POST', `${FABRIC_API}/workspaces`, {
+    body: { displayName: name, capacityId: capacity.id },
+  });
+  log(`Created workspace ${json.displayName} (${json.id}).`);
+  return json;
 }
 
 async function findItem(getToken, workspaceId, type, name) {
@@ -470,6 +505,40 @@ function prepareTemplate() {
   return { path, cleanup: () => rmSync(tempRoot, { recursive: true, force: true }) };
 }
 
+// Exercise 4, Task 1 installs the Rayfin plugin from the awesome-copilot marketplace in the GitHub Copilot app.
+// The Copilot CLI shares the app's plugins (~/.copilot, or COPILOT_HOME), so install it with the CLI.
+// Returns true when the app needs a restart to load the plugin.
+async function installRayfinPlugin() {
+  // On Windows the shell reports a missing command as a plain failure, so probe it instead of relying on ENOENT.
+  const hasCopilot = await runCommand('copilot', ['--version'], { capture: true }).then(
+    () => true,
+    () => false,
+  );
+  const copilot = (args, options) =>
+    hasCopilot ? runCommand('copilot', args, options) : runCommand('npx', ['--yes', '@github/copilot', ...args], options);
+  try {
+    const installed = await copilot(['plugin', 'list'], { capture: true });
+    const line = installed.split('\n').find((entry) => /^\W*rayfin@awesome-copilot\b/i.test(entry));
+    if (line && /\[disabled\]/i.test(line)) {
+      log('The rayfin plugin is installed but disabled; enabling it...');
+      await copilot(['plugin', 'enable', RAYFIN_PLUGIN], { capture: true });
+      return true;
+    }
+    if (line) {
+      log('The rayfin plugin is already installed.');
+      return false;
+    }
+    log(`Installing the ${RAYFIN_PLUGIN} plugin...`);
+    await copilot(['plugin', 'install', RAYFIN_PLUGIN], { capture: true });
+    log(`  PASS  ${RAYFIN_PLUGIN} installed`);
+    return true;
+  } catch (error) {
+    log(`  WARN  Couldn't install the rayfin plugin: ${error.message}`);
+    log(`        Install it from the GitHub Copilot app (Exercise 4, Task 1), or run: copilot plugin install ${RAYFIN_PLUGIN}`);
+    return false;
+  }
+}
+
 async function createApp(appDir) {
   if (existsSync(join(appDir, 'rayfin', 'rayfin.yml'))) {
     log(`${appDir} already exists; reusing it.`);
@@ -551,6 +620,7 @@ async function main() {
     options: {
       to: { type: 'string' },
       workspace: { type: 'string', short: 'w' },
+      capacity: { type: 'string' },
       tenant: { type: 'string', short: 't' },
       'app-dir': { type: 'string' },
       sql: { type: 'string' },
@@ -564,7 +634,8 @@ async function main() {
     log('Does the lab exercises for you, up to the checkpoint you pick:');
     for (const [id, { label, next }] of Object.entries(CHECKPOINTS)) log(`  --to ${id}  ${label}; then continue with ${next}`);
     log('');
-    log(`  -w, --workspace <name|id>  Fabric workspace. Default: the one workspace named ${WORKSPACE_PREFIX}*`);
+    log(`  -w, --workspace <name|id>  Fabric workspace, created if no workspace has this name. Default: the one workspace named ${WORKSPACE_PREFIX}*`);
+    log('      --capacity <name|id>   Capacity for a new workspace. Default: your one active Fabric capacity');
     log('  -t, --tenant <id>          Microsoft Entra tenant to sign in to. Default: your Azure CLI or browser default');
     log(`      --app-dir <path>       App folder (--to 4). Default: ${join(homedir(), APP_NAME)}`);
     log('      --sql <path>           Seed script. Default: ../data/portfolio-seed.sql');
@@ -583,8 +654,7 @@ async function main() {
   const getToken = createTokenProvider(values.tenant);
 
   step('Signing in and finding your workspace');
-  const workspace = await resolveWorkspace(getToken, values.workspace);
-  log(`Using workspace ${workspace.displayName} (${workspace.id}).`);
+  const workspace = await resolveWorkspace(getToken, values.workspace, values.capacity);
 
   step('Exercise 2: SQL database');
   const database = await ensureDatabase(getToken, workspace.id);
@@ -606,10 +676,12 @@ async function main() {
     `  Semantic model: ${portal}/groups/${workspace.id}/semanticmodels/${modelId}`,
   ];
 
+  let restartApp = false;
   if (to >= 4) {
     step('Exercise 4: Home Loan Operations Desk app');
     const claims = tokenClaims(await getToken(SCOPES.fabric));
     const tenantId = values.tenant ?? claims.tid;
+    restartApp = await installRayfinPlugin();
     await createApp(appDir);
     await rayfinSignIn(appDir, tenantId, claims.upn ?? claims.unique_name ?? claims.preferred_username);
     log('Deploying the app (the first deployment takes a few minutes)...');
@@ -621,8 +693,10 @@ async function main() {
   for (const link of links) log(link);
   if (to >= 4) {
     log('\nBefore you continue, in the GitHub Copilot app:');
-    log(`  1. Add the ${appDir} folder as a project.`);
-    log('  2. Create a new session in the home-loan-desk project, and change New worktree to Current checkout.');
+    let n = 1;
+    if (restartApp) log(`  ${n++}. Restart the app so it loads the rayfin plugin.`);
+    log(`  ${n++}. Add the ${appDir} folder as a project.`);
+    log(`  ${n++}. Create a new session in the home-loan-desk project, and change New worktree to Current checkout.`);
   }
   log(`\nThen continue with ${checkpoint.next}.`);
 }

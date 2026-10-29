@@ -12,7 +12,7 @@ Checkpoints complete earlier lab exercises in one run, so the user can catch up 
 | Checkpoint | Completes | Then continue with |
 | --- | --- | --- |
 | `3` | Exercises 2 and 3: the CaldovaHomeLoans SQL database with its data, and the CaldovaPortfolio semantic model | Exercise 4 |
-| `4` | Exercises 2 to 4: everything in checkpoint 3, plus the home-loan-desk app, created in `%USERPROFILE%\home-loan-desk` and deployed | Exercise 5 |
+| `4` | Exercises 2 to 4: everything in checkpoint 3, plus the rayfin plugin and the home-loan-desk app, created in `%USERPROFILE%\home-loan-desk` and deployed | Exercise 5 |
 
 ## /lab-checkpoint list
 
@@ -25,7 +25,7 @@ Reply with the table above, then: "Run `/lab-checkpoint <checkpoint>` to set the
 1. Ask the user to confirm with the ask_user tool, with the choices "Yes, run it" and "No, cancel". In the question, say:
    - which exercises the checkpoint completes,
    - that it resets the portfolio data and replaces the semantic model, so changes made to them by hand are lost,
-   - for checkpoint 4: that it creates the app in `%USERPROFILE%\home-loan-desk`, or deploys it again if the folder already exists,
+   - for checkpoint 4: that it installs the rayfin plugin, and creates the app in `%USERPROFILE%\home-loan-desk`, or deploys it again if the folder already exists,
    - that a browser window may open to sign in: pick the lab account,
    - that it takes a few minutes.
 
@@ -38,12 +38,14 @@ Reply with the table above, then: "Run `/lab-checkpoint <checkpoint>` to set the
    ```
 
 3. If it fails:
-   - With "No workspace found" or "Several workspaces match": show the workspaces it lists, ask the user which one is their lab workspace, and run the same command again with `--workspace "<name>"` added.
+   - With "No workspace found" or "Several workspaces match": show the workspaces it lists, and ask the user which one is their lab workspace, or which name to give a new one. Exercise 1 names it `PREL40-homeloans-<lab instance ID>`, as shown in the lab instructions. Run the same command again with `--workspace "<name>"` added: if no workspace has that name, the script creates it.
+   - With "Several Fabric capacities": show the capacities it lists, ask the user which one to use, and run the same command again with `--capacity "<name>"` added.
    - With anything else: show the error line, and say "Run `/lab-checkpoint <checkpoint>` again, or ask a lab proctor for help." Stop there.
 
-4. When it ends with **Done**, reply with a short summary and the links it printed. For checkpoint 4:
+4. When it ends with **Done**, reply with a short summary and the links it printed. If it printed a WARN line for the plugin, tell the user to install the rayfin plugin from the app, as in Exercise 4, Task 1. For checkpoint 4:
    - Offer to add the app folder as a project in the GitHub Copilot app, and do it if the user agrees.
    - Tell the user to create a new session in the **home-loan-desk** project, and change **New worktree** to **Current checkout**.
+   - If it says to restart the app, tell the user to restart the GitHub Copilot app first, so it loads the rayfin plugin.
 
    End with: "Continue with <exercise> in the lab instructions."
 
