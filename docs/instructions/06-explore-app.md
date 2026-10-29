@@ -94,7 +94,4 @@ Now look at the app the way a loan officer at Caldova Home Loans would see it.
 
 1. In the **Handoff brief** panel, notice that **Generate handoff brief** is disabled. You build this AI feature in a later exercise, and it will flag this kind of contradiction for you.
 
-    > [!NOTE]
-    > All applicants, amounts, and documents are fictional.
-
 Select **Next →** to connect your semantic model and add portfolio analytics to the app.
