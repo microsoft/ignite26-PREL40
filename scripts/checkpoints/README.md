@@ -57,10 +57,10 @@ In your workspace, the checkpoint:
 1. Creates the **CaldovaPortfolio** Direct Lake semantic model, or updates it if it exists. The model matches Exercise 3: four tables, three relationships, a marked date table, and the four measures with their formats and descriptions.
 1. Refreshes the model and runs the Exercise 3 DAX checks against the reference values.
 
-It takes about two minutes on a new workspace, and under a minute when you run it again. When it ends with **Done**, continue with Exercise 4.
+It takes about two minutes on a new workspace. When it ends with **Done**, continue with Exercise 4.
 
 > [!NOTE]
-> You can run the checkpoint again, even after doing some of the steps by hand. The seed script drops and re-creates the tables, which resets the portfolio data. The semantic model is replaced with the one in this folder, so any edits you made to it in the browser are lost.
+> You can run the checkpoint after doing some of the steps by hand: it skips what's already in place. If the stage counts or the measures don't match the lab, it runs the seed script again, which resets the portfolio data, or replaces the semantic model with the one in this folder, which loses any edits you made to it in the browser.
 
 ## Checkpoint 4: the app, created and deployed
 
@@ -78,13 +78,28 @@ The checkpoint does everything in checkpoint 3, then:
 1. Signs you in to Rayfin. If you aren't signed in yet, a browser window opens: pick your lab account. If Rayfin can't use the OS keychain to store its sign-in tokens, the checkpoint retries with `--encryption-fallback-enabled`, which stores them in a plain file instead.
 1. Deploys the app to your workspace and checks that the hosted app responds.
 
-If the app folder already exists, the checkpoint keeps it as is and only deploys it again. It takes about five minutes the first time. When it ends with **Done**, it shows the hosted app URL. Before you continue with Exercise 5, do these steps from Exercise 4 in the GitHub Copilot app:
+If the app folder already exists, the checkpoint keeps it as is, and deploys it again only if it has new commits since the last deployment. It takes about five minutes the first time. When it ends with **Done**, it shows the hosted app URL. Before you continue with Exercise 5, do these steps from Exercise 4 in the GitHub Copilot app:
 
 1. If the checkpoint installed the plugin, restart the app so it loads it.
 1. Add the `home-loan-desk` folder as a project.
 1. Create a new session in the **home-loan-desk** project, and change **New worktree** to **Current checkout**.
 
 If the plugin install fails, the checkpoint shows a warning and deploys the app anyway. Install the plugin from the app, as in Exercise 4, Task 1.
+
+## Run a checkpoint again
+
+Each run saves its progress in `.state.json`, next to the script, for each workspace. When you run a checkpoint again:
+
+- If the workspace is already at that checkpoint, the script shows the links and stops: `Already at checkpoint 4 in this workspace: nothing to do.` For checkpoint 4, that's only if the app folder is the same and has no new commits since the last deployment.
+- Otherwise, it skips the steps done in an earlier run, and starts from the first step that isn't done. For example, after `--to 3`, `--to 4` starts with the Rayfin plugin.
+- Steps that aren't in `.state.json` yet, for example because you did them by hand, are checked: the script skips them if the result already matches the lab.
+
+The state file is local: it doesn't notice changes made in the browser or in another folder. To run steps again anyway:
+
+- `--redo <step,...>` runs the steps you list, even if they're done. The steps are `database`, `seed`, `model`, `plugin`, `app` and `deploy`. For example, `--redo seed` resets the portfolio data, and then refreshes the semantic model. `--redo database` and `--redo app` reuse the database or app folder if it exists: they never delete anything.
+- `--force` runs every step up to the checkpoint, as if it were the first run.
+
+To start over in a workspace, delete its entry from `.state.json`, or delete the file. The VM update keeps the file.
 
 ## Options
 
@@ -97,6 +112,8 @@ If the plugin install fails, the checkpoint shows a warning and deploys the app 
 | `--app-dir <path>` | Create or reuse the app in this folder (checkpoint 4). By default, it's `home-loan-desk` in your user profile folder. |
 | `--sql <path>` | Use another seed script. By default, the checkpoint uses `../data/portfolio-seed.sql` on the VM or `data/portfolio-seed.sql` in the repository. |
 | `--skip-seed` | Keep the existing data and only deploy and check the semantic model. |
+| `--redo <step,...>` | Run these steps again, even if an earlier run did them: `database`, `seed`, `model`, `plugin`, `app`, `deploy`. See [Run a checkpoint again](#run-a-checkpoint-again). |
+| `--force` | Run every step again, as if it were the first run. |
 | `-h`, `--help` | Show the checkpoints and options. |
 
 ## For lab authors
@@ -112,6 +129,6 @@ Checkpoint 4 runs `rayfin init` from the lab template with the Rayfin CLI versio
 ### Add a checkpoint
 
 - Add an entry to `CHECKPOINTS` in [`checkpoint.mjs`](checkpoint.mjs) and a stage in `main()` that runs after the earlier ones. Add a row and section for it in this README, and a row to the table in the [`/lab-checkpoint` skill](../vm-skills/lab-checkpoint/SKILL.md).
-- Make it safe to run again, whether the attendee did none, some, or all of the steps by hand.
+- Add its steps to `STEPS`, and give each one a check, so a run with no state skips what's already done. Make it safe to run again, whether the attendee did none, some, or all of the steps by hand.
 - End with a check that proves the result matches the instructions, and say which exercise to continue with.
 - Everything in this folder (except `node_modules`) ships to `C:\LabFiles\checkpoints` with the VM update. If a checkpoint needs files from elsewhere in the repository, add them to `GROUPS` in [`publish-vm-update.mjs`](../publish-vm-update.mjs).

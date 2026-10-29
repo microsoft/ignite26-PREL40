@@ -20,7 +20,7 @@
 
 import { AzureCliCredential, ChainedTokenCredential, InteractiveBrowserCredential } from '@azure/identity';
 import { execFileSync, spawn } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -56,7 +56,8 @@ const modelDir = join(scriptDir, `${MODEL_NAME}.SemanticModel`);
 class UserError extends Error {}
 class RefreshError extends UserError {}
 
-const log = (message = '') => process.stderr.write(`${message}\n`);
+const logLine = (message = '') => process.stderr.write(`${message}\n`);
+const log = logLine;
 const step = (message) => log(`\n> ${message}`);
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const isGuid = (value) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
@@ -280,10 +281,30 @@ async function seedDatabase(getToken, database, seedSql, manifest) {
     }
   }
   const counts = Object.fromEntries(rows.map((row) => [row.CurrentStage, row.Applications]));
-  const mismatches = manifest.byStage.filter(({ stage, applications }) => counts[stage] !== applications);
+  const mismatches = stageMismatches(rows, manifest);
   for (const { stage } of manifest.byStage) log(`  ${stage.padEnd(20)} ${String(counts[stage] ?? '-').padStart(3)}`);
-  if (mismatches.length > 0) throw new UserError(`Seed counts don't match manifest.json for: ${mismatches.map((m) => m.stage).join(', ')}`);
+  if (mismatches.length > 0) throw new UserError(`Seed counts don't match manifest.json for: ${mismatches.join(', ')}`);
   log('Seeded 200 applications. Stage counts match the reference.');
+}
+
+function stageMismatches(rows, manifest) {
+  const counts = Object.fromEntries(rows.map((row) => [row.CurrentStage, row.Applications]));
+  const extra = rows.filter((row) => !manifest.byStage.some(({ stage }) => stage === row.CurrentStage)).map((row) => row.CurrentStage);
+  return [...manifest.byStage.filter(({ stage, applications }) => counts[stage] !== applications).map(({ stage }) => stage), ...extra];
+}
+
+// True when the database already holds the seeded portfolio: the same number of applications in each stage.
+async function isSeeded(getToken, database, manifest) {
+  try {
+    const rows = await runSql(
+      database,
+      await getToken(SCOPES.sql),
+      'SELECT CurrentStage, COUNT(*) AS Applications FROM dbo.LoanApplication GROUP BY CurrentStage',
+    );
+    return stageMismatches(rows, manifest).length === 0;
+  } catch {
+    return false;
+  }
 }
 
 // Every SQL database replicates to OneLake; the semantic model reads that copy.
@@ -399,7 +420,8 @@ SUMMARIZECOLUMNS (
 ORDER BY [Stalled applications] DESC`;
 
 // Returns a list of mismatches; empty when the model returns the reference values.
-async function checkMeasures(getToken, workspaceId, modelId, manifest) {
+async function checkMeasures(getToken, workspaceId, modelId, manifest, { quiet = false } = {}) {
+  const log = quiet ? () => {} : logLine;
   const problems = [];
   const [totals] = await runDax(getToken, workspaceId, modelId, TOTALS_QUERY);
   for (const [measure, expected] of Object.entries(manifest.referenceValues)) {
@@ -615,28 +637,62 @@ async function rayfinSignIn(appDir, tenantId, fabricUser) {
   await runRayfin(['login', '--tenant', tenantId], appDir);
 }
 
-async function deployApp(appDir, workspaceId, tenantId) {
-  await runRayfin(['up', '--workspace-id', workspaceId, '--tenant', tenantId, '--yes'], appDir);
-
+function findDeployment(appDir, workspaceId) {
   const deploymentsPath = join(appDir, 'rayfin', '.deployments.json');
-  const deployments = existsSync(deploymentsPath) ? JSON.parse(readFileSync(deploymentsPath, 'utf8')).deployments : {};
-  const deployment = Object.values(deployments ?? {}).find((entry) => entry.fabricWorkspaceId === workspaceId);
-  if (!deployment?.hostingUrl) throw new UserError(`The deployment finished, but ${deploymentsPath} has no hosted URL for this workspace.`);
+  if (!existsSync(deploymentsPath)) return undefined;
+  const deployments = JSON.parse(readFileSync(deploymentsPath, 'utf8')).deployments ?? {};
+  return Object.values(deployments).find((entry) => entry.fabricWorkspaceId === workspaceId && entry.hostingUrl);
+}
 
-  // Static hosting is protected, so the app may answer with a redirect to sign in: anything but a server error is fine.
-  for (let attempt = 1; ; attempt++) {
-    const status = await fetch(deployment.hostingUrl, { redirect: 'manual' }).then(
+// Static hosting is protected, so the app may answer with a redirect to sign in: anything but a server error is fine.
+async function isResponding(url, { retries = 0 } = {}) {
+  for (let attempt = 0; ; attempt++) {
+    const status = await fetch(url, { redirect: 'manual' }).then(
       (response) => response.status,
       () => 0,
     );
-    if (status > 0 && status < 500) {
-      log(`  PASS  ${deployment.hostingUrl} responds (${status})`);
-      return deployment;
-    }
-    if (attempt === 6) throw new UserError(`The app was deployed, but ${deployment.hostingUrl} doesn't respond (${status || 'no response'}).`);
+    if (status > 0 && status < 500) return status;
+    if (attempt >= retries) return false;
     log(`  The app isn't responding yet (${status || 'no response'}). Trying again in 10 seconds...`);
     await sleep(10000);
   }
+}
+
+async function deployApp(appDir, workspaceId, tenantId) {
+  await runRayfin(['up', '--workspace-id', workspaceId, '--tenant', tenantId, '--yes'], appDir);
+  const deployment = findDeployment(appDir, workspaceId);
+  if (!deployment) throw new UserError(`The deployment finished, but rayfin/.deployments.json in ${appDir} has no hosted URL for this workspace.`);
+  const status = await isResponding(deployment.hostingUrl, { retries: 5 });
+  if (!status) throw new UserError(`The app was deployed, but ${deployment.hostingUrl} doesn't respond.`);
+  log(`  PASS  ${deployment.hostingUrl} responds (${status})`);
+  return deployment;
+}
+
+const gitHead = (appDir) => runCommand('git', ['rev-parse', 'HEAD'], { cwd: appDir, capture: true }).catch(() => undefined);
+
+// ---------------------------------------------------------------------------
+// Progress, saved next to the script for each workspace, so a later run skips the steps already done.
+
+const STATE_PATH = join(scriptDir, '.state.json');
+const STEPS = [
+  { name: 'database', checkpoint: 3, label: 'Exercise 2: SQL database' },
+  { name: 'seed', checkpoint: 3, label: 'Exercise 2: portfolio data' },
+  { name: 'model', checkpoint: 3, label: 'Exercise 3: semantic model' },
+  { name: 'plugin', checkpoint: 4, label: 'Exercise 4: Rayfin plugin' },
+  { name: 'app', checkpoint: 4, label: 'Exercise 4: home-loan-desk app' },
+  { name: 'deploy', checkpoint: 4, label: 'Exercise 4: deployment' },
+];
+
+function loadState() {
+  try {
+    return JSON.parse(readFileSync(STATE_PATH, 'utf8'));
+  } catch {
+    return { workspaces: {} };
+  }
+}
+
+function saveState(state) {
+  writeFileSync(STATE_PATH, `${JSON.stringify(state, null, 2)}\n`);
 }
 
 // ---------------------------------------------------------------------------
@@ -651,6 +707,8 @@ async function main() {
       'app-dir': { type: 'string' },
       sql: { type: 'string' },
       'skip-seed': { type: 'boolean', default: false },
+      force: { type: 'boolean', default: false },
+      redo: { type: 'string' },
       help: { type: 'boolean', short: 'h' },
     },
   });
@@ -660,12 +718,16 @@ async function main() {
     log('Does the lab exercises for you, up to the checkpoint you pick:');
     for (const [id, { label, next }] of Object.entries(CHECKPOINTS)) log(`  --to ${id}  ${label}; then continue with ${next}`);
     log('');
+    log('Steps already done in an earlier run are skipped. Steps: ' + STEPS.map((s) => s.name).join(', '));
+    log('');
     log(`  -w, --workspace <name|id>  Fabric workspace, created if no workspace has this name. Default: the one workspace named ${WORKSPACE_PREFIX}*`);
     log('      --capacity <name|id>   Capacity for a new workspace. Default: your one active Fabric capacity');
     log('  -t, --tenant <id>          Microsoft Entra tenant to sign in to. Default: your Azure CLI or browser default');
     log(`      --app-dir <path>       App folder (--to 4). Default: ${join(homedir(), APP_NAME)}`);
     log('      --sql <path>           Seed script. Default: ../data/portfolio-seed.sql');
     log('      --skip-seed            Keep the existing database data; only deploy and check the semantic model');
+    log('      --redo <step,...>      Run these steps again, even if they were done before');
+    log('      --force                Run every step again, ignoring earlier runs');
   };
   if (values.help) return usage();
   const checkpoint = CHECKPOINTS[values.to];
@@ -675,48 +737,151 @@ async function main() {
   }
   const to = Number(values.to);
   const appDir = resolve(values['app-dir'] ?? join(homedir(), APP_NAME));
+  const redo = new Set((values.redo ?? '').split(',').map((name) => name.trim().toLowerCase()).filter(Boolean));
+  const unknown = [...redo].filter((name) => !STEPS.some((s) => s.name === name));
+  if (unknown.length > 0) throw new UserError(`Unknown step for --redo: ${unknown.join(', ')}. Steps: ${STEPS.map((s) => s.name).join(', ')}`);
 
   const { seedPath, seedSql, manifest } = loadInputs(values.sql);
   const getToken = createTokenProvider(values.tenant);
 
   step('Signing in and finding your workspace');
   const workspace = await resolveWorkspace(getToken, values.workspace, values.capacity);
-
-  step('Exercise 2: SQL database');
-  const database = await ensureDatabase(getToken, workspace.id);
-  if (values['skip-seed']) log('Skipped seeding (--skip-seed).');
-  else {
-    log(`Running ${seedPath}...`);
-    await seedDatabase(getToken, database, seedSql, manifest);
-  }
-  await waitForReplication(getToken, workspace.id, database.id);
-
-  step('Exercise 3: semantic model');
-  const modelId = await deployModel(getToken, workspace.id, database.id);
-  log('Refreshing and checking the measures...');
-  await refreshAndCheck(getToken, workspace.id, modelId, manifest);
+  const state = loadState();
+  state.workspaces ??= {};
+  const progress = (state.workspaces[workspace.id] ??= { name: workspace.displayName, checkpoint: 0, steps: {} });
+  progress.name = workspace.displayName;
+  const record = (name, data = {}) => {
+    progress.steps[name] = { ...data, at: new Date().toISOString() };
+    saveState(state);
+  };
+  const forget = (name) => {
+    delete progress.steps[name];
+    saveState(state);
+  };
 
   const portal = 'https://app.fabric.microsoft.com';
-  const links = [
-    `  SQL database:   ${portal}/groups/${workspace.id}/sqldatabases/${database.id}`,
-    `  Semantic model: ${portal}/groups/${workspace.id}/semanticmodels/${modelId}`,
-  ];
+  const printLinks = () => {
+    const { database, model, app, deploy } = progress.steps;
+    if (database?.id) log(`  SQL database:   ${portal}/groups/${workspace.id}/sqldatabases/${database.id}`);
+    if (model?.id) log(`  Semantic model: ${portal}/groups/${workspace.id}/semanticmodels/${model.id}`);
+    if (to >= 4 && app?.dir) log(`  App folder:     ${app.dir}`);
+    if (to >= 4 && deploy?.url) log(`  Hosted app:     ${deploy.url}`);
+  };
+
+  // The app is local, so check it's the same folder with no new commits since the last deployment.
+  const appUpToDate =
+    to < 4 ||
+    (progress.steps.app?.dir === appDir &&
+      existsSync(join(appDir, 'rayfin', 'rayfin.yml')) &&
+      progress.steps.deploy?.commit === (await gitHead(appDir)));
+  if (!values.force && redo.size === 0 && progress.checkpoint >= to && appUpToDate) {
+    log(`\nAlready at checkpoint ${progress.checkpoint} in this workspace: nothing to do.`);
+    printLinks();
+    log(`\nContinue with ${checkpoint.next}. To run the steps again, add --redo <step,...> or --force.`);
+    return;
+  }
+  if (progress.checkpoint > 0 && !values.force) log(`An earlier run reached checkpoint ${progress.checkpoint} here: skipping the steps it did.`);
+
+  // A step runs when forced, or when it's neither recorded in the state nor already done according to its check.
+  const steps = Object.fromEntries(STEPS.map((s) => [s.name, s]));
+  const plan = async (name, check) => {
+    if (values.force || redo.has(name)) return true;
+    if (progress.steps[name]) {
+      log('Skipping: done in an earlier run.');
+      return false;
+    }
+    if (check && (await check())) {
+      log('Skipping: already in place.');
+      return false;
+    }
+    return true;
+  };
+
+  let database;
+  const getDatabase = async () => (database ??= await ensureDatabase(getToken, workspace.id));
+
+  step(steps.database.label);
+  if (await plan('database')) record('database', { id: (await getDatabase()).id });
+
+  step(steps.seed.label);
+  let seeded = false;
+  if (values['skip-seed']) log('Skipped seeding (--skip-seed).');
+  else if (await plan('seed', async () => isSeeded(getToken, await getDatabase(), manifest))) {
+    forget('seed');
+    forget('model');
+    log(`Running ${seedPath}...`);
+    await seedDatabase(getToken, await getDatabase(), seedSql, manifest);
+    seeded = true;
+    record('seed');
+  } else if (!progress.steps.seed) record('seed');
+
+  step(steps.model.label);
+  const existingModel = async () => (await findItem(getToken, workspace.id, 'SemanticModel', MODEL_NAME))?.id;
+  let modelId = progress.steps.model?.id;
+  const modelOk = async () => {
+    modelId = await existingModel();
+    if (!modelId) return false;
+    // After a reseed, the refresh below checks the measures.
+    if (seeded) return true;
+    const problems = await checkMeasures(getToken, workspace.id, modelId, manifest, { quiet: true }).catch(() => ['error']);
+    return problems.length === 0;
+  };
+  if (await plan('model', modelOk)) {
+    forget('model');
+    await waitForReplication(getToken, workspace.id, (await getDatabase()).id);
+    modelId = await deployModel(getToken, workspace.id, (await getDatabase()).id);
+    log('Refreshing and checking the measures...');
+    await refreshAndCheck(getToken, workspace.id, modelId, manifest);
+  } else if (seeded) {
+    // New data: the model is fine, but it must pick up the re-created tables.
+    await waitForReplication(getToken, workspace.id, (await getDatabase()).id);
+    modelId ??= await existingModel();
+    log('Refreshing the semantic model for the new data, and checking the measures...');
+    await refreshAndCheck(getToken, workspace.id, modelId, manifest);
+  }
+  if (!progress.steps.model || progress.steps.model.id !== modelId) record('model', { id: modelId });
+  progress.checkpoint = Math.max(progress.checkpoint, 3);
+  saveState(state);
 
   let restartApp = false;
   if (to >= 4) {
-    step('Exercise 4: Home Loan Operations Desk app');
     const claims = tokenClaims(await getToken(SCOPES.fabric));
     const tenantId = values.tenant ?? claims.tid;
-    restartApp = await installRayfinPlugin();
-    await createApp(appDir);
-    await rayfinSignIn(appDir, tenantId, claims.upn ?? claims.unique_name ?? claims.preferred_username);
-    log('Deploying the app (the first deployment takes a few minutes)...');
-    const deployment = await deployApp(appDir, workspace.id, tenantId);
-    links.push(`  App folder:     ${appDir}`, `  Hosted app:     ${deployment.hostingUrl}`);
+
+    step(steps.plugin.label);
+    if (await plan('plugin')) {
+      restartApp = await installRayfinPlugin();
+      record('plugin');
+    }
+
+    step(steps.app.label);
+    const appRecorded = progress.steps.app?.dir === appDir && existsSync(join(appDir, 'rayfin', 'rayfin.yml'));
+    if (values.force || redo.has('app') || !appRecorded) {
+      await createApp(appDir);
+      record('app', { dir: appDir });
+    } else log('Skipping: done in an earlier run.');
+
+    step(steps.deploy.label);
+    const head = await gitHead(appDir);
+    const deployed = progress.steps.deploy;
+    let deployment;
+    if (!values.force && !redo.has('deploy') && deployed?.dir === appDir && deployed.commit === head) {
+      log('Skipping: done in an earlier run, and the app has no new commits since.');
+    } else if (!values.force && !redo.has('deploy') && !deployed && (deployment = findDeployment(appDir, workspace.id)) && (await isResponding(deployment.hostingUrl))) {
+      log(`Skipping: already deployed to ${deployment.hostingUrl}.`);
+      record('deploy', { dir: appDir, commit: head, url: deployment.hostingUrl });
+    } else {
+      await rayfinSignIn(appDir, tenantId, claims.upn ?? claims.unique_name ?? claims.preferred_username);
+      log('Deploying the app (the first deployment takes a few minutes)...');
+      deployment = await deployApp(appDir, workspace.id, tenantId);
+      record('deploy', { dir: appDir, commit: head, url: deployment.hostingUrl });
+    }
+    progress.checkpoint = Math.max(progress.checkpoint, 4);
+    saveState(state);
   }
 
   log(`\nDone. ${checkpoint.label} are set up.`);
-  for (const link of links) log(link);
+  printLinks();
   if (to >= 4) {
     log('\nBefore you continue, in the GitHub Copilot app:');
     let n = 1;

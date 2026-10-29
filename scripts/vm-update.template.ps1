@@ -46,11 +46,18 @@ __PAYLOAD_BASE64__
         @(Get-ChildItem -LiteralPath $Path -Recurse -File -Force).Count
     }
 
-    function Copy-Folder([string]$Source, [string]$Destination) {
+    # Replaces the destination folder; the files named in $Keep survive the update.
+    function Copy-Folder([string]$Source, [string]$Destination, [string[]]$Keep = @()) {
         if (-not (Test-Path -LiteralPath $Source -PathType Container)) { throw "Missing from the package: $Source" }
+        $kept = @{}
+        foreach ($name in $Keep) {
+            $path = Join-Path $Destination $name
+            if (Test-Path -LiteralPath $path -PathType Leaf) { $kept[$name] = [IO.File]::ReadAllBytes($path) }
+        }
         if (Test-Path -LiteralPath $Destination) { Remove-Item -LiteralPath $Destination -Recurse -Force }
         New-Item -ItemType Directory -Force -Path (Split-Path -Parent $Destination) | Out-Null
         Copy-Item -LiteralPath $Source -Destination $Destination -Recurse -Force
+        foreach ($name in $kept.Keys) { [IO.File]::WriteAllBytes((Join-Path $Destination $name), $kept[$name]) }
         Get-FileCount $Destination
     }
 
@@ -110,7 +117,7 @@ __PAYLOAD_BASE64__
                 "portfolio-seed.sql and $samples sample files"
             }
             Invoke-Update 'Checkpoints' $checkpointsTarget {
-                "$(Copy-Folder (Join-Path $staging 'checkpoints') $checkpointsTarget) files (run npm install before use)"
+                "$(Copy-Folder (Join-Path $staging 'checkpoints') $checkpointsTarget @('.state.json')) files (run npm install before use)"
             }
             foreach ($skill in $skills) {
                 $skillTarget = Join-Path $skillsRoot $skill
