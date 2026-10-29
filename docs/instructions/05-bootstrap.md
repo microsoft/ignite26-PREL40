@@ -34,12 +34,12 @@ The lab template is a working, secure starter that we'll use to get faster to th
 
 1. In the GitHub Copilot app, start a new chat.
 
-1. Click on the model picker in the chat area (note that the icon may vary) and enable **Auto** mode.
+1. Click on the model picker in the chat area (note that the icon may vary) and enable **Copilot Fusion** mode.
 
     ![GitHub Copilot App Model Picker](../../img/github-copilot-model-picker.png)
 
     > [!TIP]
-    > Enabling **Auto** mode ensures that the agent uses the appropriate model for the task at hand, improving the accuracy and relevance of its responses. You can optimize the model selection for *Efficiency* to opt for faster responses and lower cost, or *Intelligence* to prioritize more accurate responses at a higher cost. We'll use the default *Balance* setting, which balances speed, cost, and accuracy for most tasks.
+    > **Copilot Fusion** is an intelligent runtime model router and orchestrator. This mode ensures that the agent uses the appropriate model for the task at hand, improving the accuracy and relevance of its responses, while optimizing the cost. Default effort level is *Standard*, which balances speed, cost, and accuracy. You can also opt for *High* or *Max* effort levels for more demanding tasks that require greater accuracy and thoroughness, at the expense of speed and cost.
 
 1. Enter the following prompt, then press **Enter**:
 
@@ -83,9 +83,9 @@ Deploying creates a Fabric App item in your workspace, provisions a managed SQL 
     Workspace URL: <replace with the URL of your Fabric workspace>
     ```
 
-1. Before validating the prompt, open the web browser with the Microsoft Fabric tab, and navigate to your workspace if needed. Copy the URL of your workspace to use in the next step and paste it in the prompt.
+1. Before validating the prompt, open the web browser with the Microsoft Fabric tab, and navigate to your workspace if needed. Copy the URL of your workspace to use in the next step and paste it in the prompt. Press **Enter** to continue.
 
-1. A confirmation dialog will appear at the bottom asking you if you trust the repository. Select **A. Trust repository** to continue.
+1. A confirmation dialog will appear at the bottom asking you if you trust the repository. Select **A. Always trust repository** to continue.
 
 1. When a browser window opens to sign in, select the **@lab.CloudPortalCredential(User1).Username** account.
 
@@ -93,6 +93,9 @@ Deploying creates a Fabric App item in your workspace, provisions a managed SQL 
     > If you're asked for credentials, use the same email and Temporary Access Pass you used in Exercise 1.
 
 1. Wait for the deployment to finish. The first deployment takes a few minutes.
+
+    > [!IMPORTANT]
+    > Rayfin tool may report an error like **Login failed: OS keychain is not available and plaintext token storage is not enabled.** because of the VM environment. If asked, allow the agent to login using plain text credentials storage and retry.
 
 1. Confirm that the agent reports a successful deployment and gives you the URL of the hosted app.
 
