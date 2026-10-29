@@ -75,7 +75,7 @@ The checkpoint does everything in checkpoint 3, then:
 1. Installs the **rayfin** plugin from the **awesome-copilot** marketplace in the GitHub Copilot app, or enables it if it's disabled. It uses the Copilot CLI (`copilot plugin install rayfin@awesome-copilot`), or runs it with `npx` if the CLI isn't installed.
 1. Creates the **home-loan-desk** Rayfin app in your user profile folder (`%USERPROFILE%\home-loan-desk` on the VM) from the lab template in `C:\LabFiles\template\home-loan-desk`, and installs its dependencies.
 1. Initializes a Git repository and makes an initial commit.
-1. Signs you in to Rayfin. If you aren't signed in yet, a browser window opens: pick your lab account.
+1. Signs you in to Rayfin. If you aren't signed in yet, a browser window opens: pick your lab account. If Rayfin can't use the OS keychain to store its sign-in tokens, the checkpoint retries with `--encryption-fallback-enabled`, which stores them in a plain file instead.
 1. Deploys the app to your workspace and checks that the hosted app responds.
 
 If the app folder already exists, the checkpoint keeps it as is and only deploys it again. It takes about five minutes the first time. When it ends with **Done**, it shows the hosted app URL. Before you continue with Exercise 5, do these steps from Exercise 4 in the GitHub Copilot app:

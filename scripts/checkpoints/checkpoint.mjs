@@ -12,7 +12,8 @@
 //           4. installs the rayfin plugin from the awesome-copilot marketplace in the GitHub Copilot app,
 //           5. creates the home-loan-desk Rayfin app from the lab template, with an initial Git commit
 //              (or reuses the folder if it already exists),
-//           6. signs in to Rayfin and deploys the app to the workspace, then checks the hosted URL.
+//           6. signs in to Rayfin and deploys the app to the workspace, then checks the hosted URL
+//              (retrying with plaintext token storage if the OS keychain isn't available).
 //
 // Usage: npm install, then node checkpoint.mjs --to <3|4> [options]. Run with --help for the options.
 // Sign-in: uses the Azure CLI if you're signed in with `az login`, otherwise opens a browser.
@@ -456,25 +457,34 @@ function quote(arg) {
   return process.platform === 'win32' && /[\s"&|<>^]/.test(arg) ? `"${arg.replace(/"/g, '\\"')}"` : arg;
 }
 
-function runCommand(command, args, { cwd, capture = false } = {}) {
+// capture: collect the output instead of showing it. tee: show it and also collect it.
+function runCommand(command, args, { cwd, capture = false, tee = false } = {}) {
   return new Promise((done, fail) => {
     const windows = process.platform === 'win32';
     const child = spawn(command, windows ? args.map(quote) : args, {
       cwd,
       shell: windows,
-      stdio: capture ? ['ignore', 'pipe', 'pipe'] : 'inherit',
+      stdio: capture ? ['ignore', 'pipe', 'pipe'] : tee ? ['inherit', 'pipe', 'pipe'] : 'inherit',
     });
     let output = '';
-    if (capture) {
-      child.stdout.on('data', (chunk) => (output += chunk));
-      child.stderr.on('data', (chunk) => (output += chunk));
+    if (capture || tee) {
+      child.stdout.on('data', (chunk) => {
+        output += chunk;
+        if (tee) process.stdout.write(chunk);
+      });
+      child.stderr.on('data', (chunk) => {
+        output += chunk;
+        if (tee) process.stderr.write(chunk);
+      });
     }
     child.on('error', (error) =>
       fail(error.code === 'ENOENT' ? new UserError(`${command} is not installed or not on PATH.`) : error),
     );
     child.on('close', (code) => {
-      if (code === 0) done(output.trim());
-      else fail(new UserError(`${command} ${args.join(' ')} failed (exit code ${code}).${capture && output ? `\n${output.trim()}` : ''}`));
+      if (code === 0) return done(output.trim());
+      const error = new UserError(`${command} ${args.join(' ')} failed (exit code ${code}).${capture && output ? `\n${output.trim()}` : ''}`);
+      error.output = output;
+      fail(error);
     });
   });
 }
@@ -573,6 +583,22 @@ async function createApp(appDir) {
   await runCommand('git', ['commit', '--quiet', '-m', 'Initial commit from the lab template'], { cwd: appDir });
 }
 
+// Without an OS keychain, Rayfin refuses to store its tokens unless plaintext storage is allowed. Allow it then,
+// and keep it for the next Rayfin commands.
+let rayfinPlaintextTokens = false;
+async function runRayfin(args, appDir) {
+  const run = () =>
+    runCommand('npx', ['rayfin', ...args, ...(rayfinPlaintextTokens ? ['--encryption-fallback-enabled'] : [])], { cwd: appDir, tee: true });
+  try {
+    return await run();
+  } catch (error) {
+    if (rayfinPlaintextTokens || !/OS keychain is not available/i.test(error.output ?? '')) throw error;
+    log('No OS keychain is available, so trying again with plaintext token storage (--encryption-fallback-enabled)...');
+    rayfinPlaintextTokens = true;
+    return run();
+  }
+}
+
 async function rayfinSignIn(appDir, tenantId, fabricUser) {
   const status = await runCommand('npx', ['rayfin', 'login', 'status'], { cwd: appDir, capture: true }).catch(() => '');
   const field = (name) => status.match(new RegExp(`^\\s*${name}:\\s*(\\S+)`, 'mi'))?.[1];
@@ -586,11 +612,11 @@ async function rayfinSignIn(appDir, tenantId, fabricUser) {
     return;
   }
   log('Signing in to Rayfin. In the browser window that opens, pick the same account as before.');
-  await runCommand('npx', ['rayfin', 'login', '--tenant', tenantId], { cwd: appDir });
+  await runRayfin(['login', '--tenant', tenantId], appDir);
 }
 
 async function deployApp(appDir, workspaceId, tenantId) {
-  await runCommand('npx', ['rayfin', 'up', '--workspace-id', workspaceId, '--tenant', tenantId, '--yes'], { cwd: appDir });
+  await runRayfin(['up', '--workspace-id', workspaceId, '--tenant', tenantId, '--yes'], appDir);
 
   const deploymentsPath = join(appDir, 'rayfin', '.deployments.json');
   const deployments = existsSync(deploymentsPath) ? JSON.parse(readFileSync(deploymentsPath, 'utf8')).deployments : {};
