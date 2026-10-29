@@ -1,0 +1,23 @@
+table Branch
+
+	column BranchId
+		dataType: string
+		summarizeBy: none
+		sourceColumn: BranchId
+
+	column BranchName
+		dataType: string
+		summarizeBy: none
+		sourceColumn: BranchName
+
+	column Region
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Region
+
+	partition Branch = entity
+		mode: directLake
+		source
+			entityName: Branch
+			schemaName: dbo
+			expressionSource: 'DirectLake - CaldovaHomeLoans'

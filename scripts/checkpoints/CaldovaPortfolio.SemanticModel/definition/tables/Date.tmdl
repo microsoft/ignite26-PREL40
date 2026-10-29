@@ -1,0 +1,54 @@
+table 'Date'
+	dataCategory: Time
+
+	column 'Date'
+		dataType: dateTime
+		isKey
+		formatString: Long Date
+		summarizeBy: none
+		sourceColumn: Date
+
+	column Year
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: Year
+
+	column Quarter
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Quarter
+
+	column MonthNumber
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: MonthNumber
+
+	column MonthName
+		dataType: string
+		summarizeBy: none
+		sourceColumn: MonthName
+
+	column YearMonth
+		dataType: string
+		summarizeBy: none
+		sourceColumn: YearMonth
+
+	column DayOfWeekNumber
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: DayOfWeekNumber
+
+	column DayOfWeekName
+		dataType: string
+		summarizeBy: none
+		sourceColumn: DayOfWeekName
+
+	partition 'Date' = entity
+		mode: directLake
+		source
+			entityName: Date
+			schemaName: dbo
+			expressionSource: 'DirectLake - CaldovaHomeLoans'

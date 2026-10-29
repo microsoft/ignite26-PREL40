@@ -1,0 +1,100 @@
+table LoanApplication
+
+	/// Applications not in Closed or Withdrawn at the snapshot date.
+	measure 'Open applications' =
+			COUNTROWS (
+			    FILTER (
+			        LoanApplication,
+			        NOT ( LoanApplication[CurrentStage] IN { "Closed", "Withdrawn" } )
+			    )
+			)
+		formatString: #,0
+
+	/// Requested amounts of open applications. Requested volume, not revenue or a commitment.
+	measure 'Requested amount in pipeline' =
+			SUMX (
+			    FILTER (
+			        LoanApplication,
+			        NOT ( LoanApplication[CurrentStage] IN { "Closed", "Withdrawn" } )
+			    ),
+			    LoanApplication[RequestedAmount]
+			)
+		formatString: \$#,0;(\$#,0);\$#,0
+
+	/// Average calendar days between stage start and the snapshot date, for open applications.
+	measure 'Average days in current stage' =
+			AVERAGEX (
+			    FILTER (
+			        LoanApplication,
+			        NOT ( LoanApplication[CurrentStage] IN { "Closed", "Withdrawn" } )
+			    ),
+			    DATEDIFF ( LoanApplication[StageStartDate], LoanApplication[SnapshotDate], DAY )
+			)
+		formatString: #,0.00
+
+	/// Open applications with more than 7 days in their current stage (a fictional operations threshold).
+	measure 'Stalled applications' =
+			COUNTROWS (
+			    FILTER (
+			        LoanApplication,
+			        NOT ( LoanApplication[CurrentStage] IN { "Closed", "Withdrawn" } )
+			            && DATEDIFF ( LoanApplication[StageStartDate], LoanApplication[SnapshotDate], DAY ) > 7
+			    )
+			)
+		formatString: #,0
+
+	column ApplicationId
+		dataType: string
+		summarizeBy: none
+		sourceColumn: ApplicationId
+
+	column CaseNumber
+		dataType: string
+		summarizeBy: none
+		sourceColumn: CaseNumber
+
+	column BranchId
+		dataType: string
+		summarizeBy: none
+		sourceColumn: BranchId
+
+	column ProductId
+		dataType: string
+		summarizeBy: none
+		sourceColumn: ProductId
+
+	column SubmissionDate
+		dataType: dateTime
+		formatString: Long Date
+		summarizeBy: none
+		sourceColumn: SubmissionDate
+
+	column CurrentStage
+		dataType: string
+		summarizeBy: none
+		sourceColumn: CurrentStage
+
+	column StageStartDate
+		dataType: dateTime
+		formatString: Long Date
+		summarizeBy: none
+		sourceColumn: StageStartDate
+
+	column RequestedAmount
+		dataType: decimal
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		summarizeBy: sum
+		sourceColumn: RequestedAmount
+
+	column SnapshotDate
+		dataType: dateTime
+		formatString: Long Date
+		summarizeBy: none
+		sourceColumn: SnapshotDate
+
+	partition LoanApplication = entity
+		mode: directLake
+		source
+			entityName: LoanApplication
+			schemaName: dbo
+			expressionSource: 'DirectLake - CaldovaHomeLoans'

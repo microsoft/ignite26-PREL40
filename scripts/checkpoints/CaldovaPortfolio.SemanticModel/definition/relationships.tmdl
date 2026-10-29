@@ -1,0 +1,11 @@
+relationship LoanApplication_Branch
+	fromColumn: LoanApplication.BranchId
+	toColumn: Branch.BranchId
+
+relationship LoanApplication_LoanProduct
+	fromColumn: LoanApplication.ProductId
+	toColumn: LoanProduct.ProductId
+
+relationship LoanApplication_Date
+	fromColumn: LoanApplication.SubmissionDate
+	toColumn: 'Date'.'Date'

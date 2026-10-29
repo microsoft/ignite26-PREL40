@@ -1,0 +1,18 @@
+table LoanProduct
+
+	column ProductId
+		dataType: string
+		summarizeBy: none
+		sourceColumn: ProductId
+
+	column ProductCategory
+		dataType: string
+		summarizeBy: none
+		sourceColumn: ProductCategory
+
+	partition LoanProduct = entity
+		mode: directLake
+		source
+			entityName: LoanProduct
+			schemaName: dbo
+			expressionSource: 'DirectLake - CaldovaHomeLoans'

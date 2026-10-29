@@ -1,0 +1,17 @@
+{
+  "name": "prel40-checkpoints",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lab checkpoints: complete earlier exercises in one command to catch up or jump ahead.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "checkpoint": "node checkpoint.mjs"
+  },
+  "dependencies": {
+    "@azure/identity": "^4.14.0",
+    "tedious": "^20.3.8"
+  }
+}

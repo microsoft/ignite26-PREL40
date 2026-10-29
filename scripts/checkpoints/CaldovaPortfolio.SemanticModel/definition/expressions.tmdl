@@ -1,0 +1,7 @@
+expression 'DirectLake - CaldovaHomeLoans' =
+		let
+		    Source = AzureStorage.DataLake("https://onelake.dfs.fabric.microsoft.com/{{WORKSPACE_ID}}/{{SQL_DATABASE_ID}}", [HierarchicalNavigation=true])
+		in
+		    Source
+
+	annotation PBI_IncludeFutureArtifacts = False
