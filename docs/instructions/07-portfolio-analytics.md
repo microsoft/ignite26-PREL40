@@ -7,6 +7,7 @@ By completing this exercise, you will:
 - Connect your semantic model to the app with the Rayfin semantic model connector.
 - Build the portfolio page with the four shared measures, filters, a stage distribution, and a stalled list.
 - Redeploy the app and check the values against the semantic model.
+- Commit your changes to the Git repository.
 
 ## Task 1: Copy your semantic model URL
 
@@ -122,5 +123,13 @@ The **Portfolio** page already has empty measure cards and placeholders, waiting
 1. Find **HL-1103**. It's tagged **Not assigned to you**, without a link: the case is in the shared portfolio, but it belongs to your colleague Morgan Lee. You test that boundary in the next exercise.
 
 1. Select **HL-1042** to open Alex Rivera's case from the portfolio.
+
+## Task 5: Commit your changes
+
+Save your work in Git, so the next exercise starts from a clean diff.
+
+1. Click on the **Commit** button at the top of the session area.
+
+1. Wait for the agent to confirm the commit.
 
 Select **Next →** to continue.
