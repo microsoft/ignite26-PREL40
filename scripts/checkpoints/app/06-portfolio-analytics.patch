@@ -1,0 +1,794 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: sinedied <noda@free.fr>
+Date: Thu, 29 Oct 2026 16:45:09 +0100
+Subject: [PATCH] Complete exercise 6
+
+---
+ package-lock.json                             |   4 +-
+ packages/frontend/package.json                |   4 +-
+ .../frontend/src/components/app-shell.tsx     |   2 +-
+ packages/frontend/src/components/states.tsx   |  39 ++
+ packages/frontend/src/lib/connectors.ts       |  26 +-
+ packages/frontend/src/pages/manager-page.tsx  | 405 ++++++++++++++++--
+ .../frontend/src/queries/portfolio.spec.ts    |  47 ++
+ packages/frontend/src/queries/portfolio.ts    |  92 ++++
+ rayfin/connectors/caldovaportfolio/schema.ts  |  16 +
+ rayfin/rayfin.yml                             |  12 +
+ 10 files changed, 595 insertions(+), 52 deletions(-)
+ create mode 100644 packages/frontend/src/queries/portfolio.spec.ts
+ create mode 100644 packages/frontend/src/queries/portfolio.ts
+ create mode 100644 rayfin/connectors/caldovaportfolio/schema.ts
+
+diff --git a/package-lock.json b/package-lock.json
+index 943959d..9ae7a18 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -11922,8 +11922,8 @@
+         "@microsoft/rayfin-auth": "1.36.2",
+         "@microsoft/rayfin-auth-provider-fabric": "1.36.2",
+         "@microsoft/rayfin-client": "1.36.2",
+-        "@microsoft/rayfin-connector-fabric-semanticmodel": "1.36.2",
+-        "@microsoft/rayfin-connectors": "1.36.2",
++        "@microsoft/rayfin-connector-fabric-semanticmodel": "^1.36.2",
++        "@microsoft/rayfin-connectors": "^1.36.2",
+         "@microsoft/rayfin-data": "1.36.2",
+         "@microsoft/rayfin-lib": "1.36.2",
+         "@rayfin-app/shared": "*",
+diff --git a/packages/frontend/package.json b/packages/frontend/package.json
+index 5537e96..64f0372 100644
+--- a/packages/frontend/package.json
++++ b/packages/frontend/package.json
+@@ -22,8 +22,8 @@
+     "@microsoft/rayfin-auth": "1.36.2",
+     "@microsoft/rayfin-auth-provider-fabric": "1.36.2",
+     "@microsoft/rayfin-client": "1.36.2",
+-    "@microsoft/rayfin-connector-fabric-semanticmodel": "1.36.2",
+-    "@microsoft/rayfin-connectors": "1.36.2",
++    "@microsoft/rayfin-connector-fabric-semanticmodel": "^1.36.2",
++    "@microsoft/rayfin-connectors": "^1.36.2",
+     "@microsoft/rayfin-data": "1.36.2",
+     "@microsoft/rayfin-lib": "1.36.2",
+     "@rayfin-app/shared": "*",
+diff --git a/packages/frontend/src/components/app-shell.tsx b/packages/frontend/src/components/app-shell.tsx
+index f3bad51..a7a4811 100644
+--- a/packages/frontend/src/components/app-shell.tsx
++++ b/packages/frontend/src/components/app-shell.tsx
+@@ -11,7 +11,7 @@ const LAB_REPOSITORY_URL = 'https://github.com/microsoft/ignite26-PREL40';
+ /** Set `enabled: true` on Portfolio once the semantic model is connected. */
+ const NAV_ITEMS: readonly { to: string; label: string; enabled: boolean }[] = [
+   { to: '/cases', label: 'My cases', enabled: true },
+-  { to: '/manager', label: 'Portfolio', enabled: false },
++  { to: '/manager', label: 'Portfolio', enabled: true },
+ ];
+ 
+ const focusRing =
+diff --git a/packages/frontend/src/components/states.tsx b/packages/frontend/src/components/states.tsx
+index d8db42f..e5335d6 100644
+--- a/packages/frontend/src/components/states.tsx
++++ b/packages/frontend/src/components/states.tsx
+@@ -23,6 +23,45 @@ export function LoadingState({
+   );
+ }
+ 
++/** Animated placeholder block; decorative unless given a label. */
++export function Skeleton({ className, label }: { readonly className?: string; readonly label?: string }) {
++  return (
++    <span
++      className={`block animate-pulse rounded-md bg-muted ${className ?? ''}`}
++      {...(label ? { role: 'status', 'aria-label': label } : { 'aria-hidden': true })}
++    />
++  );
++}
++
++const CHART_BARS = [60, 85, 45, 70, 30];
++
++export function ChartSkeleton() {
++  return (
++    <div role="status" aria-busy="true" aria-label="Loading stage distribution" className="flex h-80 items-end gap-400 px-300 pb-300">
++      {CHART_BARS.map((h, i) => (
++        <div key={i} className="flex flex-1 items-end gap-100" style={{ height: `${h}%` }}>
++          <Skeleton className="h-full flex-1" />
++          <Skeleton className="h-2/3 flex-1 opacity-70" />
++        </div>
++      ))}
++    </div>
++  );
++}
++
++export function TableSkeleton({ rows = 6 }: { readonly rows?: number }) {
++  return (
++    <div role="status" aria-busy="true" aria-label="Loading stalled applications" className="space-y-200">
++      <Skeleton className="h-8 w-full" />
++      {Array.from({ length: rows }, (_, i) => (
++        <div key={i} className="flex items-center gap-400">
++          <Skeleton className="h-10 flex-1" />
++          <Skeleton className="h-10 w-20" />
++        </div>
++      ))}
++    </div>
++  );
++}
++
+ export interface EmptyStateProps {
+   readonly title: string;
+   readonly hint?: ReactNode;
+diff --git a/packages/frontend/src/lib/connectors.ts b/packages/frontend/src/lib/connectors.ts
+index 7f05316..0069622 100644
+--- a/packages/frontend/src/lib/connectors.ts
++++ b/packages/frontend/src/lib/connectors.ts
+@@ -1,3 +1,4 @@
++// #region rayfin:app-owned — copied verbatim by the Rayfin CLI; edit freely.
+ //-----------------------------------------------------------------------
+ // <copyright company="Microsoft Corporation">
+ //        Copyright (c) Microsoft Corporation.  All rights reserved.
+@@ -9,10 +10,27 @@ import type {
+   ConnectorConfig,
+   ConnectorsRuntime,
+ } from '@microsoft/rayfin-connectors';
++// #endregion rayfin:app-owned
+ 
+-/** Replaced with named connector types by `rayfin connector add`. */
+-export type AppConnectorsSchema = Record<string, never>;
++// @generated by `rayfin connector add` — do not edit below this line.
++//
++// Regenerated from rayfin.yml on every `rayfin connector add` and
++// `rayfin connector remove`. To take ownership of this file, delete the
++// line above; the CLI will then print the required wiring instead of
++// rewriting it.
+ 
+-export const connectorConfigs: Record<string, ConnectorConfig> = {};
++import { fabricSemanticModel } from '@microsoft/rayfin-connector-fabric-semanticmodel';
+ 
+-export const connectorRuntimes: ConnectorsRuntime = {};
++import { connectorConfig as caldovaportfolioConfig, type CaldovaportfolioSchema as caldovaportfolioSchema } from '../../../../rayfin/connectors/caldovaportfolio/schema';
++
++export type AppConnectorsSchema = {
++  'caldovaportfolio': caldovaportfolioSchema;
++};
++
++export const connectorConfigs: Record<string, ConnectorConfig> = {
++  'caldovaportfolio': caldovaportfolioConfig,
++};
++
++export const connectorRuntimes: ConnectorsRuntime = {
++  'caldovaportfolio': fabricSemanticModel(),
++};
+diff --git a/packages/frontend/src/pages/manager-page.tsx b/packages/frontend/src/pages/manager-page.tsx
+index 19261e7..ec936c7 100644
+--- a/packages/frontend/src/pages/manager-page.tsx
++++ b/packages/frontend/src/pages/manager-page.tsx
+@@ -1,26 +1,76 @@
+-import { BarChart3, ListChecks } from 'lucide-react';
+-import type { ReactNode } from 'react';
++import { VegaVisual, useCssTheme } from '@microsoft/fabric-visuals';
++import type { VisualizationSpec } from '@microsoft/fabric-visuals';
++import { AlertCircle, ChevronDown } from 'lucide-react';
++import { useMemo, useState } from 'react';
++import { Link } from 'react-router';
+ 
+ import { Panel } from '@/components/panel';
+-import { connectorConfigs } from '@/lib/connectors';
++import { ChartSkeleton, EmptyState, ErrorState, Skeleton, TableSkeleton } from '@/components/states';
++import { buttonStyles } from '@/components/styles';
++import { useAsyncData } from '@/hooks/use-async-data';
++import { useSemanticModelQuery } from '@/hooks/use-semantic-model-query';
++import { formatDateOnly, formatUsd } from '@/lib/format';
++import { toDataTable } from '@/lib/to-data-table';
+ import { cn } from '@/lib/utils';
++import {
++  NO_FILTERS,
++  PORTFOLIO_CONNECTION,
++  branchOptionsQuery,
++  kpiQuery,
++  productOptionsQuery,
++  snapshotQuery,
++  stageColumnMetadata,
++  stageQuery,
++  stalledCasesQuery,
++  tableRecords,
++  type PortfolioFilters,
++} from '@/queries/portfolio';
++import { listMyCases } from '@/services/cases';
+ 
+-/** The shared measures the semantic model defines once, for every consumer. */
+-const MEASURES = [
+-  { name: 'Open applications', definition: 'Not closed or withdrawn at the snapshot date' },
+-  { name: 'Requested amount in pipeline', definition: 'Requested amounts of open applications' },
+-  { name: 'Average days in current stage', definition: 'Days since stage start, open applications' },
+-  { name: 'Stalled applications', definition: 'Open applications more than 7 days in stage' },
+-] as const;
++/** Presentation order of the stages in the chart; anything else follows alphabetically. */
++const STAGE_ORDER = [
++  'Submitted',
++  'Document collection',
++  'Property assessment',
++  'Internal review',
++  'Offer issued',
++];
++
++const countFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
++const decimalFormatter = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
++
++type QueryOutcome = ReturnType<typeof useSemanticModelQuery>;
++type SuccessTable = Extract<NonNullable<QueryOutcome['data']>, { status: 'success' }>['table'];
++
++/** Reads a query's outcome: a table, or the loading and error states to render instead. */
++function useTable(query: string): { table?: SuccessTable; pending: boolean; error?: string; retry: () => void } {
++  const { data, isLoading, error, refetch } = useSemanticModelQuery({ connection: PORTFOLIO_CONNECTION, query });
++  const retry = () => void refetch();
++  if (error) return { pending: false, error: error.message, retry };
++  if (data?.status === 'error') return { pending: false, error: data.error.message, retry };
++  if (isLoading) return { pending: true, retry };
++  if (data?.status === 'success') return { table: data.table, pending: false, retry };
++  return { pending: !data, retry };
++}
++
++function asNumber(value: unknown): number | null {
++  return typeof value === 'number' && Number.isFinite(value) ? value : null;
++}
++
++/** A blank measure means no matching rows, not zero, so it is shown as a dash. */
++function formatMeasure(value: unknown, format: (n: number) => string): string {
++  const n = asNumber(value);
++  return n === null ? '—' : format(n);
++}
+ 
+ /**
+- * Operations portfolio over the shared semantic model. A view for the same
+- * signed-in user, not a separate role. The analytics checkpoint connects the
+- * model with the Rayfin semantic model connector and replaces the placeholders.
++ * Operations portfolio over the shared semantic model. Every figure is a
++ * measure the model defines; the page only filters, asks, and formats.
+  */
+ export function ManagerPage() {
+-  const connectors = Object.keys(connectorConfigs);
+-  const connected = connectors.length > 0;
++  const [filters, setFilters] = useState<PortfolioFilters>(NO_FILTERS);
++  const snapshot = useTable(snapshotQuery);
++  const asOf = snapshot.table ? tableRecords(snapshot.table)[0]?.['[AsOf]'] : undefined;
+ 
+   return (
+     <section aria-labelledby="portfolio-heading" className="flex flex-col gap-500">
+@@ -28,45 +78,314 @@ export function ManagerPage() {
+         <h1 id="portfolio-heading" className="font-heading text-hero-700 font-semibold tracking-[-0.02em] text-foreground">
+           Operations portfolio
+         </h1>
+-        <p className="flex items-center gap-200 text-300 text-muted-foreground">
+-          <span
+-            aria-hidden="true"
+-            className={cn('size-2 rounded-full', connected ? 'bg-success-foreground' : 'bg-muted-foreground/50')}
+-          />
+-          {connected ? `Semantic model: ${connectors.join(', ')}` : 'Semantic model not connected'}
++        <p className="text-300 text-muted-foreground">
++          {snapshot.error ? (
++            'Snapshot date unavailable'
++          ) : asOf ? (
++            <>
++              Data as of{' '}
++              <time dateTime={String(asOf).slice(0, 10)} className="font-medium text-foreground">
++                {formatDateOnly(asOf)}
++              </time>
++            </>
++          ) : (
++            <Skeleton className="inline-block h-4 w-36 align-middle" label="Loading snapshot date" />
++          )}
+         </p>
+       </div>
+ 
+-      <ul
+-        aria-label="Portfolio measures"
+-        className="grid gap-px overflow-hidden rounded-xl border border-border bg-border shadow-[0_1px_2px_rgb(16_24_40/0.04)] sm:grid-cols-2 xl:grid-cols-4"
+-      >
+-        {MEASURES.map((measure) => (
+-          <li key={measure.name} className="flex flex-col gap-200 bg-card p-500">
+-            <p className="text-300 font-medium text-foreground">{measure.name}</p>
+-            <p className="font-heading text-hero-700 font-medium leading-[1.1] text-muted-foreground/60" aria-label="No data">
+-              —
+-            </p>
+-            <p className="text-200 text-muted-foreground">{measure.definition}</p>
+-          </li>
+-        ))}
+-      </ul>
++      <FilterBar filters={filters} onChange={setFilters} />
++      <KpiTiles filters={filters} />
+ 
+       <div className="grid gap-400 lg:grid-cols-2">
+-        <Placeholder icon={<BarChart3 aria-hidden="true" className="icon-size-400" />} title="Stage distribution" />
+-        <Placeholder icon={<ListChecks aria-hidden="true" className="icon-size-400" />} title="Stalled applications" />
++        <StagePanel filters={filters} />
++        <StalledPanel key={`${filters.branch}|${filters.product}`} filters={filters} />
+       </div>
+     </section>
+   );
+ }
+ 
+-function Placeholder({ icon, title }: { icon: ReactNode; title: string }) {
++function FilterBar({ filters, onChange }: { filters: PortfolioFilters; onChange: (next: PortfolioFilters) => void }) {
++  const branches = useTable(branchOptionsQuery);
++  const products = useTable(productOptionsQuery);
++
+   return (
+-    <Panel title={title}>
+-      <div className="flex min-h-48 flex-col items-center justify-center gap-200 rounded-lg border border-dashed border-input px-600 text-center text-muted-foreground">
+-        {icon}
+-        <p className="text-300">No data yet</p>
+-      </div>
++    <div role="group" aria-label="Portfolio filters" className="flex flex-wrap items-end gap-400">
++      <FilterSelect
++        label="Branch"
++        allLabel="All branches"
++        value={filters.branch}
++        options={branches.table?.rows.map((row) => String(row[0])) ?? []}
++        error={branches.error}
++        onChange={(branch) => onChange({ ...filters, branch })}
++      />
++      <FilterSelect
++        label="Product"
++        allLabel="All products"
++        value={filters.product}
++        options={products.table?.rows.map((row) => String(row[0])) ?? []}
++        error={products.error}
++        onChange={(product) => onChange({ ...filters, product })}
++      />
++      {filters.branch || filters.product ? (
++        <button type="button" className={buttonStyles.secondary} onClick={() => onChange(NO_FILTERS)}>
++          Clear filters
++        </button>
++      ) : null}
++    </div>
++  );
++}
++
++function FilterSelect({
++  label,
++  allLabel,
++  value,
++  options,
++  error,
++  onChange,
++}: {
++  label: string;
++  allLabel: string;
++  value: string;
++  options: string[];
++  error?: string;
++  onChange: (value: string) => void;
++}) {
++  return (
++    <label className="flex w-full flex-col gap-100 text-200 font-medium text-muted-foreground sm:w-60">
++      {label}
++      <span className="relative block">
++        <select
++          className={buttonStyles.select}
++          value={value}
++          disabled={options.length === 0}
++          onChange={(event) => onChange(event.target.value)}
++        >
++          <option value="">{allLabel}</option>
++          {options.map((option) => (
++            <option key={option} value={option}>
++              {option}
++            </option>
++          ))}
++        </select>
++        <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-300 top-1/2 icon-size-200 -translate-y-1/2 text-muted-foreground" />
++      </span>
++      {error ? <span role="alert" className="text-destructive">{error}</span> : null}
++    </label>
++  );
++}
++
++function KpiTiles({ filters }: { filters: PortfolioFilters }) {
++  const kpis = useTable(kpiQuery(filters));
++  const record = kpis.table ? tableRecords(kpis.table)[0] : undefined;
++
++  if (kpis.error) return <ErrorState title="Couldn't load the portfolio measures" message={kpis.error} onRetry={kpis.retry} />;
++
++  const tiles = [
++    {
++      name: 'Open applications',
++      definition: 'Not closed or withdrawn at the snapshot date',
++      value: formatMeasure(record?.['[OpenApplications]'], (n) => countFormatter.format(n)),
++    },
++    {
++      name: 'Requested amount in pipeline',
++      definition: 'Requested amounts of open applications',
++      value: formatMeasure(record?.['[RequestedAmount]'], formatUsd),
++    },
++    {
++      name: 'Average days in current stage',
++      definition: 'Days since stage start, open applications',
++      value: formatMeasure(record?.['[AverageDays]'], (n) => decimalFormatter.format(n)),
++    },
++    {
++      name: 'Stalled applications',
++      definition: 'Open applications more than 7 days in stage',
++      value: formatMeasure(record?.['[Stalled]'], (n) => countFormatter.format(n)),
++    },
++  ];
++
++  return (
++    <ul
++      aria-label="Portfolio measures"
++      aria-busy={kpis.pending}
++      className="grid gap-px overflow-hidden rounded-xl border border-border bg-border shadow-[0_1px_2px_rgb(16_24_40/0.04)] sm:grid-cols-2 xl:grid-cols-4"
++    >
++      {tiles.map((tile) => (
++        <li key={tile.name} className="flex flex-col gap-200 bg-card p-500">
++          <p className="text-300 font-medium text-foreground">{tile.name}</p>
++          <p
++            className={cn(
++              'font-heading text-hero-700 font-medium leading-[1.1] tabular-nums',
++              'text-foreground'
++            )}
++          >
++            {kpis.pending ? <Skeleton className="my-100 h-8 w-32" /> : tile.value}
++          </p>
++          <p className="text-200 text-muted-foreground">{tile.definition}</p>
++        </li>
++      ))}
++    </ul>
++  );
++}
++
++function StagePanel({ filters }: { filters: PortfolioFilters }) {
++  const stages = useTable(stageQuery(filters));
++  const theme = useCssTheme();
++  const data = useMemo(() => (stages.table ? toDataTable(stages.table, stageColumnMetadata) : undefined), [stages.table]);
++
++  const spec = useMemo<VisualizationSpec>(() => {
++    const present = (data?.rows ?? []).map((row) => String(row[0]));
++    const order = [
++      ...STAGE_ORDER.filter((s) => present.includes(s)),
++      ...present.filter((s) => !STAGE_ORDER.includes(s)).sort(),
++    ];
++    return {
++      $schema: 'https://vega.github.io/schema/vega-lite/v6.json',
++      description: 'Open and stalled applications by stage',
++      data: {},
++      transform: [{ fold: ['open', 'stalled'], as: ['status', 'count'] }],
++      mark: 'bar',
++      encoding: {
++        x: { field: 'stage', type: 'nominal', sort: order, title: null, axis: { labelAngle: 0, labelLimit: 90 } },
++        xOffset: { field: 'status', sort: ['open', 'stalled'] },
++        y: { field: 'count', type: 'quantitative', title: 'Applications' },
++        color: {
++          field: 'status',
++          type: 'nominal',
++          title: null,
++          scale: { domain: ['open', 'stalled'], range: ['#0d7a66', '#c77700'] },
++          legend: { labelExpr: "datum.value == 'open' ? 'Open' : 'Stalled'" },
++        },
++        tooltip: [
++          { field: 'stage', type: 'nominal', title: 'Stage' },
++          { field: 'status', type: 'nominal', title: 'Status' },
++          { field: 'count', type: 'quantitative', title: 'Applications', format: ',' },
++        ],
++      },
++    } as VisualizationSpec;
++  }, [data]);
++
++  return (
++    <Panel title="Stage distribution" description="Open and stalled applications by current stage">
++      {stages.error ? (
++        <ErrorState title="Couldn't load the stage distribution" message={stages.error} onRetry={stages.retry} />
++      ) : stages.pending || !data ? (
++        <ChartSkeleton />
++      ) : data.rows.length === 0 ? (
++        <EmptyState title="No applications match these filters" />
++      ) : (
++        <div role="img" aria-label="Bar chart of open and stalled applications by stage">
++          <VegaVisual spec={spec} data={data} theme={theme} style={{ height: 320 }} />
++        </div>
++      )}
++    </Panel>
++  );
++}
++
++function StalledPanel({ filters }: { filters: PortfolioFilters }) {
++  const stalled = useTable(stalledCasesQuery(filters));
++  const mine = useAsyncData(async () => (await listMyCases()).map((c) => c.case_number), []);
++  const mineSet = useMemo(() => new Set(mine.status === 'ready' ? mine.data : []), [mine]);
++
++  const rows = useMemo(() => {
++    const records = stalled.table ? tableRecords(stalled.table) : [];
++    return records
++      .map((r) => ({
++        caseNumber: String(r['LoanApplication[CaseNumber]']),
++        stage: String(r['LoanApplication[CurrentStage]']),
++        branch: String(r['Branch[BranchName]'] ?? ''),
++        product: String(r['LoanProduct[ProductCategory]'] ?? ''),
++        amount: r['[Amount]'],
++        days: asNumber(r['[Days]']),
++      }))
++      .sort((a, b) => Number(mineSet.has(b.caseNumber)) - Number(mineSet.has(a.caseNumber)));
++  }, [stalled.table, mineSet]);
++
++  const [limit, setLimit] = useState(10);
++  const th = 'whitespace-nowrap px-300 py-200 font-medium';
++  const td = 'px-300 py-200 align-middle';
++
++  return (
++    <Panel title="Stalled applications" description="Longest in stage first; your own cases are listed first">
++      {stalled.error ? (
++        <ErrorState title="Couldn't load stalled applications" message={stalled.error} onRetry={stalled.retry} />
++      ) : stalled.pending ? (
++        <TableSkeleton />
++      ) : rows.length === 0 ? (
++        <EmptyState title="No stalled applications" hint="Nothing matching these filters has been in its stage for more than 7 days." />
++      ) : (
++        <>
++          {mine.status === 'error' ? (
++            <p role="alert" className="text-200 text-destructive">
++              Couldn't check which cases are yours: {mine.error}
++            </p>
++          ) : null}
++          <div className="overflow-x-auto rounded-lg border border-border">
++            <table className="w-full border-collapse text-left text-300">
++              <caption className="sr-only">Stalled applications from the portfolio model</caption>
++              <thead className="border-b border-border bg-muted/60 text-200 text-muted-foreground">
++                <tr>
++                  <th scope="col" className={th}>Case</th>
++                  <th scope="col" className={th}>Stage</th>
++                  <th scope="col" className={cn(th, 'text-right')}>Days</th>
++                  <th scope="col" className={cn(th, 'text-right')}>Requested</th>
++                </tr>
++              </thead>
++              <tbody>
++                {rows.slice(0, limit).map((row) => {
++                  const isMine = mineSet.has(row.caseNumber);
++                  return (
++                    <tr key={row.caseNumber} className="border-b border-border last:border-b-0">
++                      <td className={td}>
++                        <div className="flex flex-wrap items-center gap-200">
++                          {isMine ? (
++                            <Link
++                              to={`/cases/${row.caseNumber}`}
++                              className="rounded-sm font-medium tabular-nums text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
++                            >
++                              {row.caseNumber}
++                            </Link>
++                          ) : (
++                            <span className="font-medium tabular-nums text-foreground">{row.caseNumber}</span>
++                          )}
++                          {isMine ? (
++                            <span className="rounded-full bg-tint px-200 text-200 font-medium text-tint-foreground">
++                              Assigned to you
++                            </span>
++                          ) : null}
++                        </div>
++                        <div className="text-200 text-muted-foreground">
++                          {[row.branch, row.product].filter(Boolean).join(' · ')}
++                        </div>
++                      </td>
++                      <td className={cn(td, 'whitespace-nowrap')}>{row.stage}</td>
++                      <td className={cn(td, 'text-right tabular-nums')}>
++                        <span className="inline-flex items-center gap-100 text-warning-foreground">
++                          <AlertCircle aria-hidden="true" className="icon-size-100" />
++                          {row.days ?? '—'}
++                        </span>
++                      </td>
++                      <td className={cn(td, 'whitespace-nowrap text-right tabular-nums')}>
++                        {formatMeasure(row.amount, formatUsd)}
++                      </td>
++                    </tr>
++                  );
++                })}
++              </tbody>
++            </table>
++          </div>
++          <div className="flex items-center justify-between text-200 text-muted-foreground">
++            <span>
++              Showing {Math.min(limit, rows.length)} of {rows.length}
++            </span>
++            {limit < rows.length ? (
++              <button type="button" className={buttonStyles.secondary} onClick={() => setLimit((n) => n + 20)}>
++                Show more
++              </button>
++            ) : null}
++          </div>
++        </>
++      )}
+     </Panel>
+   );
+ }
+diff --git a/packages/frontend/src/queries/portfolio.spec.ts b/packages/frontend/src/queries/portfolio.spec.ts
+new file mode 100644
+index 0000000..ea8f440
+--- /dev/null
++++ b/packages/frontend/src/queries/portfolio.spec.ts
+@@ -0,0 +1,47 @@
++import { describe, expect, it } from 'vitest';
++
++import {
++  NO_FILTERS,
++  daxString,
++  kpiQuery,
++  stageQuery,
++  stalledCasesQuery,
++  tableRecords,
++} from './portfolio';
++
++const filters = { branch: 'Chicago Loop', product: 'Refinance' };
++
++describe('portfolio queries', () => {
++  it('escapes quotes so a value cannot end the DAX string', () => {
++    expect(daxString('a"b')).toBe('"a""b"');
++  });
++
++  it('applies both filters to every filtered query', () => {
++    for (const query of [kpiQuery(filters), stageQuery(filters), stalledCasesQuery(filters)]) {
++      expect(query).toContain('TREATAS({"Chicago Loop"}, Branch[BranchName])');
++      expect(query).toContain('TREATAS({"Refinance"}, LoanProduct[ProductCategory])');
++    }
++  });
++
++  it('adds no filters when none are chosen', () => {
++    for (const query of [kpiQuery(NO_FILTERS), stageQuery(NO_FILTERS), stalledCasesQuery(NO_FILTERS)]) {
++      expect(query).not.toContain('TREATAS');
++    }
++  });
++
++  it('reads measures from the model instead of computing them', () => {
++    const query = kpiQuery(NO_FILTERS);
++    for (const measure of [
++      '[Open applications]',
++      '[Requested amount in pipeline]',
++      '[Average days in current stage]',
++      '[Stalled applications]',
++    ]) {
++      expect(query).toContain(measure);
++    }
++  });
++
++  it('keys rows by column name', () => {
++    expect(tableRecords({ columns: [{ name: 'a' }, { name: 'b' }], rows: [[1, 2]] })).toEqual([{ a: 1, b: 2 }]);
++  });
++});
+diff --git a/packages/frontend/src/queries/portfolio.ts b/packages/frontend/src/queries/portfolio.ts
+new file mode 100644
+index 0000000..a5053b2
+--- /dev/null
++++ b/packages/frontend/src/queries/portfolio.ts
+@@ -0,0 +1,92 @@
++import type { ColumnMetadataMap } from '@/lib/to-data-table';
++
++/** Connector name declared in `rayfin/rayfin.yml`. */
++export const PORTFOLIO_CONNECTION = 'caldovaportfolio';
++
++/**
++ * Every number on the portfolio page is a measure the semantic model already
++ * defines. These queries only ask for them; nothing is recalculated in
++ * JavaScript.
++ */
++
++export interface PortfolioFilters {
++  /** `Branch[BranchName]`; empty means all branches. */
++  readonly branch: string;
++  /** `LoanProduct[ProductCategory]`; empty means all products. */
++  readonly product: string;
++}
++
++export const NO_FILTERS: PortfolioFilters = { branch: '', product: '' };
++
++/** A DAX string literal: quotes are doubled, so a value can never end the literal. */
++export function daxString(value: string): string {
++  return `"${value.replace(/"/gu, '""')}"`;
++}
++
++/** Filter arguments shared by every query that honors the page filters. */
++export function filterArguments({ branch, product }: PortfolioFilters): string[] {
++  const filters: string[] = [];
++  if (branch) filters.push(`TREATAS({${daxString(branch)}}, Branch[BranchName])`);
++  if (product) filters.push(`TREATAS({${daxString(product)}}, LoanProduct[ProductCategory])`);
++  return filters;
++}
++
++export const branchOptionsQuery =
++  'EVALUATE FILTER(SUMMARIZECOLUMNS(Branch[BranchName]), NOT ISBLANK(Branch[BranchName])) ORDER BY Branch[BranchName]';
++
++export const productOptionsQuery =
++  'EVALUATE FILTER(SUMMARIZECOLUMNS(LoanProduct[ProductCategory]), NOT ISBLANK(LoanProduct[ProductCategory])) ORDER BY LoanProduct[ProductCategory]';
++
++/** The snapshot date is a property of the data, so it ignores the page filters. */
++export const snapshotQuery = 'EVALUATE ROW("AsOf", MAX(LoanApplication[SnapshotDate]))';
++
++export function kpiQuery(filters: PortfolioFilters): string {
++  const row =
++    'ROW("OpenApplications", [Open applications], ' +
++    '"RequestedAmount", [Requested amount in pipeline], ' +
++    '"AverageDays", [Average days in current stage], ' +
++    '"Stalled", [Stalled applications])';
++  const args = filterArguments(filters);
++  return `EVALUATE ${args.length ? `CALCULATETABLE(${row}, ${args.join(', ')})` : row}`;
++}
++
++export function stageQuery(filters: PortfolioFilters): string {
++  const args = ['LoanApplication[CurrentStage]', ...filterArguments(filters)];
++  return (
++    `EVALUATE SUMMARIZECOLUMNS(${args.join(', ')}, ` +
++    '"Open", [Open applications], "Stalled", [Stalled applications])'
++  );
++}
++
++export function stalledCasesQuery(filters: PortfolioFilters): string {
++  const args = [
++    'LoanApplication[CaseNumber]',
++    'LoanApplication[CurrentStage]',
++    'Branch[BranchName]',
++    'LoanProduct[ProductCategory]',
++    ...filterArguments(filters),
++  ];
++  return (
++    `EVALUATE FILTER(SUMMARIZECOLUMNS(${args.join(', ')}, ` +
++    '"Amount", [Requested amount in pipeline], ' +
++    '"Days", [Average days in current stage], ' +
++    '"Stalled", [Stalled applications]), [Stalled] > 0) ' +
++    'ORDER BY [Days] DESC, LoanApplication[CaseNumber]'
++  );
++}
++
++export const stageColumnMetadata: ColumnMetadataMap = {
++  'LoanApplication[CurrentStage]': { name: 'stage', displayName: 'Stage' },
++  '[Open]': { name: 'open', displayName: 'Open', format: '#,0' },
++  '[Stalled]': { name: 'stalled', displayName: 'Stalled', format: '#,0' },
++};
++
++/** Rows of a query table as objects keyed by the column names the model returned. */
++export function tableRecords(table: {
++  columns: readonly { name: string }[];
++  rows: readonly (readonly unknown[])[];
++}): Record<string, unknown>[] {
++  return table.rows.map((row) =>
++    Object.fromEntries(table.columns.map((column, index) => [column.name, row[index]]))
++  );
++}
+diff --git a/rayfin/connectors/caldovaportfolio/schema.ts b/rayfin/connectors/caldovaportfolio/schema.ts
+new file mode 100644
+index 0000000..e7a5fb4
+--- /dev/null
++++ b/rayfin/connectors/caldovaportfolio/schema.ts
+@@ -0,0 +1,16 @@
++// @generated — do not edit.
++
++// Connector: caldovaportfolio (fabric-semanticmodel)
++
++import type { ConnectorConfig } from '@microsoft/rayfin-connectors';
++import type { FabricSemanticModel } from '@microsoft/rayfin-connector-fabric-semanticmodel';
++
++/**
++ * Typed connector schema for "caldovaportfolio" (fabric-semanticmodel).
++ * Plug into your AppConnectorsSchema in your RayfinClient setup.
++ */
++export type CaldovaportfolioSchema = FabricSemanticModel<'executeQuery'>;
++
++export const connectorConfig = {
++  connector: 'fabric-semanticmodel',
++} as const satisfies ConnectorConfig;
+diff --git a/rayfin/rayfin.yml b/rayfin/rayfin.yml
+index 90db0e6..18e9d59 100644
+--- a/rayfin/rayfin.yml
++++ b/rayfin/rayfin.yml
+@@ -13,6 +13,7 @@ services:
+       enabled: false
+     allowedRedirectUris:
+       - http://localhost:5173
++      - http://127.0.0.1:5173
+   data:
+     enabled: true
+     path: packages/data
+@@ -31,3 +32,14 @@ services:
+     enabled: false
+   functions:
+     enabled: false
++connectors:
++  - name: caldovaportfolio
++    type: fabric-semanticmodel
++    config:
++      workspaceId: {{WORKSPACE_ID}}
++      itemId: {{SEMANTIC_MODEL_ID}}
++    auth:
++      type: delegated
++    version: "1"
++    operations:
++      - name: executeQuery

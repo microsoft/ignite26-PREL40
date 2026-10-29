@@ -9,9 +9,10 @@
 //                default) with dummy values, then runs the app's typecheck, build and test scripts.
 //
 // Usage: node app-patches.mjs <capture|apply|verify> [N] [options]. Run with --help for the options.
+// checkpoint.mjs imports apply() and resetApp() to bring an app to a checkpoint.
 
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -21,9 +22,9 @@ import { APP_NAME, prepareTemplate, resolveLabDir, UserError } from './lab.mjs';
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const PATCH_DIR = join(scriptDir, 'app');
 // The app checkpoint (Exercise 4) is the base the patches apply to.
-const BASE_CHECKPOINT = 4;
-const TAG_PREFIX = 'lab/checkpoint-';
-const INITIAL_COMMIT = 'Initial commit from the lab template';
+export const BASE_CHECKPOINT = 4;
+export const TAG_PREFIX = 'lab/checkpoint-';
+export const INITIAL_COMMIT = 'Initial commit from the lab template';
 const GUID = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi;
 const LEAKS = [GUID, /\b[a-z0-9-]+\.(?:webapp\.fabricapps\.net|pbidedicated\.windows\.net)\b/gi, /\bpk-[A-Za-z0-9_-]{16,}/g];
 const DUMMY_VALUES = {
@@ -103,7 +104,7 @@ const slugify = (text) =>
     .replace(/-+$/, '') || 'changes';
 const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-function listPatches() {
+export function listPatches() {
   if (!existsSync(PATCH_DIR)) return [];
   return readdirSync(PATCH_DIR)
     .map((file) => file.match(/^(\d+)-(.+)\.patch$/))
@@ -122,7 +123,7 @@ function checkApp(appDir) {
 }
 
 // The latest checkpoint tag in the history of HEAD, below `below` if set.
-function latestCheckpoint(appDir, below = Infinity) {
+export function latestCheckpoint(appDir, below = Infinity) {
   const tags = git(appDir, ['tag', '--merged', 'HEAD', '--list', `${TAG_PREFIX}*`])
     .split('\n')
     .filter(Boolean)
@@ -236,7 +237,58 @@ function onlyRedirectUris(appDir, dirty) {
   return changes.length > 0 && changes.every((line) => /^\+\s*-\s*https?:\/\/\S+\s*$/.test(line));
 }
 
-function apply(n, options, { appDir, values: givenValues } = {}) {
+// The allowedRedirectUris items in rayfin.yml, and the line after which to add more.
+function redirectUris(lines) {
+  const start = lines.findIndex((line) => /^\s*allowedRedirectUris:\s*$/.test(line));
+  if (start < 0) return null;
+  let end = start;
+  while (/^\s*-\s*\S+\s*$/.test(lines[end + 1] ?? '')) end++;
+  const items = lines.slice(start + 1, end + 1);
+  return { uris: items.map((line) => line.replace(/^\s*-\s*|\s*$/g, '')), last: end, indent: items[0]?.match(/^\s*/)[0] };
+}
+
+// Adds back the redirect URIs that rayfin up added, if the patched rayfin.yml doesn't have them yet.
+function restoreRedirectUris(appDir, uris) {
+  const path = join(appDir, 'rayfin', 'rayfin.yml');
+  const lines = readFileSync(path, 'utf8').split('\n');
+  const found = redirectUris(lines);
+  const missing = found ? uris.filter((uri) => !found.uris.includes(uri)) : [];
+  if (!found || !found.indent) {
+    if (uris.length) log(`Warning: couldn't add back the redirect URIs in rayfin/rayfin.yml: ${uris.join(', ')}. Deploy the app again to restore them.`);
+    return;
+  }
+  lines.splice(found.last + 1, 0, ...missing.map((uri) => `${found.indent}- ${uri}`));
+  writeFileSync(path, lines.join('\n'));
+}
+
+// Puts the app back at checkpoint 4 (its lab/checkpoint-4 tag, or its first commit), so the patches apply again.
+// Commits made since are kept in a backup branch, whose name it returns. Keeps the deployment's redirect URIs.
+export function resetApp(appDir) {
+  checkApp(appDir);
+  const dirty = git(appDir, ['status', '--porcelain', '--untracked-files=no']);
+  if (dirty && !onlyRedirectUris(appDir, dirty)) {
+    throw new UserError(`The app has uncommitted changes. Commit or stash them first:\n${dirty.replace(/^/gm, '  ')}`);
+  }
+  const base =
+    git(appDir, ['rev-parse', '--verify', '--quiet', `${TAG_PREFIX}${BASE_CHECKPOINT}^{commit}`], { allowFail: true }) ||
+    git(appDir, ['rev-list', '--max-parents=0', 'HEAD']).split('\n').at(-1);
+  const head = git(appDir, ['rev-parse', 'HEAD']);
+  let backup = null;
+  if (head !== base) {
+    backup = `lab/backup-${new Date().toISOString().replace(/\D/g, '').slice(0, 14)}`;
+    git(appDir, ['branch', backup, head]);
+  }
+  const deployedUris = dirty ? redirectUris(readFileSync(join(appDir, 'rayfin', 'rayfin.yml'), 'utf8').split('\n'))?.uris ?? [] : null;
+  git(appDir, ['reset', '--hard', '--quiet', base]);
+  for (const tag of git(appDir, ['tag', '--list', `${TAG_PREFIX}*`]).split('\n').filter(Boolean)) {
+    if (Number(tag.slice(TAG_PREFIX.length)) > BASE_CHECKPOINT) git(appDir, ['tag', '-d', tag]);
+  }
+  git(appDir, ['tag', '-f', `${TAG_PREFIX}${BASE_CHECKPOINT}`]);
+  if (deployedUris) restoreRedirectUris(appDir, deployedUris);
+  return backup;
+}
+
+export function apply(n, options, { appDir, values: givenValues } = {}) {
   let statePath;
   if (!appDir) {
     const lab = resolveLabDir(options['lab-dir']);
@@ -265,13 +317,14 @@ function apply(n, options, { appDir, values: givenValues } = {}) {
   });
 
   const dirty = git(appDir, ['status', '--porcelain', '--untracked-files=no']);
-  let stashed = false;
+  // Set the deployment's redirect URIs aside, so they don't conflict with patches that change rayfin.yml.
+  let deployedUris = null;
   if (dirty) {
     if (!onlyRedirectUris(appDir, dirty)) {
       throw new UserError(`The app has uncommitted changes. Commit or stash them first:\n${dirty.replace(/^/gm, '  ')}`);
     }
-    git(appDir, ['stash', 'push', '--quiet', '-m', 'lab: redirect URIs from the deployment', '--', 'rayfin/rayfin.yml']);
-    stashed = true;
+    deployedUris = redirectUris(readFileSync(join(appDir, 'rayfin', 'rayfin.yml'), 'utf8').split('\n'))?.uris ?? [];
+    git(appDir, ['checkout', '--', 'rayfin/rayfin.yml']);
   }
 
   const identity = git(appDir, ['config', 'user.email'], { allowFail: true }) ? [] : ['-c', 'user.name=Lab User', '-c', 'user.email=lab.user@example.com'];
@@ -284,7 +337,7 @@ function apply(n, options, { appDir, values: givenValues } = {}) {
         git(appDir, ['am', '--abort'], { allowFail: true });
         throw new UserError(
           `app/${patch.file} doesn't apply: the app differs from what the patch expects. ` +
-            `The app is back at checkpoint ${latestCheckpoint(appDir) ?? BASE_CHECKPOINT}.`,
+            `The app is back as it was${index > 0 ? `, plus the patches up to checkpoint ${latestCheckpoint(appDir)}` : ''}.`,
         );
       }
       git(appDir, ['tag', '-f', `${TAG_PREFIX}${patch.n}`]);
@@ -292,9 +345,7 @@ function apply(n, options, { appDir, values: givenValues } = {}) {
     });
   } finally {
     rmSync(tempDir, { recursive: true, force: true });
-    if (stashed && git(appDir, ['stash', 'pop', '--quiet'], { allowFail: true }) === null) {
-      log('Warning: couldn\'t restore the redirect URIs in rayfin/rayfin.yml. Run "git stash pop" in the app and fix the conflict.');
-    }
+    if (deployedUris) restoreRedirectUris(appDir, deployedUris);
   }
 }
 
@@ -379,9 +430,12 @@ function main() {
   throw new UserError(`Unknown command: ${command}\n\n${USAGE}`);
 }
 
-try {
-  main();
-} catch (error) {
-  console.error(`\nError: ${error instanceof UserError ? error.message : (error.stack ?? error.message)}`);
-  process.exitCode = 1;
+const isMain = process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isMain) {
+  try {
+    main();
+  } catch (error) {
+    console.error(`\nError: ${error instanceof UserError ? error.message : (error.stack ?? error.message)}`);
+    process.exitCode = 1;
+  }
 }

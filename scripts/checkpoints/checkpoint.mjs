@@ -14,8 +14,11 @@
 //              (or reuses the folder if it already exists),
 //           6. signs in to Rayfin and deploys the app to the workspace, then checks the hosted URL
 //              (retrying with plaintext token storage if the OS keychain isn't available).
+//   --to 6  Everything above, then Exercise 6:
+//           7. applies the app changes from ./app (see app-patches.mjs) as Git commits, installs the
+//              dependencies if they changed, and deploys the app again.
 //
-// Usage: npm install, then node checkpoint.mjs --to <3|4> [options]. Run with --help for the options.
+// Usage: npm install, then node checkpoint.mjs --to <3|4|6> [options]. Run with --help for the options.
 // Lab folder: C:\LabFiles on the lab VM. On another machine, pass --lab-dir or set PREL40_LABFILES (see lab.mjs).
 // Sign-in: uses the Azure CLI if you're signed in with `az login`, otherwise opens a browser.
 
@@ -26,6 +29,7 @@ import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { Connection, Request } from 'tedious';
+import { apply as applyPatches, BASE_CHECKPOINT, INITIAL_COMMIT, latestCheckpoint, resetApp, TAG_PREFIX } from './app-patches.mjs';
 import { APP_NAME, findManifest, findSeed, prepareTemplate, resolveLabDir, UserError } from './lab.mjs';
 
 const WORKSPACE_PREFIX = 'PREL40-homeloans';
@@ -38,6 +42,7 @@ const RAYFIN_PLUGIN = 'rayfin@awesome-copilot';
 const CHECKPOINTS = {
   3: { label: 'Exercises 2 and 3', next: 'Exercise 4' },
   4: { label: 'Exercises 2 to 4', next: 'Exercise 5' },
+  6: { label: 'Exercises 2 to 6', next: 'Exercise 7' },
 };
 
 const FABRIC_API = 'https://api.fabric.microsoft.com/v1';
@@ -561,7 +566,8 @@ async function createApp(appDir, labDir) {
     await runCommand('git', ['config', 'user.email', 'lab.user@example.com'], { cwd: appDir });
   }
   await runCommand('git', ['add', '-A'], { cwd: appDir });
-  await runCommand('git', ['commit', '--quiet', '-m', 'Initial commit from the lab template'], { cwd: appDir });
+  await runCommand('git', ['commit', '--quiet', '-m', INITIAL_COMMIT], { cwd: appDir });
+  await runCommand('git', ['tag', `${TAG_PREFIX}${BASE_CHECKPOINT}`], { cwd: appDir });
 }
 
 // Without an OS keychain, Rayfin refuses to store its tokens unless plaintext storage is allowed. Allow it then,
@@ -639,6 +645,7 @@ const STEPS = [
   { name: 'plugin', checkpoint: 4, label: 'Exercise 4: Rayfin plugin' },
   { name: 'app', checkpoint: 4, label: 'Exercise 4: home-loan-desk app' },
   { name: 'deploy', checkpoint: 4, label: 'Exercise 4: deployment' },
+  { name: 'code', checkpoint: 6, label: 'Exercise 6: portfolio analytics' },
 ];
 
 function loadState(statePath) {
@@ -683,7 +690,7 @@ async function main() {
     log('      --capacity <name|id>   Capacity for a new workspace. Default: your one active Fabric capacity');
     log('  -t, --tenant <id>          Microsoft Entra tenant to sign in to. Default: your Azure CLI or browser default');
     log(`      --lab-dir <path>       Lab folder: lab files, app and progress. Default: $PREL40_LABFILES, or C:\\LabFiles on the lab VM`);
-    log(`      --app-dir <path>       App folder (--to 4). Default: ~/${APP_NAME} on the lab VM, else <lab folder>/${APP_NAME}`);
+    log(`      --app-dir <path>       App folder (--to 4 and later). Default: ~/${APP_NAME} on the lab VM, else <lab folder>/${APP_NAME}`);
     log('      --sql <path>           Seed script. Default: <lab folder>/data/portfolio-seed.sql, or the one in the repository');
     log('      --skip-seed            Keep the existing database data; only deploy and check the semantic model');
     log('      --redo <step,...>      Run these steps again, even if they were done before');
@@ -735,7 +742,8 @@ async function main() {
     to < 4 ||
     (progress.steps.app?.dir === appDir &&
       existsSync(join(appDir, 'rayfin', 'rayfin.yml')) &&
-      progress.steps.deploy?.commit === (await gitHead(appDir)));
+      progress.steps.deploy?.commit === (await gitHead(appDir)) &&
+      (to < 6 || (latestCheckpoint(appDir) ?? 0) >= to));
   if (!values.force && redo.size === 0 && progress.checkpoint >= to && appUpToDate) {
     log(`\nAlready at checkpoint ${progress.checkpoint} in this workspace: nothing to do.`);
     printLinks();
@@ -823,23 +831,73 @@ async function main() {
       record('app', { dir: appDir });
     } else log('Skipping: done in an earlier run.');
 
-    step(steps.deploy.label);
-    const head = await gitHead(appDir);
-    const deployed = progress.steps.deploy;
-    let deployment;
-    if (!values.force && !redo.has('deploy') && deployed?.dir === appDir && deployed.commit === head) {
-      log('Skipping: done in an earlier run, and the app has no new commits since.');
-    } else if (!values.force && !redo.has('deploy') && !deployed && (deployment = findDeployment(appDir, workspace.id)) && (await isResponding(deployment.hostingUrl))) {
-      log(`Skipping: already deployed to ${deployment.hostingUrl}.`);
-      record('deploy', { dir: appDir, commit: head, url: deployment.hostingUrl });
-    } else {
-      await rayfinSignIn(appDir, tenantId, claims.upn ?? claims.unique_name ?? claims.preferred_username);
-      log('Deploying the app (the first deployment takes a few minutes)...');
-      deployment = await deployApp(appDir, workspace.id, tenantId);
-      record('deploy', { dir: appDir, commit: head, url: deployment.hostingUrl });
-    }
+    // Deploys when the app has commits that the last deployment doesn't have.
+    // `again`: a redeployment after new commits, which --force and --redo deploy don't repeat.
+    const deploy = async (label, { again = false } = {}) => {
+      step(label);
+      const head = await gitHead(appDir);
+      const deployed = progress.steps.deploy;
+      let deployment;
+      if ((again || (!values.force && !redo.has('deploy'))) && deployed?.dir === appDir && deployed.commit === head) {
+        log('Skipping: done in an earlier run, and the app has no new commits since.');
+      } else if (!values.force && !redo.has('deploy') && !deployed && (deployment = findDeployment(appDir, workspace.id)) && (await isResponding(deployment.hostingUrl))) {
+        log(`Skipping: already deployed to ${deployment.hostingUrl}.`);
+        record('deploy', { dir: appDir, commit: head, url: deployment.hostingUrl });
+      } else {
+        await rayfinSignIn(appDir, tenantId, claims.upn ?? claims.unique_name ?? claims.preferred_username);
+        log('Deploying the app (the first deployment takes a few minutes)...');
+        deployment = await deployApp(appDir, workspace.id, tenantId);
+        record('deploy', { dir: appDir, commit: head, url: deployment.hostingUrl });
+      }
+    };
+
+    await deploy(steps.deploy.label);
     progress.checkpoint = Math.max(progress.checkpoint, 4);
     saveState(statePath, state);
+
+    if (to >= 6) {
+      step(steps.code.label);
+      const at = latestCheckpoint(appDir) ?? BASE_CHECKPOINT;
+      if (!redo.has('code') && at >= to) {
+        log(`Skipping: the app already has the changes up to checkpoint ${at}.`);
+      } else {
+        if (redo.has('code')) {
+          const backup = resetApp(appDir);
+          log(`Reset the app's code to checkpoint ${BASE_CHECKPOINT}.${backup ? ` Your earlier commits are in the ${backup} branch.` : ''}`);
+        }
+        const before = await gitHead(appDir);
+        const deployment = findDeployment(appDir, workspace.id);
+        const patchValues = Object.fromEntries(
+          Object.entries({
+            WORKSPACE_ID: workspace.id,
+            TENANT_ID: tenantId,
+            SQL_DATABASE_ID: progress.steps.database?.id,
+            SEMANTIC_MODEL_ID: modelId,
+            HOSTING_URL: deployment?.hostingUrl,
+            APP_ITEM_ID: deployment?.fabricItemId,
+          }).filter(([, value]) => value),
+        );
+        try {
+          applyPatches(to, {}, { appDir, values: patchValues });
+        } catch (error) {
+          if (!(error instanceof UserError) || !/doesn't apply/.test(error.message)) throw error;
+          throw new UserError(
+            `${error.message}\n` +
+              'You may have done some of these exercises yourself. If your app already works, continue with the lab instead.\n' +
+              'To replace your app changes with the checkpoint\'s, run again with --redo code: your commits are kept in a backup branch.',
+          );
+        }
+        const changed = await runCommand('git', ['diff', '--name-only', before, 'HEAD'], { cwd: appDir, capture: true });
+        if (changed.split('\n').some((file) => /(^|\/)package(-lock)?\.json$/.test(file.trim()))) {
+          log('Installing the updated dependencies...');
+          await runCommand('npm', ['install', '--no-audit', '--no-fund'], { cwd: appDir });
+        }
+        record('code', { checkpoint: to });
+      }
+      await deploy(`Exercise ${to}: redeployment`, { again: true });
+      progress.checkpoint = Math.max(progress.checkpoint, to);
+      saveState(statePath, state);
+    }
   }
 
   log(`\nDone. ${checkpoint.label} are set up.`);

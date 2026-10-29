@@ -10,6 +10,7 @@ All checkpoints run with the same script, [`checkpoint.mjs`](checkpoint.mjs). Pi
 | --- | --- | --- |
 | `node checkpoint.mjs --to 3` | Exercises 2 and 3: the SQL database, its data, and the semantic model | Exercise 4 |
 | `node checkpoint.mjs --to 4` | Exercises 2 to 4: everything above, plus the Rayfin plugin and the Home Loan Operations Desk app, created and deployed | Exercise 5 |
+| `node checkpoint.mjs --to 6` | Exercises 2 to 6: everything above, plus the semantic model connector and the portfolio page in the app, committed and deployed again | Exercise 7 |
 
 Each checkpoint also completes the ones before it.
 
@@ -126,18 +127,36 @@ If the app folder already exists, the checkpoint keeps it as is, and deploys it 
 
 If the plugin install fails, the checkpoint shows a warning and deploys the app anyway. Install the plugin from the app, as in Exercise 4, Task 1.
 
+## Checkpoint 6: portfolio analytics
+
+Run:
+
+```powershell
+node checkpoint.mjs --to 6
+```
+
+Exercise 5 doesn't change anything. The checkpoint does everything in checkpoint 4, then:
+
+1. Adds the app changes of Exercise 6 as a Git commit: the **CaldovaPortfolio** semantic model connector in `rayfin/rayfin.yml`, its typed schema, and the portfolio page. It fills in your workspace and semantic model IDs, and tags the commit `lab/checkpoint-6`.
+1. Installs the app's dependencies again if the changes updated them.
+1. Deploys the app again.
+
+If the app already has the changes, for example from an earlier run, it skips them, and deploys only if the app has new commits since the last deployment. When it ends with **Done**, do the same steps in the GitHub Copilot app as for checkpoint 4, then continue with Exercise 7.
+
+If you already changed the app's code yourself, for example by doing part of Exercise 6, the changes may not apply. The checkpoint then stops and leaves the app as it was. If your app works, continue with the lab. Otherwise, run it again with `--redo code`: it saves your commits in a `lab/backup-<date>` branch, puts the app's code back as it was after checkpoint 4, then adds the changes. Commit or stash your uncommitted changes first.
+
 ## Run a checkpoint again
 
 Each run saves its progress for each workspace in `.state.json`, in the lab folder's `checkpoints` folder (`C:\LabFiles\checkpoints\.state.json` on the VM). When you run a checkpoint again:
 
-- If the workspace is already at that checkpoint, the script shows the links and stops: `Already at checkpoint 4 in this workspace: nothing to do.` For checkpoint 4, that's only if the app folder is the same and has no new commits since the last deployment.
+- If the workspace is already at that checkpoint, the script shows the links and stops: `Already at checkpoint 4 in this workspace: nothing to do.` For checkpoint 4 and later, that's only if the app folder is the same and has no new commits since the last deployment.
 - Otherwise, it skips the steps done in an earlier run, and starts from the first step that isn't done. For example, after `--to 3`, `--to 4` starts with the Rayfin plugin.
 - Steps that aren't in `.state.json` yet, for example because you did them by hand, are checked: the script skips them if the result already matches the lab.
 
 The state file is local: it doesn't notice changes made in the browser or in another folder. To run steps again anyway:
 
-- `--redo <step,...>` runs the steps you list, even if they're done. The steps are `database`, `seed`, `model`, `plugin`, `app` and `deploy`. For example, `--redo seed` resets the portfolio data, and then refreshes the semantic model. `--redo database` and `--redo app` reuse the database or app folder if it exists: they never delete anything.
-- `--force` runs every step up to the checkpoint, as if it were the first run.
+- `--redo <step,...>` runs the steps you list, even if they're done. The steps are `database`, `seed`, `model`, `plugin`, `app`, `deploy` and `code`. For example, `--redo seed` resets the portfolio data, and then refreshes the semantic model. `--redo database` and `--redo app` reuse the database or app folder if it exists: they never delete anything. `--redo code` replaces the app's code changes since checkpoint 4 with the checkpoint's, and keeps yours in a backup branch.
+- `--force` runs every step up to the checkpoint, as if it were the first run. It doesn't replace app code changes: only `--redo code` does.
 
 To start over in a workspace, delete its entry from `.state.json`, or delete the file. The VM update keeps the file.
 
@@ -145,15 +164,15 @@ To start over in a workspace, delete its entry from `.state.json`, or delete the
 
 | Option | What it does |
 | --- | --- |
-| `--to <checkpoint>` | Required. How far to go: `3` or `4`. |
+| `--to <checkpoint>` | Required. How far to go: `3`, `4` or `6`. |
 | `-w`, `--workspace <name\|id>` | Use this workspace, or create it if no workspace has this name. By default, the checkpoint picks the one workspace whose name starts with `PREL40-homeloans`. |
 | `--capacity <name\|id>` | Create the workspace on this capacity. By default, the checkpoint uses your one active Fabric capacity, and stops if you have several. |
 | `-t`, `--tenant <id>` | Sign in to this Microsoft Entra tenant. Use it when your Azure CLI default tenant isn't the lab tenant. |
 | `--lab-dir <path>` | Use this lab folder, for the lab files, the app and the checkpoint progress. By default, it's `C:\LabFiles` on the VM. See [Run on your own machine](#run-on-your-own-machine). |
-| `--app-dir <path>` | Create or reuse the app in this folder (checkpoint 4). By default, it's `%USERPROFILE%\home-loan-desk` on the VM, and `<lab folder>/home-loan-desk` elsewhere. |
+| `--app-dir <path>` | Create or reuse the app in this folder (checkpoint 4 and later). By default, it's `%USERPROFILE%\home-loan-desk` on the VM, and `<lab folder>/home-loan-desk` elsewhere. |
 | `--sql <path>` | Use another seed script. By default, the checkpoint uses `data/portfolio-seed.sql` in the lab folder, or in the repository. |
 | `--skip-seed` | Keep the existing data and only deploy and check the semantic model. |
-| `--redo <step,...>` | Run these steps again, even if an earlier run did them: `database`, `seed`, `model`, `plugin`, `app`, `deploy`. See [Run a checkpoint again](#run-a-checkpoint-again). |
+| `--redo <step,...>` | Run these steps again, even if an earlier run did them: `database`, `seed`, `model`, `plugin`, `app`, `deploy`, `code`. See [Run a checkpoint again](#run-a-checkpoint-again). |
 | `--force` | Run every step again, as if it were the first run. |
 | `-h`, `--help` | Show the checkpoints and options. |
 
@@ -169,7 +188,7 @@ Checkpoint 4 runs `rayfin init` from the lab template with the Rayfin CLI versio
 
 ### Save the app changes of a later exercise
 
-From Exercise 6 on, the exercises change the app. Store those changes as Git patches in [`app/`](app/), one per checkpoint: `app/<NN>-<slug>.patch`. [`app-patches.mjs`](app-patches.mjs) captures, applies, and checks them. Each app keeps `lab/checkpoint-<N>` Git tags to know which patches it has.
+From Exercise 6 on, the exercises change the app. Store those changes as Git patches in [`app/`](app/), one per checkpoint: `app/<NN>-<slug>.patch`. [`app-patches.mjs`](app-patches.mjs) captures, applies, and checks them, and the `code` step of the checkpoint script applies them up to `--to`. Each app keeps `lab/checkpoint-<N>` Git tags to know which patches it has: the checkpoint tags the app's initial commit `lab/checkpoint-4`.
 
 1. Get an app at checkpoint 4, for example with `node checkpoint.mjs --to 4`. If you already captured earlier patches, bring it up to the checkpoint before yours: `npm run patch:apply -- <N-1>`.
 1. Do the exercise as an attendee would, and commit the app changes, in one commit or several.
@@ -195,9 +214,13 @@ To apply the patches to another app at checkpoint 4 or later, run `npm run patch
 
 To change a patch, apply the patches up to the one before it, redo the changes, and capture again with the same number: it replaces the patch, and keeps its name unless you pass `--name <slug>`. Then capture the later patches again on top, or check they still apply with `npm run patch:verify`.
 
-All commands take `--lab-dir <path>` and `--app-dir <path>`, with the same defaults as checkpoint 4. Run `node app-patches.mjs --help` for the options. The checkpoint script doesn't apply the patches yet.
+All commands take `--lab-dir <path>` and `--app-dir <path>`, with the same defaults as checkpoint 4. Run `node app-patches.mjs --help` for the options.
 
 ### Add a checkpoint
+
+For an exercise that only changes the app, capture its patch, then add an entry to `CHECKPOINTS` in [`checkpoint.mjs`](checkpoint.mjs): the `code` step applies the patches up to `--to`, then deploys the app again. Add a row and section for it in this README, and a row to the table in the [`/lab-checkpoint` skill](../vm-skills/lab-checkpoint/SKILL.md).
+
+For other changes:
 
 - Add an entry to `CHECKPOINTS` in [`checkpoint.mjs`](checkpoint.mjs) and a stage in `main()` that runs after the earlier ones. Add a row and section for it in this README, and a row to the table in the [`/lab-checkpoint` skill](../vm-skills/lab-checkpoint/SKILL.md).
 - Add its steps to `STEPS`, and give each one a check, so a run with no state skips what's already done. Make it safe to run again, whether the attendee did none, some, or all of the steps by hand.
