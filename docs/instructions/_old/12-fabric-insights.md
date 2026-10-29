@@ -1,4 +1,4 @@
-# Exercise 10: Explore Data with Fabric Intelligence
+# Exercise 11: Explore Data with Fabric Intelligence
 
 In Exercise 9, you seeded the database with a realistic production dataset. In this exercise, you will use Microsoft Fabric intelligence capabilities to query that data using natural language.
 

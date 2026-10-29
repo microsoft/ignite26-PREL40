@@ -1,4 +1,4 @@
-# Exercise 9: Seed Data for Analysis
+# Exercise 10: Seed Data for Analysis
 
 In Exercise 8, you implemented and deployed a schema-backed comments feature. In this exercise, you will seed the backend with a richer dataset for the analysis-focused steps that follow.
 

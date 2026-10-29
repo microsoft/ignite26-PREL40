@@ -1,4 +1,4 @@
-# Exercise 6: Run the App Locally
+# Exercise 7: Run the App Locally
 
 In this exercise, you will run the Field Services app locally.
 

@@ -1,4 +1,4 @@
-# Exercise 7: Verify the Production Deployment on Microsoft Fabric
+# Exercise 8: Verify the Production Deployment on Microsoft Fabric
 
 In Exercise 6, you ran **npx rayfin up** to provision the Rayfin backend in Microsoft Fabric. That command also built the frontend by running **npm run build:fabric**, uploaded the compiled app to Microsoft Fabric's managed static hosting, and deployed the schema.
 

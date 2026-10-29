@@ -1,4 +1,4 @@
-# Exercise 8: Add a Feature with Copilot CLI
+# Exercise 9: Add a Feature with Copilot CLI
 
 In the previous exercises, you deployed the Field Services app to Microsoft Fabric and confirmed that the hosted app uses the same Rayfin backend as your local development experience. In this exercise, you will use GitHub Copilot CLI to implement a schema-backed comments feature for work orders.
 
