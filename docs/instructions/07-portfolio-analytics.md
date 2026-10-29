@@ -43,7 +43,7 @@ Ask Copilot to add the connector and read the model's metadata before it writes 
     - A typed schema for the connector in **rayfin/connectors/**.
     - The **Branch**, **Date**, **LoanApplication**, and **LoanProduct** tables, and the four measures you created in Exercise 3: **Open applications**, **Requested amount in pipeline**, **Average days in current stage**, and **Stalled applications**.
 
-    > [!NOTE]
+    > [!INFO]
     > With delegated authentication, the app queries the model as the signed-in user. Only people with access to the semantic model can see the portfolio, whatever the app allows.
 
 ## Task 3: Build the portfolio page
@@ -79,7 +79,7 @@ The **Portfolio** page already has empty measure cards and placeholders, waiting
 
 1. In the **Files** panel, open **packages/frontend/src/pages/manager-page.tsx** and the files it imports. Notice that the DAX queries reference the measures by name, such as `[Open applications]`, instead of recalculating them.
 
-    > [!NOTE]
+    > [!INFO]
     > Defining measures once in the model is the point: the app, your Power BI reports, and any data agent all get the same numbers.
 
 ## Task 4: Redeploy and check the portfolio
@@ -101,16 +101,16 @@ The **Portfolio** page already has empty measure cards and placeholders, waiting
 
 1. Confirm that the measures match the reference values from Exercise 3:
 
-    | Measure | Value |
-    | --- | --- |
-    | **Open applications** | 172 |
-    | **Requested amount in pipeline** | USD 52,776,000 |
-    | **Average days in current stage** | 5.95 |
-    | **Stalled applications** | 48 |
+    | Measure                           | Value          |
+    | --------------------------------- | -------------- |
+    | **Open applications**             | 172            |
+    | **Requested amount in pipeline**  | USD 52,776,000 |
+    | **Average days in current stage** | 5.95           |
+    | **Stalled applications**          | 48             |
 
     The page also shows the snapshot date of the portfolio data: October 30, 2026.
 
-    > [!NOTE]
+    > [!TIP]
     > If a panel shows an error, paste the error message in the same session and ask Copilot to fix it. Never accept mock or sample values as a fix.
 
 1. In the stage distribution, notice that **Document collection** stands out: it holds 31 of the 48 stalled applications.
@@ -123,4 +123,4 @@ The **Portfolio** page already has empty measure cards and placeholders, waiting
 
 1. Select **HL-1042** to open Alex Rivera's case from the portfolio.
 
-Select **Next →** to prove that the app's access rules refuse what they should.
+Select **Next →** to continue.
