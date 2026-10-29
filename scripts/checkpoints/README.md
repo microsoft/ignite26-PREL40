@@ -69,6 +69,17 @@ PREL40_LABFILES=~/prel40-lab pwsh -NoProfile -File scripts/dist/prel40-vm-update
 
 Build `scripts/dist/prel40-vm-update.ps1` first with `node scripts/publish-vm-update.mjs --no-upload`.
 
+For a lab instance inside this repository, use `.workspace` at its root as the lab folder: Git ignores it. From the repository root:
+
+```shell
+node scripts/publish-vm-update.mjs --no-upload
+PREL40_LABFILES="$PWD/.workspace" pwsh -NoProfile -File scripts/dist/prel40-vm-update.ps1
+npm install --prefix .workspace/checkpoints
+node .workspace/checkpoints/checkpoint.mjs --to 4
+```
+
+The checkpoint finds the lab folder from its own location, and creates the app in `.workspace/home-loan-desk`, with its own Git repository. The template and data in `.workspace` are copies: run the update again after you change them in the repository.
+
 ## Checkpoint 3: database and semantic model
 
 Run:

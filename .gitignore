@@ -449,5 +449,8 @@ src/home-loan-desk/rayfin/.project.json
 /scripts/dist/
 /scripts/checkpoints/.state.json
 
+# Local lab instance (lab files, app and checkpoint state), see scripts/checkpoints/README.md
+/.workspace/
+
 # macOS
 .DS_Store
