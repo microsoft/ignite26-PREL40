@@ -31,10 +31,16 @@ Reply with the table above, then: "Run `/lab-checkpoint <checkpoint>` to set the
 
    If the user doesn't confirm, stop.
 
-2. Run this once in PowerShell, replacing `<checkpoint>`. Wait until it ends: it can take up to 10 minutes. Don't stop it or start it again while it runs.
+2. If the `C:\LabFiles\checkpoints\node_modules` folder doesn't exist, install the dependencies first:
 
-   ```powershell
-   cd C:\LabFiles\checkpoints; if (-not (Test-Path node_modules)) { npm install --no-audit --no-fund }; node checkpoint.mjs --to <checkpoint>
+   ```shell
+   npm install --prefix "C:\LabFiles\checkpoints" --no-audit --no-fund
+   ```
+
+   Then run this once, replacing `<checkpoint>`. Wait until it ends: it can take up to 10 minutes. Don't stop it or start it again while it runs.
+
+   ```shell
+   node "C:\LabFiles\checkpoints\checkpoint.mjs" --to <checkpoint>
    ```
 
 3. If it fails:

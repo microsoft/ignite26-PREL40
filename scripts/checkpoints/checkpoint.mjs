@@ -16,23 +16,23 @@
 //              (retrying with plaintext token storage if the OS keychain isn't available).
 //
 // Usage: npm install, then node checkpoint.mjs --to <3|4> [options]. Run with --help for the options.
+// Lab folder: C:\LabFiles on the lab VM. On another machine, pass --lab-dir or set PREL40_LABFILES (see lab.mjs).
 // Sign-in: uses the Azure CLI if you're signed in with `az login`, otherwise opens a browser.
 
 import { AzureCliCredential, ChainedTokenCredential, InteractiveBrowserCredential } from '@azure/identity';
-import { execFileSync, spawn } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { homedir, tmpdir } from 'node:os';
+import { spawn } from 'node:child_process';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { Connection, Request } from 'tedious';
+import { APP_NAME, findManifest, findSeed, prepareTemplate, resolveLabDir, UserError } from './lab.mjs';
 
 const WORKSPACE_PREFIX = 'PREL40-homeloans';
 const DATABASE_NAME = 'CaldovaHomeLoans';
 const MODEL_NAME = 'CaldovaPortfolio';
 const TABLES = ['Branch', 'Date', 'LoanApplication', 'LoanProduct'];
 const OPEN_EXCLUDED_STAGES = ['Closed', 'Withdrawn'];
-const APP_NAME = 'home-loan-desk';
 const RAYFIN_CLI = '@microsoft/rayfin-cli@1.36.2';
 const RAYFIN_PLUGIN = 'rayfin@awesome-copilot';
 const CHECKPOINTS = {
@@ -53,7 +53,6 @@ const SCOPES = {
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const modelDir = join(scriptDir, `${MODEL_NAME}.SemanticModel`);
 
-class UserError extends Error {}
 class RefreshError extends UserError {}
 
 const logLine = (message = '') => process.stderr.write(`${message}\n`);
@@ -65,23 +64,9 @@ const isGuid = (value) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9
 // ---------------------------------------------------------------------------
 // Inputs
 
-function findFile(label, candidates) {
-  const found = candidates.find((path) => path && existsSync(path));
-  if (!found) throw new UserError(`Can't find ${label}. Looked in:\n  ${candidates.filter(Boolean).join('\n  ')}`);
-  return found;
-}
-
-// On the VM: C:\LabFiles\checkpoints next to C:\LabFiles\data. In the repo: scripts/checkpoints next to data/.
-function loadInputs(sqlPath) {
-  const seedPath = findFile('portfolio-seed.sql', [
-    sqlPath,
-    join(scriptDir, '..', 'data', 'portfolio-seed.sql'),
-    join(scriptDir, '..', '..', 'data', 'portfolio-seed.sql'),
-  ]);
-  const manifestPath = findFile('manifest.json', [
-    join(scriptDir, 'manifest.json'),
-    join(scriptDir, '..', '..', 'data', 'generator', 'manifest.json'),
-  ]);
+function loadInputs(labDir, sqlPath) {
+  const seedPath = findSeed(labDir, sqlPath);
+  const manifestPath = findManifest(labDir);
   if (!existsSync(join(modelDir, 'definition.pbism'))) throw new UserError(`Missing semantic model definition in ${modelDir}`);
   return { seedPath, seedSql: readFileSync(seedPath, 'utf8'), manifest: JSON.parse(readFileSync(manifestPath, 'utf8')) };
 }
@@ -511,32 +496,6 @@ function runCommand(command, args, { cwd, capture = false, tee = false } = {}) {
   });
 }
 
-// On the VM the template is C:\LabFiles\template\home-loan-desk. In the repo, src/home-loan-desk can hold
-// local state (rayfin/.env, deployments, node_modules), so copy only the files Git tracks to a temp folder.
-function prepareTemplate() {
-  const vmTemplate = join(scriptDir, '..', 'template', APP_NAME);
-  if (existsSync(join(vmTemplate, 'rayfin-template.yml'))) return { path: vmTemplate, cleanup: () => {} };
-
-  const repoTemplate = join(scriptDir, '..', '..', 'src', APP_NAME);
-  if (!existsSync(join(repoTemplate, 'rayfin-template.yml'))) {
-    throw new UserError(`Can't find the lab template. Looked in:\n  ${vmTemplate}\n  ${repoTemplate}`);
-  }
-  const files = execFileSync('git', ['ls-files', '-z', '--cached', '--others', '--exclude-standard'], {
-    cwd: repoTemplate,
-    encoding: 'utf8',
-    maxBuffer: 64 * 1024 * 1024,
-  })
-    .split('\0')
-    .filter((file) => file && existsSync(join(repoTemplate, file)));
-  const tempRoot = mkdtempSync(join(tmpdir(), 'prel40-template-'));
-  const path = join(tempRoot, APP_NAME);
-  for (const file of files) {
-    mkdirSync(dirname(join(path, file)), { recursive: true });
-    copyFileSync(join(repoTemplate, file), join(path, file));
-  }
-  return { path, cleanup: () => rmSync(tempRoot, { recursive: true, force: true }) };
-}
-
 // Exercise 4, Task 1 installs the Rayfin plugin from the awesome-copilot marketplace in the GitHub Copilot app.
 // The Copilot CLI shares the app's plugins (~/.copilot, or COPILOT_HOME), so install it with the CLI.
 // Returns true when the app needs a restart to load the plugin.
@@ -571,7 +530,7 @@ async function installRayfinPlugin() {
   }
 }
 
-async function createApp(appDir) {
+async function createApp(appDir, labDir) {
   if (existsSync(join(appDir, 'rayfin', 'rayfin.yml'))) {
     log(`${appDir} already exists; reusing it.`);
     return;
@@ -580,7 +539,7 @@ async function createApp(appDir) {
     throw new UserError(`${appDir} exists but isn't a Rayfin app. Move or delete it, or pick another folder with --app-dir.`);
   }
 
-  const template = prepareTemplate();
+  const template = prepareTemplate(labDir);
   try {
     log(`Creating the app from ${template.path}...`);
     mkdirSync(dirname(appDir), { recursive: true });
@@ -671,9 +630,8 @@ async function deployApp(appDir, workspaceId, tenantId) {
 const gitHead = (appDir) => runCommand('git', ['rev-parse', 'HEAD'], { cwd: appDir, capture: true }).catch(() => undefined);
 
 // ---------------------------------------------------------------------------
-// Progress, saved next to the script for each workspace, so a later run skips the steps already done.
+// Progress, saved in <lab>/checkpoints/.state.json for each workspace, so a later run skips the steps already done.
 
-const STATE_PATH = join(scriptDir, '.state.json');
 const STEPS = [
   { name: 'database', checkpoint: 3, label: 'Exercise 2: SQL database' },
   { name: 'seed', checkpoint: 3, label: 'Exercise 2: portfolio data' },
@@ -683,16 +641,16 @@ const STEPS = [
   { name: 'deploy', checkpoint: 4, label: 'Exercise 4: deployment' },
 ];
 
-function loadState() {
+function loadState(statePath) {
   try {
-    return JSON.parse(readFileSync(STATE_PATH, 'utf8'));
+    return JSON.parse(readFileSync(statePath, 'utf8'));
   } catch {
     return { workspaces: {} };
   }
 }
 
-function saveState(state) {
-  writeFileSync(STATE_PATH, `${JSON.stringify(state, null, 2)}\n`);
+function saveState(statePath, state) {
+  writeFileSync(statePath, `${JSON.stringify(state, null, 2)}\n`);
 }
 
 // ---------------------------------------------------------------------------
@@ -704,6 +662,7 @@ async function main() {
       workspace: { type: 'string', short: 'w' },
       capacity: { type: 'string' },
       tenant: { type: 'string', short: 't' },
+      'lab-dir': { type: 'string' },
       'app-dir': { type: 'string' },
       sql: { type: 'string' },
       'skip-seed': { type: 'boolean', default: false },
@@ -723,8 +682,9 @@ async function main() {
     log(`  -w, --workspace <name|id>  Fabric workspace, created if no workspace has this name. Default: the one workspace named ${WORKSPACE_PREFIX}*`);
     log('      --capacity <name|id>   Capacity for a new workspace. Default: your one active Fabric capacity');
     log('  -t, --tenant <id>          Microsoft Entra tenant to sign in to. Default: your Azure CLI or browser default');
-    log(`      --app-dir <path>       App folder (--to 4). Default: ${join(homedir(), APP_NAME)}`);
-    log('      --sql <path>           Seed script. Default: ../data/portfolio-seed.sql');
+    log(`      --lab-dir <path>       Lab folder: lab files, app and progress. Default: $PREL40_LABFILES, or C:\\LabFiles on the lab VM`);
+    log(`      --app-dir <path>       App folder (--to 4). Default: ~/${APP_NAME} on the lab VM, else <lab folder>/${APP_NAME}`);
+    log('      --sql <path>           Seed script. Default: <lab folder>/data/portfolio-seed.sql, or the one in the repository');
     log('      --skip-seed            Keep the existing database data; only deploy and check the semantic model');
     log('      --redo <step,...>      Run these steps again, even if they were done before');
     log('      --force                Run every step again, ignoring earlier runs');
@@ -736,27 +696,29 @@ async function main() {
     throw new UserError(values.to ? `Unknown checkpoint "${values.to}".` : 'Pick a checkpoint with --to.');
   }
   const to = Number(values.to);
-  const appDir = resolve(values['app-dir'] ?? join(homedir(), APP_NAME));
+  const { labDir, defaultAppDir, statePath } = resolveLabDir(values['lab-dir']);
+  const appDir = resolve(values['app-dir'] ?? defaultAppDir);
   const redo = new Set((values.redo ?? '').split(',').map((name) => name.trim().toLowerCase()).filter(Boolean));
   const unknown = [...redo].filter((name) => !STEPS.some((s) => s.name === name));
   if (unknown.length > 0) throw new UserError(`Unknown step for --redo: ${unknown.join(', ')}. Steps: ${STEPS.map((s) => s.name).join(', ')}`);
 
-  const { seedPath, seedSql, manifest } = loadInputs(values.sql);
+  const { seedPath, seedSql, manifest } = loadInputs(labDir, values.sql);
+  log(`Lab folder: ${labDir}`);
   const getToken = createTokenProvider(values.tenant);
 
   step('Signing in and finding your workspace');
   const workspace = await resolveWorkspace(getToken, values.workspace, values.capacity);
-  const state = loadState();
+  const state = loadState(statePath);
   state.workspaces ??= {};
   const progress = (state.workspaces[workspace.id] ??= { name: workspace.displayName, checkpoint: 0, steps: {} });
   progress.name = workspace.displayName;
   const record = (name, data = {}) => {
     progress.steps[name] = { ...data, at: new Date().toISOString() };
-    saveState(state);
+    saveState(statePath, state);
   };
   const forget = (name) => {
     delete progress.steps[name];
-    saveState(state);
+    saveState(statePath, state);
   };
 
   const portal = 'https://app.fabric.microsoft.com';
@@ -841,7 +803,7 @@ async function main() {
   }
   if (!progress.steps.model || progress.steps.model.id !== modelId) record('model', { id: modelId });
   progress.checkpoint = Math.max(progress.checkpoint, 3);
-  saveState(state);
+  saveState(statePath, state);
 
   let restartApp = false;
   if (to >= 4) {
@@ -857,7 +819,7 @@ async function main() {
     step(steps.app.label);
     const appRecorded = progress.steps.app?.dir === appDir && existsSync(join(appDir, 'rayfin', 'rayfin.yml'));
     if (values.force || redo.has('app') || !appRecorded) {
-      await createApp(appDir);
+      await createApp(appDir, labDir);
       record('app', { dir: appDir });
     } else log('Skipping: done in an earlier run.');
 
@@ -877,7 +839,7 @@ async function main() {
       record('deploy', { dir: appDir, commit: head, url: deployment.hostingUrl });
     }
     progress.checkpoint = Math.max(progress.checkpoint, 4);
-    saveState(state);
+    saveState(statePath, state);
   }
 
   log(`\nDone. ${checkpoint.label} are set up.`);

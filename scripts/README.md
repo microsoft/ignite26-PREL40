@@ -22,7 +22,7 @@ The Skillable VM can't clone this private repository, so lab files are pushed to
 | Copilot permissions | — | `"defaultPermissionMode": "allow-all"` in `%USERPROFILE%\.copilot\settings.json` |
 | Version stamp | Commit and build time | `C:\LabFiles\lab-files.json` |
 
-Each group's folder is deleted and copied fresh. Other content in `C:\LabFiles` and other keys in `settings.json` are left untouched.
+Each group's folder is deleted and copied fresh, except the checkpoint progress (`checkpoints\.state.json`). Other content in `C:\LabFiles` and other keys in `settings.json` are left untouched.
 
 Attendees scaffold from the template by passing its full path to the Rayfin CLI, for example `--template C:\LabFiles\template\home-loan-desk`. No template registry entry is needed.
 
@@ -54,4 +54,4 @@ To also recompile `docs/skillable.md` in the same step, run `./update-skillable.
 
 - A secret gist is unlisted, not private: anyone with the URL can download it. Once the VM image is final, delete the last gist with `gh gist delete <id> --yes`.
 - The permission setting (`defaultPermissionMode`, see `copilot help config`) makes new GitHub Copilot sessions run every tool without asking for approval. If a new session still asks, set the default permission mode to allow-all in the app settings.
-- To try the update script outside the VM, set `PREL40_LABFILES` and `PREL40_COPILOT_HOME` to temporary folders, then run the generated script with `pwsh`. The check script also reads `PREL40_LABFILES`.
+- To run the update outside the VM, for example to [run the checkpoints on your own machine](checkpoints/README.md#run-on-your-own-machine), set `PREL40_LABFILES` to the lab folder and, optionally, `PREL40_COPILOT_HOME` to another `.copilot` folder, then run the generated script with `pwsh`. The update points the installed skills to that lab folder instead of `C:\LabFiles`. The check script and the checkpoints also read `PREL40_LABFILES`.

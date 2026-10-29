@@ -10,7 +10,7 @@ allowed-tools: "*"
 1. Run the check script from this skill's base directory, once, in a new Windows PowerShell process:
 
    ```powershell
-   powershell -NoProfile -ExecutionPolicy Bypass -File "<skill base directory>\check-setup.ps1"
+   powershell -NoProfile -ExecutionPolicy Bypass -File "<skill base directory>/check-setup.ps1" -LabRoot "C:\LabFiles"
    ```
 
    If `powershell` isn't available, run the same command with `pwsh`.

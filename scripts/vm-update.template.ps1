@@ -61,6 +61,21 @@ __PAYLOAD_BASE64__
         Get-FileCount $Destination
     }
 
+    # The skills name the VM paths. When the lab files go elsewhere, point the installed skills there instead,
+    # with the app in the lab folder, like the checkpoints do.
+    function Set-SkillPaths([string]$SkillFolder) {
+        $root = [IO.Path]::GetFullPath($labRoot).TrimEnd('\', '/')
+        if ($root -eq 'C:\LabFiles') { return }
+        $sep = [string][IO.Path]::DirectorySeparatorChar
+        foreach ($file in Get-ChildItem -LiteralPath $SkillFolder -Filter 'SKILL.md' -Recurse -File) {
+            $text = [IO.File]::ReadAllText($file.FullName) -replace '%USERPROFILE%\\home-loan-desk', 'C:\LabFiles\home-loan-desk'
+            $text = [regex]::Replace($text, 'C:\\LabFiles((?:\\[\w.-]+)*)', {
+                param($match) $root + $match.Groups[1].Value.Replace('\', $sep)
+            }.GetNewClosure())
+            [IO.File]::WriteAllText($file.FullName, $text)
+        }
+    }
+
     function Set-PermissionMode([string]$Path, [string]$Mode) {
         $settings = $null
         if (Test-Path -LiteralPath $Path -PathType Leaf) {
@@ -122,7 +137,9 @@ __PAYLOAD_BASE64__
             foreach ($skill in $skills) {
                 $skillTarget = Join-Path $skillsRoot $skill
                 Invoke-Update "$skill skill" $skillTarget {
-                    "$(Copy-Folder ([IO.Path]::Combine($staging, 'skills', $skill)) $skillTarget) files"
+                    $count = Copy-Folder ([IO.Path]::Combine($staging, 'skills', $skill)) $skillTarget
+                    Set-SkillPaths $skillTarget
+                    "$count files"
                 }
             }
             foreach ($skill in $oldSkills) {

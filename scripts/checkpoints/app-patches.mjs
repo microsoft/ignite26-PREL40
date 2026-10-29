@@ -11,16 +11,15 @@
 // Usage: node app-patches.mjs <capture|apply|verify> [N] [options]. Run with --help for the options.
 
 import { execFileSync, spawnSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
-import { homedir, tmpdir } from 'node:os';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+import { APP_NAME, prepareTemplate, resolveLabDir, UserError } from './lab.mjs';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const PATCH_DIR = join(scriptDir, 'app');
-const STATE_PATH = join(scriptDir, '.state.json');
-const APP_NAME = 'home-loan-desk';
 // The app checkpoint (Exercise 4) is the base the patches apply to.
 const BASE_CHECKPOINT = 4;
 const TAG_PREFIX = 'lab/checkpoint-';
@@ -37,7 +36,6 @@ const DUMMY_VALUES = {
 };
 const DUMMY_OTHER = '00000000-0000-4000-8000-0000000000ff';
 
-class UserError extends Error {}
 const log = (message = '') => console.log(message);
 
 const USAGE = `Usage: node app-patches.mjs <command> [N] [options]
@@ -51,13 +49,16 @@ Commands:
                (all by default) with dummy values, then run typecheck, build and test.
 
 Options:
-  --app-dir <path>            The app (capture, apply). Default: ~/${APP_NAME}.
+  --lab-dir <path>            Lab folder, for the app and the checkpoint state. Default: $PREL40_LABFILES,
+                              or C:\\LabFiles on the lab VM (see checkpoint.mjs --help).
+  --app-dir <path>            The app (capture, apply). Default: ~/${APP_NAME} on the lab VM,
+                              else <lab folder>/${APP_NAME}.
   --name <slug>               Patch file name, after the number (capture). Default: the existing patch's,
                               or the first commit's subject.
   --placeholder <NAME=value>  Replace value with {{NAME}} (capture), or fill {{NAME}} with value (apply).
                               Repeatable. Values found automatically: WORKSPACE_ID, TENANT_ID, HOSTING_URL and
                               APP_ITEM_ID from rayfin/.deployments.json; SQL_DATABASE_ID and SEMANTIC_MODEL_ID
-                              from the checkpoint state (.state.json) for that workspace.
+                              from the checkpoint state (<lab folder>/checkpoints/.state.json) for that workspace.
   --allow <value>             Keep this GUID or URL in the patch (capture). Repeatable.
   --keep                      Keep the temp app, even if the checks pass (verify).
   -h, --help                  Show this help.`;
@@ -141,7 +142,7 @@ function parsePlaceholders(entries = []) {
 }
 
 // This app's workspace-specific values, from its last deployment and the checkpoint state.
-function appValues(appDir, overrides) {
+function appValues(appDir, statePath, overrides) {
   const deployments = readJson(join(appDir, 'rayfin', '.deployments.json'));
   const deployment = deployments?.deployments?.[deployments.active] ?? Object.values(deployments?.deployments ?? {})[0];
   const values = {};
@@ -154,14 +155,15 @@ function appValues(appDir, overrides) {
     });
   }
   const workspaceId = overrides.WORKSPACE_ID ?? values.WORKSPACE_ID;
-  const steps = readJson(STATE_PATH)?.workspaces?.[workspaceId]?.steps;
+  const steps = (statePath && readJson(statePath))?.workspaces?.[workspaceId]?.steps;
   if (steps) Object.assign(values, { SQL_DATABASE_ID: steps.database?.id, SEMANTIC_MODEL_ID: steps.model?.id });
   Object.assign(values, overrides);
   return Object.fromEntries(Object.entries(values).filter(([, value]) => value));
 }
 
 function capture(n, options) {
-  const appDir = resolve(options['app-dir'] ?? join(homedir(), APP_NAME));
+  const { defaultAppDir, statePath } = resolveLabDir(options['lab-dir']);
+  const appDir = resolve(options['app-dir'] ?? defaultAppDir);
   checkApp(appDir);
   if (n <= BASE_CHECKPOINT) throw new UserError(`Patches start after checkpoint ${BASE_CHECKPOINT}, which creates the app from the template.`);
 
@@ -185,7 +187,7 @@ function capture(n, options) {
   const commits = git(appDir, ['rev-list', '--reverse', `${base}..HEAD`]).split('\n').filter(Boolean);
   if (!commits.length) throw new UserError(`No commits since ${baseN === null ? 'the initial commit' : base}. Commit the checkpoint ${n} changes first.`);
 
-  const values = appValues(appDir, parsePlaceholders(options.placeholder));
+  const values = appValues(appDir, statePath, parsePlaceholders(options.placeholder));
   let text = git(appDir, ['format-patch', '--stdout', '--zero-commit', '--no-signature', `${base}..HEAD`]) + '\n';
   const used = [];
   for (const [name, value] of Object.entries(values).sort((a, b) => b[1].length - a[1].length)) {
@@ -234,7 +236,13 @@ function onlyRedirectUris(appDir, dirty) {
   return changes.length > 0 && changes.every((line) => /^\+\s*-\s*https?:\/\/\S+\s*$/.test(line));
 }
 
-function apply(n, options, { appDir = resolve(options['app-dir'] ?? join(homedir(), APP_NAME)), values: givenValues } = {}) {
+function apply(n, options, { appDir, values: givenValues } = {}) {
+  let statePath;
+  if (!appDir) {
+    const lab = resolveLabDir(options['lab-dir']);
+    appDir = resolve(options['app-dir'] ?? lab.defaultAppDir);
+    statePath = lab.statePath;
+  }
   checkApp(appDir);
   const current = latestCheckpoint(appDir) ?? BASE_CHECKPOINT;
   const patches = listPatches().filter((patch) => patch.n > current && patch.n <= n);
@@ -243,7 +251,7 @@ function apply(n, options, { appDir = resolve(options['app-dir'] ?? join(homedir
     return;
   }
 
-  const values = givenValues ?? appValues(appDir, parsePlaceholders(options.placeholder));
+  const values = givenValues ?? appValues(appDir, statePath, parsePlaceholders(options.placeholder));
   const contents = patches.map((patch) => {
     const text = readFileSync(patch.path, 'utf8');
     const missing = [...new Set([...text.matchAll(/\{\{([A-Z][A-Z0-9_]*)\}\}/g)].map((match) => match[1]))].filter((name) => !values[name]);
@@ -291,28 +299,21 @@ function apply(n, options, { appDir = resolve(options['app-dir'] ?? join(homedir
 }
 
 // Same as checkpoint 4: rayfin init from the lab template, with the Rayfin CLI version that checkpoint.mjs pins.
-function createApp(root) {
+function createApp(root, options) {
   const rayfinCli = readFileSync(join(scriptDir, 'checkpoint.mjs'), 'utf8').match(/const RAYFIN_CLI = '([^']+)'/)?.[1];
   if (!rayfinCli) throw new UserError("Can't find RAYFIN_CLI in checkpoint.mjs.");
-  const repoTemplate = join(scriptDir, '..', '..', 'src', APP_NAME);
-  if (!existsSync(join(repoTemplate, 'rayfin-template.yml'))) throw new UserError(`Can't find the lab template in ${repoTemplate}.`);
-
-  // Copy only the files Git tracks, so local state like rayfin/.env or node_modules stays out.
-  const template = join(root, 'template', APP_NAME);
-  const files = execFileSync('git', ['ls-files', '-z', '--cached', '--others', '--exclude-standard'], {
-    cwd: repoTemplate,
-    encoding: 'utf8',
-    maxBuffer: 64 * 1024 * 1024,
-  })
-    .split('\0')
-    .filter((file) => file && existsSync(join(repoTemplate, file)));
-  for (const file of files) {
-    mkdirSync(dirname(join(template, file)), { recursive: true });
-    copyFileSync(join(repoTemplate, file), join(template, file));
+  // The lab folder's template if there is one, like checkpoint 4; otherwise the repository's.
+  let labDir = null;
+  try {
+    labDir = resolveLabDir(options['lab-dir']).labDir;
+  } catch {}
+  const template = prepareTemplate(labDir ?? root);
+  log(`Creating the app from ${template.path} with ${rayfinCli}...`);
+  try {
+    run('npx', ['--yes', '--package', rayfinCli, 'rayfin', 'init', APP_NAME, '--template', template.path, '--yes'], root);
+  } finally {
+    template.cleanup();
   }
-
-  log(`Creating the app from the lab template with ${rayfinCli}...`);
-  run('npx', ['--yes', '--package', rayfinCli, 'rayfin', 'init', APP_NAME, '--template', template, '--yes'], root);
   const appDir = join(root, APP_NAME);
   git(appDir, ['init', '--quiet']);
   git(appDir, ['config', 'user.name', 'Lab User']);
@@ -333,7 +334,7 @@ function verify(n, options) {
   const root = mkdtempSync(join(tmpdir(), 'prel40-verify-'));
   let passed = false;
   try {
-    const appDir = createApp(root);
+    const appDir = createApp(root, options);
     log(`\nApplying ${patches.length} patch(es) with dummy values...`);
     const values = { ...DUMMY_VALUES };
     for (const patch of patches) {
@@ -358,6 +359,7 @@ function main() {
   const { values: options, positionals } = parseArgs({
     allowPositionals: true,
     options: {
+      'lab-dir': { type: 'string' },
       'app-dir': { type: 'string' },
       name: { type: 'string' },
       placeholder: { type: 'string', multiple: true },

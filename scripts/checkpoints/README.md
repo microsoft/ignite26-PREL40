@@ -36,9 +36,38 @@ cd C:\LabFiles\checkpoints
 npm install
 ```
 
-From a clone of this repository, run the same commands in `scripts/checkpoints`.
+To run them on your own machine instead, see [Run on your own machine](#run-on-your-own-machine).
 
 To sign in, checkpoints use the Azure CLI if you're signed in with `az login`. Otherwise they open a browser window: sign in with your lab account.
+
+## Run on your own machine
+
+Checkpoints run on Windows, macOS, or Linux. Outside the lab VM, pick a lab folder: it plays the part of `C:\LabFiles`, and holds the app and the checkpoint progress. From a clone of this repository:
+
+```shell
+cd scripts/checkpoints
+npm install
+node checkpoint.mjs --to 4 --lab-dir ~/prel40-lab
+```
+
+The checkpoint creates the folder if it doesn't exist, and the app in `<lab folder>/home-loan-desk`. It takes the lab files it needs (the seed script, the semantic model, and the app template) from `<lab folder>/data`, `checkpoints` and `template` if they're there, like on the VM. Otherwise, it takes them from the repository.
+
+Instead of passing `--lab-dir` on every run, set the `PREL40_LABFILES` environment variable. The checkpoint picks the lab folder in this order:
+
+1. `--lab-dir`.
+1. The `PREL40_LABFILES` environment variable.
+1. The folder above the script, if the script is installed there by the VM update. For example, `C:\LabFiles` for `C:\LabFiles\checkpoints\checkpoint.mjs`.
+1. `C:\LabFiles`, if it exists.
+
+Otherwise, it stops and asks for `--lab-dir`.
+
+To get the same lab files and skills as on the VM, run the VM update with the same environment variable. It installs the files in the lab folder, and points the `/lab-checkpoint` and `/check-setup` skills to it. `/check-setup` needs PowerShell (`pwsh`) on macOS and Linux.
+
+```shell
+PREL40_LABFILES=~/prel40-lab pwsh -NoProfile -File scripts/dist/prel40-vm-update.ps1
+```
+
+Build `scripts/dist/prel40-vm-update.ps1` first with `node scripts/publish-vm-update.mjs --no-upload`.
 
 ## Checkpoint 3: database and semantic model
 
@@ -73,7 +102,7 @@ node checkpoint.mjs --to 4
 The checkpoint does everything in checkpoint 3, then:
 
 1. Installs the **rayfin** plugin from the **awesome-copilot** marketplace in the GitHub Copilot app, or enables it if it's disabled. It uses the Copilot CLI (`copilot plugin install rayfin@awesome-copilot`), or runs it with `npx` if the CLI isn't installed.
-1. Creates the **home-loan-desk** Rayfin app in your user profile folder (`%USERPROFILE%\home-loan-desk` on the VM) from the lab template in `C:\LabFiles\template\home-loan-desk`, and installs its dependencies.
+1. Creates the **home-loan-desk** Rayfin app from the lab template in `C:\LabFiles\template\home-loan-desk`, and installs its dependencies. On the VM, it's in your user profile folder (`%USERPROFILE%\home-loan-desk`). With another lab folder, it's in `<lab folder>/home-loan-desk`.
 1. Initializes a Git repository and makes an initial commit.
 1. Signs you in to Rayfin. If you aren't signed in yet, a browser window opens: pick your lab account. If Rayfin can't use the OS keychain to store its sign-in tokens, the checkpoint retries with `--encryption-fallback-enabled`, which stores them in a plain file instead.
 1. Deploys the app to your workspace and checks that the hosted app responds.
@@ -88,7 +117,7 @@ If the plugin install fails, the checkpoint shows a warning and deploys the app 
 
 ## Run a checkpoint again
 
-Each run saves its progress in `.state.json`, next to the script, for each workspace. When you run a checkpoint again:
+Each run saves its progress for each workspace in `.state.json`, in the lab folder's `checkpoints` folder (`C:\LabFiles\checkpoints\.state.json` on the VM). When you run a checkpoint again:
 
 - If the workspace is already at that checkpoint, the script shows the links and stops: `Already at checkpoint 4 in this workspace: nothing to do.` For checkpoint 4, that's only if the app folder is the same and has no new commits since the last deployment.
 - Otherwise, it skips the steps done in an earlier run, and starts from the first step that isn't done. For example, after `--to 3`, `--to 4` starts with the Rayfin plugin.
@@ -109,8 +138,9 @@ To start over in a workspace, delete its entry from `.state.json`, or delete the
 | `-w`, `--workspace <name\|id>` | Use this workspace, or create it if no workspace has this name. By default, the checkpoint picks the one workspace whose name starts with `PREL40-homeloans`. |
 | `--capacity <name\|id>` | Create the workspace on this capacity. By default, the checkpoint uses your one active Fabric capacity, and stops if you have several. |
 | `-t`, `--tenant <id>` | Sign in to this Microsoft Entra tenant. Use it when your Azure CLI default tenant isn't the lab tenant. |
-| `--app-dir <path>` | Create or reuse the app in this folder (checkpoint 4). By default, it's `home-loan-desk` in your user profile folder. |
-| `--sql <path>` | Use another seed script. By default, the checkpoint uses `../data/portfolio-seed.sql` on the VM or `data/portfolio-seed.sql` in the repository. |
+| `--lab-dir <path>` | Use this lab folder, for the lab files, the app and the checkpoint progress. By default, it's `C:\LabFiles` on the VM. See [Run on your own machine](#run-on-your-own-machine). |
+| `--app-dir <path>` | Create or reuse the app in this folder (checkpoint 4). By default, it's `%USERPROFILE%\home-loan-desk` on the VM, and `<lab folder>/home-loan-desk` elsewhere. |
+| `--sql <path>` | Use another seed script. By default, the checkpoint uses `data/portfolio-seed.sql` in the lab folder, or in the repository. |
 | `--skip-seed` | Keep the existing data and only deploy and check the semantic model. |
 | `--redo <step,...>` | Run these steps again, even if an earlier run did them: `database`, `seed`, `model`, `plugin`, `app`, `deploy`. See [Run a checkpoint again](#run-a-checkpoint-again). |
 | `--force` | Run every step again, as if it were the first run. |
@@ -124,7 +154,7 @@ Edit the TMDL files in [`CaldovaPortfolio.SemanticModel/definition/`](CaldovaPor
 
 ### Change the app checkpoint
 
-Checkpoint 4 runs `rayfin init` from the lab template with the Rayfin CLI version pinned in `RAYFIN_CLI` in [`checkpoint.mjs`](checkpoint.mjs). Keep it in line with the template's `@microsoft/rayfin-cli` version. On the VM it uses `C:\LabFiles\template\home-loan-desk`. From the repository, it copies only the files Git tracks in [`src/home-loan-desk`](../../src/home-loan-desk/) to a temp folder first, so local state like `rayfin/.env` or `node_modules` doesn't end up in the app.
+Checkpoint 4 runs `rayfin init` from the lab template with the Rayfin CLI version pinned in `RAYFIN_CLI` in [`checkpoint.mjs`](checkpoint.mjs). Keep it in line with the template's `@microsoft/rayfin-cli` version. It uses `template/home-loan-desk` in the lab folder (`C:\LabFiles\template\home-loan-desk` on the VM). If the lab folder doesn't have it, it copies only the files Git tracks in [`src/home-loan-desk`](../../src/home-loan-desk/) to a temp folder first, so local state like `rayfin/.env` or `node_modules` doesn't end up in the app.
 
 ### Save the app changes of a later exercise
 
@@ -154,7 +184,7 @@ To apply the patches to another app at checkpoint 4 or later, run `npm run patch
 
 To change a patch, apply the patches up to the one before it, redo the changes, and capture again with the same number: it replaces the patch, and keeps its name unless you pass `--name <slug>`. Then capture the later patches again on top, or check they still apply with `npm run patch:verify`.
 
-All commands take `--app-dir <path>`, which defaults to `home-loan-desk` in your user profile folder, like checkpoint 4. Run `node app-patches.mjs --help` for the options. The checkpoint script doesn't apply the patches yet.
+All commands take `--lab-dir <path>` and `--app-dir <path>`, with the same defaults as checkpoint 4. Run `node app-patches.mjs --help` for the options. The checkpoint script doesn't apply the patches yet.
 
 ### Add a checkpoint
 

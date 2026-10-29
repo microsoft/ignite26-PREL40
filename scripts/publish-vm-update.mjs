@@ -27,7 +27,7 @@ const GROUPS = [
   { name: 'data', source: 'data/samples', target: 'data/samples', required: ['HL-1042-floor-plan.pdf', 'HL-1042-kitchen-current.jpg'] },
   { name: 'skill', source: 'scripts/vm-skills/check-setup', target: 'skills/check-setup', required: ['SKILL.md', 'check-setup.ps1'] },
   { name: 'skill', source: 'scripts/vm-skills/lab-checkpoint', target: 'skills/lab-checkpoint', required: ['SKILL.md'] },
-  { name: 'checkpoints', source: 'scripts/checkpoints', target: 'checkpoints', required: ['checkpoint.mjs', 'package.json', 'package-lock.json'] },
+  { name: 'checkpoints', source: 'scripts/checkpoints', target: 'checkpoints', required: ['checkpoint.mjs', 'lab.mjs', 'package.json', 'package-lock.json'] },
   { name: 'checkpoints', source: 'data/generator/manifest.json', target: 'checkpoints/manifest.json' },
 ];
 
