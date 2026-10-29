@@ -11,11 +11,12 @@ Build data-rich apps in Microsoft Fabric.
 4. [Knowledge check: Data and semantic model](./instructions/04-knowledge-check-data.md)
 5. [Bootstrap and deploy the Home Loan Operations Desk app](./instructions/05-bootstrap.md)
 6. [Explore the Home Loan Operations Desk app](./instructions/06-explore-app.md)
-7. [Run the App Locally](./instructions/07-run-locally.md)
-8. [Verify the Production Deployment on Microsoft Fabric](./instructions/08-deploy.md)
-9. [Add a Feature with Copilot CLI](./instructions/09-new-feature.md)
-10. [Seed Data for Analysis](./instructions/10-seed-data.md)
-11. [Explore Data with Fabric Intelligence](./instructions/11-fabric-insights.md)
-12. [Conclusion](./instructions/12-conclusion.md)
+7. [Add portfolio analytics from the semantic model](./instructions/07-portfolio-analytics.md)
+8. [Run the App Locally](./instructions/08-run-locally.md)
+9. [Verify the Production Deployment on Microsoft Fabric](./instructions/09-deploy.md)
+10. [Add a Feature with Copilot CLI](./instructions/10-new-feature.md)
+11. [Seed Data for Analysis](./instructions/11-seed-data.md)
+12. [Explore Data with Fabric Intelligence](./instructions/12-fabric-insights.md)
+13. [Conclusion](./instructions/13-conclusion.md)
 
 The questions for the knowledge checks are in [knowledge-checks.md](./knowledge-checks.md).
