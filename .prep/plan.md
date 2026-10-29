@@ -12,9 +12,9 @@ Legend: ✅ done, 🚧 in progress, ⬜ not started.
 - ✅ `05-bootstrap.md`: Scaffold the Home Loan Operations Desk starter from the pinned template with the Rayfin plugin, and deploy it with `npm run rayfin:up` (using the GH Copilot app).
 - ✅ `06-explore-app.md`: Open the deployed app and watch **Preparing data** seed your cases, then ask Copilot for a tour of the starter (routes, entities, access rules, what's missing) and open HL-1042 to see why it's stalled.
 - ✅ `07-portfolio-analytics.md`: Connect the semantic model and show the four measures, filters, stage distribution, and stalled list tagged **Assigned to you** on `#/manager`.
-- ⬜ `08-property-photos.md`: Add a private `case-photos` storage folder with an access rule, upload HL-1042's plan and photo, and see the checklist turn to Received.
+- 🚧 `08-property-photos.md`: Add a private `case-photos` storage folder with an access rule, upload HL-1042's plan and photo, and see the checklist turn to Received.
 - ⬜ `09-ai-handoff-brief.md`: Set the Foundry secrets, add the `generateCaseBrief` function, generate a brief that flags HL-1042's contradiction, and save a reviewed task.
-- ⬜ `10-access-control.md`: Prove access control: unauthenticated API call, protected hosting, HL-1103 in the database but not in the app, and no impersonation.
+- ⬜ `10-access-control.md`: Prove access control: unauthenticated API call, protected hosting, HL-1103 in the database but not in the app, no impersonation, and an upload stamped with Morgan's email is rejected by the `case-photos` folder rule.
 - ⬜ `11-rbac.md`: Add a manager role with Rayfin RBAC so only managers can open the portfolio page (`#/manager`). Waiting for RBAC/custom claims in the published Rayfin packages. => work will be done in a separate branch
 - ⬜ `12-monitoring.md`: Tour the app's App Metrics in Fabric and learn what they do and don't measure.
 - ⬜ `13-knowledge-check-app.md`: Knowledge check on access policies, roles, storage rules, functions, and secrets.

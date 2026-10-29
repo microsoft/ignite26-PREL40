@@ -120,7 +120,7 @@ The **Portfolio** page already has empty measure cards and placeholders, waiting
 
 1. In the stalled list, find **HL-1042**. It's tagged **Assigned to you**.
 
-1. Find **HL-1103**. It's tagged **Not assigned to you**, without a link: the case is in the shared portfolio, but it belongs to your colleague Morgan Lee. You test that boundary in the next exercise.
+1. Find **HL-1103**. It's tagged **Not assigned to you**, without a link: the case is in the shared portfolio, but it belongs to your colleague Morgan Lee. You test that boundary in a later exercise.
 
 1. Select **HL-1042** to open Alex Rivera's case from the portfolio.
 
