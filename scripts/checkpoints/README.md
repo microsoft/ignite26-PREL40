@@ -13,6 +13,15 @@ All checkpoints run with the same script, [`checkpoint.mjs`](checkpoint.mjs). Pi
 
 Each checkpoint also completes the ones before it.
 
+## From the GitHub Copilot app
+
+On the lab VM, the easiest way to run a checkpoint is the `/lab-checkpoint` skill. The lab instructions don't mention it: proctors share it with attendees who need to catch up, and self-paced attendees can use it too. In a new chat in the GitHub Copilot app:
+
+- `/lab-checkpoint list` shows the checkpoints.
+- `/lab-checkpoint <checkpoint>`, for example `/lab-checkpoint 4`, asks you to confirm, then installs the dependencies if needed and runs the checkpoint. For checkpoint 4, it also offers to add the app as a project.
+
+The skill never runs on its own: only when you type the command. To run a checkpoint from a terminal instead, read on.
+
 ## Before you start
 
 You need:
@@ -98,7 +107,7 @@ Checkpoint 4 runs `rayfin init` from the lab template with the Rayfin CLI versio
 
 ### Add a checkpoint
 
-- Add an entry to `CHECKPOINTS` in [`checkpoint.mjs`](checkpoint.mjs) and a stage in `main()` that runs after the earlier ones. Add a row and section for it in this README.
+- Add an entry to `CHECKPOINTS` in [`checkpoint.mjs`](checkpoint.mjs) and a stage in `main()` that runs after the earlier ones. Add a row and section for it in this README, and a row to the table in the [`/lab-checkpoint` skill](../vm-skills/lab-checkpoint/SKILL.md).
 - Make it safe to run again, whether the attendee did none, some, or all of the steps by hand.
 - End with a check that proves the result matches the instructions, and say which exercise to continue with.
 - Everything in this folder (except `node_modules`) ships to `C:\LabFiles\checkpoints` with the VM update. If a checkpoint needs files from elsewhere in the repository, add them to `GROUPS` in [`publish-vm-update.mjs`](../publish-vm-update.mjs).

@@ -7,6 +7,7 @@ The Skillable VM can't clone this private repository, so lab files are pushed to
 | [`publish-vm-update.mjs`](publish-vm-update.mjs) | Packages the lab files, publishes the VM update script as a secret gist, and prints the command to run on the VM. |
 | [`vm-update.template.ps1`](vm-update.template.ps1) | The update script that runs on the VM. The publish script embeds the package in a copy of it. |
 | [`vm-skills/check-setup/`](vm-skills/check-setup/) | The `/check-setup` skill attendees run in the GitHub Copilot app to check their environment. |
+| [`vm-skills/lab-checkpoint/`](vm-skills/lab-checkpoint/) | The `/lab-checkpoint` skill that runs a checkpoint from the GitHub Copilot app. It's for lab authors, proctors, and self-paced attendees, and the lab instructions don't mention it. |
 | [`checkpoints/`](checkpoints/) | Scripts that complete earlier exercises in one command, for attendees who are behind or want to jump ahead, and for testers. See its [README](checkpoints/README.md). |
 
 ## What the update installs
@@ -17,6 +18,7 @@ The Skillable VM can't clone this private repository, so lab files are pushed to
 | Lab data | `data/portfolio-seed.sql`, `data/samples/` | `C:\LabFiles\data\` |
 | Checkpoints | `scripts/checkpoints/` (without `node_modules`), plus `data/generator/manifest.json` | `C:\LabFiles\checkpoints\` |
 | check-setup skill | `scripts/vm-skills/check-setup/` | `%USERPROFILE%\.copilot\skills\check-setup` (the update also removes the old `lab-check-setup` skill) |
+| lab-checkpoint skill | `scripts/vm-skills/lab-checkpoint/` | `%USERPROFILE%\.copilot\skills\lab-checkpoint` |
 | Copilot permissions | — | `"defaultPermissionMode": "allow-all"` in `%USERPROFILE%\.copilot\settings.json` |
 | Version stamp | Commit and build time | `C:\LabFiles\lab-files.json` |
 

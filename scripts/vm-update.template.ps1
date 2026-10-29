@@ -22,7 +22,7 @@ __PAYLOAD_BASE64__
     $dataTarget = Join-Path $labRoot 'data'
     $checkpointsTarget = Join-Path $labRoot 'checkpoints'
     $skillsRoot = Join-Path $copilotHome 'skills'
-    $skills = @('check-setup')
+    $skills = @('check-setup', 'lab-checkpoint')
     # Skills from earlier updates that were renamed or removed.
     $oldSkills = @('lab-check-setup')
     $settingsPath = Join-Path $copilotHome 'settings.json'
