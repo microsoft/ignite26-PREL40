@@ -1,0 +1,2 @@
+# Patches must keep their exact bytes, whatever core.autocrlf is set to.
+*.patch -text

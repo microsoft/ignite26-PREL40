@@ -8,7 +8,10 @@
     "node": ">=22"
   },
   "scripts": {
-    "checkpoint": "node checkpoint.mjs"
+    "checkpoint": "node checkpoint.mjs",
+    "patch:capture": "node app-patches.mjs capture",
+    "patch:apply": "node app-patches.mjs apply",
+    "patch:verify": "node app-patches.mjs verify"
   },
   "dependencies": {
     "@azure/identity": "^4.14.0",

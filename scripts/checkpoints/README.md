@@ -126,6 +126,36 @@ Edit the TMDL files in [`CaldovaPortfolio.SemanticModel/definition/`](CaldovaPor
 
 Checkpoint 4 runs `rayfin init` from the lab template with the Rayfin CLI version pinned in `RAYFIN_CLI` in [`checkpoint.mjs`](checkpoint.mjs). Keep it in line with the template's `@microsoft/rayfin-cli` version. On the VM it uses `C:\LabFiles\template\home-loan-desk`. From the repository, it copies only the files Git tracks in [`src/home-loan-desk`](../../src/home-loan-desk/) to a temp folder first, so local state like `rayfin/.env` or `node_modules` doesn't end up in the app.
 
+### Save the app changes of a later exercise
+
+From Exercise 6 on, the exercises change the app. Store those changes as Git patches in [`app/`](app/), one per checkpoint: `app/<NN>-<slug>.patch`. [`app-patches.mjs`](app-patches.mjs) captures, applies, and checks them. Each app keeps `lab/checkpoint-<N>` Git tags to know which patches it has.
+
+1. Get an app at checkpoint 4, for example with `node checkpoint.mjs --to 4`. If you already captured earlier patches, bring it up to the checkpoint before yours: `npm run patch:apply -- <N-1>`.
+1. Do the exercise as an attendee would, and commit the app changes, in one commit or several.
+1. Capture them:
+
+    ```shell
+    npm run patch:capture -- <N>
+    ```
+
+    It saves the commits since the previous `lab/checkpoint-*` tag (or since the initial commit) as `app/<NN>-<slug>.patch`, and tags the app's HEAD `lab/checkpoint-<N>`. It replaces workspace-specific values with placeholders: `{{WORKSPACE_ID}}`, `{{TENANT_ID}}`, `{{HOSTING_URL}}` and `{{APP_ITEM_ID}}` from the app's last deployment (`rayfin/.deployments.json`), and `{{SQL_DATABASE_ID}}` and `{{SEMANTIC_MODEL_ID}}` from `.state.json`. If the changes add another GUID, `fabricapps.net` URL or publishable key, the capture stops: replace it with `--placeholder NAME=<value>`, or keep it with `--allow <value>` if it's the same for everyone. Changes you haven't committed aren't captured, and the script lists them.
+
+1. Check the patches on a fresh app:
+
+    ```shell
+    npm run patch:verify
+    ```
+
+    It creates an app from the lab template in a temp folder, like checkpoint 4, applies all the patches with dummy values, and runs the app's `typecheck`, `build` and `test` scripts. Add a checkpoint number to stop at that patch, and `--keep` to keep the app. It takes under a minute.
+
+1. Commit the patch file.
+
+To apply the patches to another app at checkpoint 4 or later, run `npm run patch:apply -- <N>`. It applies the patches after the app's latest `lab/checkpoint-*` tag, up to `<N>`, with that app's values, and tags each one. If the app has uncommitted changes, it stops, except for the redirect URIs that `rayfin up` adds to `rayfin.yml`, which it keeps. If a patch doesn't apply, it puts the app back as it was.
+
+To change a patch, apply the patches up to the one before it, redo the changes, and capture again with the same number: it replaces the patch, and keeps its name unless you pass `--name <slug>`. Then capture the later patches again on top, or check they still apply with `npm run patch:verify`.
+
+All commands take `--app-dir <path>`, which defaults to `home-loan-desk` in your user profile folder, like checkpoint 4. Run `node app-patches.mjs --help` for the options. The checkpoint script doesn't apply the patches yet.
+
 ### Add a checkpoint
 
 - Add an entry to `CHECKPOINTS` in [`checkpoint.mjs`](checkpoint.mjs) and a stage in `main()` that runs after the earlier ones. Add a row and section for it in this README, and a row to the table in the [`/lab-checkpoint` skill](../vm-skills/lab-checkpoint/SKILL.md).
