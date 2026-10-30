@@ -17,7 +17,7 @@ Build data-rich apps in Microsoft Fabric.
 10. [Prove that the app refuses unauthorized access](./instructions/10-access-control.md)
 11. [Review your app's metrics in Microsoft Fabric](./instructions/11-monitoring.md)
 12. [Knowledge check: Securing and extending the app](./instructions/12-knowledge-check-app.md)
-13. [Bonus: Explore more with Rayfin](./instructions/13-bonus.md)
+13. [(Optional) Explore more with Rayfin](./instructions/13-bonus.md)
 14. [Conclusion](./instructions/14-conclusion.md)
 
 The questions for the knowledge checks are in [knowledge-checks.md](./knowledge-checks.md).

@@ -1,9 +1,6 @@
-# Bonus: Explore more with Rayfin
+# (Optional) Explore more with Rayfin
 
-You've built the Home Loan Operations Desk app end to end. If you have time left, pick any of the following tasks to go further. They're independent from each other, and you can do them in any order.
-
-> [!NOTE]
-> Tasks 3 and 4 use Rayfin features that are in preview, and are rolling out gradually. They may not be available in your lab environment yet. If Copilot reports that a feature or package isn't available, skip that task: don't accept a workaround.
+You've built the Home Loan Operations Desk app end to end. If you have time left, you can pick any of the following tasks to go further. They're independent from each other, and you can do them in any order.
 
 ## Task 1: Compare with a complete case
 
