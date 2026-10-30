@@ -4,4 +4,6 @@ Before you start building the app, check your understanding of the portfolio dat
 
 @lab.ActivityGroup(check1)
 
+---
+
 Select **Next →** to start building the Home Loan Operations Desk app.

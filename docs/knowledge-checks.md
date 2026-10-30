@@ -45,33 +45,33 @@ Used on the [Knowledge check: Securing and extending the app](instructions/12-kn
 
 ### Question 1
 
-- **Alias:** `AppCheckPolicies`
-- **Question:** As the workspace owner, you can see case HL-1103 in the app's SQL database, but the app says it isn't available to you. Why?
+- **Alias:** `AppCheckRayfin`
+- **Question:** What does Rayfin manage for your app?
 - **Answers:**
-    - The frontend hides cases that aren't assigned to you
-    - The case wasn't replicated to the app yet
-    - Only the semantic model can read cases assigned to other officers
-    - <!-- ✅ --> The data API checks the case's access rule against your email on every request
-- **Explanation:** Managing the platform isn't the same as being authorized in the app. The data API enforces the entity's access rule for every request, whatever the frontend does.
+    - The semantic model and its measures
+    - <!-- ✅ --> The backend: sign-in, database, storage, functions, and hosting
+    - Only the frontend hosting
+    - A separate Azure subscription for the app
+- **Explanation:** Rayfin runs the app's backend in Fabric, so you write entities and rules instead of infrastructure.
 
 ### Question 2
 
-- **Alias:** `AppCheckStorage`
-- **Question:** What protects the files uploaded to the case-photos storage folder?
-- **Answers:**
-    - The case prefix each file is stored under
-    - <!-- ✅ --> The folder's access rule, checked by the storage service on every request
-    - The upload panel on the case page
-    - The allowed file types and maximum size
-- **Explanation:** Prefixes only organize files. The folder's access rule is the authorization boundary for every upload, list, download, and delete.
-
-### Question 3
-
 - **Alias:** `AppCheckFunctions`
-- **Question:** Why does the handoff brief call the Microsoft Foundry model from a Rayfin function?
+- **Question:** Why call the Foundry model from a Rayfin function?
 - **Answers:**
     - <!-- ✅ --> The endpoint and API key stay in deployment secrets, out of the browser and source code
     - Functions can read cases assigned to any officer
     - The browser can't send requests to Microsoft Foundry
     - Functions store the generated brief automatically
-- **Explanation:** The function reads its secrets on the server, and reads case data as the signed-in officer, so the access rules still apply. A human saves the brief.
+- **Explanation:** Secrets stay on the server, and case data is read as you, so access rules still apply.
+
+### Question 3
+
+- **Alias:** `AppCheckPolicies`
+- **Question:** HL-1103 is in the app's database, but the app won't show it to you. Why?
+- **Answers:**
+    - The frontend hides cases that aren't assigned to you
+    - The case wasn't replicated to the app yet
+    - Only the semantic model can read cases assigned to other officers
+    - <!-- ✅ --> The data API checks the case's access rule against your email on every request
+- **Explanation:** Owning the workspace doesn't grant access in the app. The data API enforces access rules on every request.
