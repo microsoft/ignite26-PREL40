@@ -12,7 +12,7 @@ All checkpoints run with the same script, [`checkpoint.mjs`](checkpoint.mjs). Pi
 | `node checkpoint.mjs --to 4` | Exercises 2 to 4: everything above, plus the Rayfin plugin and the Home Loan Operations Desk app, created and deployed | Exercise 5 |
 | `node checkpoint.mjs --to 6` | Exercises 2 to 6: everything above, plus the semantic model connector and the portfolio page in the app, committed and deployed again | Exercise 7 |
 | `node checkpoint.mjs --to 7` | Exercises 2 to 7: everything above, plus private file storage and the case files panel in the app, committed and deployed again | Exercise 8 |
-| `node checkpoint.mjs --to 8` | Exercises 2 to 8: everything above, plus Rayfin Functions and the AI handoff brief in the app, committed and deployed again, and the Foundry secrets | The conclusion |
+| `node checkpoint.mjs --to 8` | Exercises 2 to 8: everything above, plus Rayfin Functions and the AI handoff brief in the app, committed and deployed again, and the Foundry secrets | Exercise 9 |
 
 Each checkpoint also completes the ones before it.
 
@@ -177,7 +177,7 @@ The checkpoint does everything in checkpoint 7, then:
 
     The values never appear in the output, a file, or a command line. If it can't get them, the checkpoint deploys the app anyway, and explains how to set them, as in Exercise 8, Task 1. Until they're set, the handoff brief shows a configuration error. Run the checkpoint again once they're set to finish it.
 
-When it ends with **Done**, continue with the conclusion. To set the secrets again, for example after you created another Foundry resource, add `--redo secrets`.
+When it ends with **Done**, continue with Exercise 9. To set the secrets again, for example after you created another Foundry resource, add `--redo secrets`.
 
 ## Run a checkpoint again
 

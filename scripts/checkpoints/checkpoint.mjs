@@ -50,7 +50,7 @@ const CHECKPOINTS = {
   4: { label: 'Exercises 2 to 4', next: 'Exercise 5' },
   6: { label: 'Exercises 2 to 6', next: 'Exercise 7' },
   7: { label: 'Exercises 2 to 7', next: 'Exercise 8' },
-  8: { label: 'Exercises 2 to 8', next: 'the conclusion' },
+  8: { label: 'Exercises 2 to 8', next: 'Exercise 9' },
 };
 // Exercise 8, Task 1: the Foundry model deployment the handoff brief function calls, and its secrets.
 const FOUNDRY_MODEL = 'gpt-6-luna';

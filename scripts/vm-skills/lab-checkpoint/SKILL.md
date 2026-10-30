@@ -15,7 +15,7 @@ Checkpoints complete earlier lab exercises in one run, so the user can catch up 
 | `4` | Exercises 2 to 4: everything in checkpoint 3, plus the rayfin plugin and the home-loan-desk app, created in `%USERPROFILE%\home-loan-desk` and deployed | Exercise 5 |
 | `6` | Exercises 2 to 6: everything in checkpoint 4, plus the semantic model connector and the portfolio page in the app, committed and deployed again | Exercise 7 |
 | `7` | Exercises 2 to 7: everything in checkpoint 6, plus private file storage and the case files panel in the app, committed and deployed again. It doesn't upload HL-1042's files | Exercise 8 |
-| `8` | Exercises 2 to 8: everything in checkpoint 7, plus Rayfin Functions and the AI handoff brief in the app, committed and deployed again, and the FOUNDRY_ENDPOINT and FOUNDRY_API_KEY secrets | The conclusion |
+| `8` | Exercises 2 to 8: everything in checkpoint 7, plus Rayfin Functions and the AI handoff brief in the app, committed and deployed again, and the FOUNDRY_ENDPOINT and FOUNDRY_API_KEY secrets | Exercise 9 |
 
 ## /lab-checkpoint list
 
