@@ -22,11 +22,11 @@ The handoff brief was designed to assist a person, not to replace one:
 
 - **A person stays in the loop.** The brief is a draft. Nothing is saved automatically: the loan officer reviews it, then decides to save it as a note labeled **AI-generated**, or to create a task from the suggested next step.
 - **Facts come from code, not from the model.** The list of missing documents is computed in code, never by the model. Notes are treated as untrusted content, the model gets no tools, and every note it cites is checked against the notes it received.
-- **No lending decisions.** Even for a complete case like HL-1088, the brief suggests the next step, never an approval, a rejection, or a price.
+- **No lending decisions.** Even when every document is received, the brief suggests the next step, never an approval, a rejection, or a price.
 
 ## From lab to production
 
-This lab is a learning scenario, not a lending system or a production banking reference architecture. Before a similar app goes to production, you'd also need to plan for:
+This lab is a learning scenario, not a production banking reference architecture. Before a similar app goes to production, you'd also need to plan for:
 
 - **A real manager role.** The Portfolio page shows aggregated data to every signed-in user. Seeing all cases or reassigning them requires roles from a trusted source.
 - **Cross-record checks.** An access rule checks one record at a time: it can confirm that a note carries your email, but not that its case is assigned to you. Create child records through a server function that checks case ownership first.
@@ -39,6 +39,6 @@ This lab is a learning scenario, not a lending system or a production banking re
 
 - Rayfin documentation: `https://rayfin.ai/docs`
 - Fabric apps overview: `https://learn.microsoft.com/fabric/apps/overview`
-- Data permissions for Fabric apps: `https://learn.microsoft.com/fabric/apps/data-permissions`
+- Community templates for Rayfin apps: `https://github.com/microsoft/awesome-rayfin`
 
 Thank you for joining this lab! We hope it gave you ideas for your own data-rich apps in Microsoft Fabric.
