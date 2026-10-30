@@ -34,12 +34,9 @@ The lab template is a working, secure starter that we'll use to get faster to th
 
 1. In the GitHub Copilot app, start a new chat.
 
-1. Click on the model picker in the chat area (note that the icon may vary) and enable **Copilot Fusion** mode.
+1. Click on the model picker in the chat area (note that the icon may vary), select **Claude Sonnet 5.5** and ensure the effort is set to **Medium**:
 
     ![GitHub Copilot App Model Picker](../../img/github-copilot-model-picker.png)
-
-    > [!TIP]
-    > **Copilot Fusion** is an intelligent runtime model router and orchestrator. This mode ensures that the agent uses the appropriate model for the task at hand, improving the accuracy and relevance of its responses, while optimizing the cost. Default effort level is *Standard*, which balances speed, cost, and accuracy. You can also opt for *High* or *Max* effort levels for more demanding tasks that require greater accuracy and thoroughness, at the expense of speed and cost.
 
 1. Enter the following prompt, then press **Enter**:
 

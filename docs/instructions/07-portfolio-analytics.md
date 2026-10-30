@@ -55,10 +55,6 @@ The **Portfolio** page already has empty measure cards and placeholders, waiting
 
     ![Switch to Plan mode](../../img/github-copilot-switch-to-plan-mode.png)
 
-1. This is a more demanding task, so let's also set the Copilot Fusion effort level to **High** to ensure best results.
-
-    ![Set Copilot Fusion effort level to High](../../img/github-copilot-fusion-effort-high.png)
-
 1. Enter the following prompt, then press **Enter**:
 
     ```text
