@@ -18,8 +18,7 @@ Rayfin storage keeps files in OneLake, in folders that you declare in code. Like
 1. Enter the following prompt, then press **Enter**:
 
     ```text
-    Enable Rayfin storage in this app and install the storage agent skill that matches our Rayfin version.
-    Then declare a private case-photos storage folder:
+    Use Rayfin storage to add a private case-photos storage folder:
     - Allowed file types: JPEG, PNG, and PDF, up to 5 MB.
     - Typed fields: case_id, officer_email, and category.
     - Access rule: files can be read, uploaded, and deleted only when officer_email is my email.
@@ -32,10 +31,12 @@ Rayfin storage keeps files in OneLake, in folders that you declare in code. Like
     - A new folder class for `case-photos` in **rayfin/storage/**, registered in the storage schema.
     - The `@microsoft/rayfin-storage` package, at the same version as the other Rayfin packages.
 
-    > [!NOTE]
-    > Rayfin storage is an experimental feature in this version of Rayfin. File names and details in the summary may differ from the ones above.
+1. Select the **Changes** button just above the chat input area to quickly see the files that were modified by the agent.
 
-1. In the **Files** panel, open the folder file in **rayfin/storage/**, and find the access rule. Its policy compares the caller's email claim with the file's field: `claims.email.eq(item.officer_email)`.
+    ![Changes button above the chat input area](../../img/github-copilot-changes-button.png)
+
+
+1. Find folder file in **rayfin/storage/**, and look for the access rule. Its policy compares the caller's email claim with the file's field: `claims.email.eq(item.officer_email)`.
 
     This is the same rule shape as the case entities you explored in Exercise 5: the storage service checks it on every upload, list, download, and delete, whatever the frontend does.
 
@@ -81,7 +82,10 @@ The storage folder is created in Fabric when you deploy, so redeploy the app bef
 
 1. In the **Document checklist** panel, confirm that **Renovation plans / current-state photos** is still **Outstanding**.
 
-1. In the new files panel, select the upload button. In the file dialog, enter `C:\LabFiles\data\samples\HL-1042-floor-plan.pdf` in the file name box, then select **Open**.
+1. In the new files panel, select the button to add a file. In the file dialog, enter `C:\LabFiles\data\samples\HL-1042-floor-plan.pdf` in the file picker, then select **Open**. Select the **Upload** button to confirm.
+
+    > [!TIP]
+    > Your generated UI may have a different layout or wording, so adjust the steps accordingly.
 
 1. Confirm that **HL-1042-floor-plan.pdf** appears in the list of the case's files, and that **Renovation plans / current-state photos** is now **Received**, with today's date, marked as uploaded.
 
@@ -90,12 +94,11 @@ The storage folder is created in Fabric when you deploy, so redeploy the app bef
 
 1. Upload the current-state photo the same way: `C:\LabFiles\data\samples\HL-1042-kitchen-current.jpg`.
 
-1. Select **HL-1042-floor-plan.pdf** in the list to download it, and confirm that it opens: it's the synthetic ground floor plan of the Rivera residence, with the renovated kitchen and the proposed rear extension.
+1. Select **HL-1042-floor-plan.pdf** in the list to download it, and confirm that it opens: it's the ground floor plan of the Rivera residence, with the renovated kitchen and the proposed rear extension.
 
 1. Reload the page. Confirm that both files are still listed, and that the checklist item is still **Received**.
 
-    > [!INFO]
-    > These files support an administrative step: the bank now has the documents it asked for. In the next exercise, the AI handoff brief only reads the case notes, tasks, and checklist. The photos and plans are never sent to the AI model, which doesn't value properties.
+1. In the Task panel, you can tick the follow up task to mark it as completed. The case is almost ready for review.
 
 ## Task 4: Commit your changes
 
