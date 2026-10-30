@@ -22,7 +22,7 @@ describe('HL-1042 sample files', () => {
     for (const match of pdf.matchAll(/^(\d{10}) 00000 n $/gm)) {
       assert.match(pdf.slice(Number(match[1])), /^\d+ 0 obj/);
     }
-    assert.match(pdf, /SYNTHETIC SAMPLE/);
+    assert.match(pdf, /AI generated sample/);
   });
 
   it('keeps both samples within the 5 MB upload limit', () => {

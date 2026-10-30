@@ -16,7 +16,7 @@ endobj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
 endobj
 6 0 obj
-<< /Length 2209 >>
+<< /Length 1927 >>
 stream
 BT /F2 18 Tf 0 g 48 560 Td (Rivera residence: kitchen renovation and rear extension) Tj ET
 BT /F1 11 Tf 0.25 g 48 540 Td (Ground floor plan, existing and proposed. Prepared by Northwind Builders for loan HL-1042.) Tj ET
@@ -80,13 +80,11 @@ BT /F1 9 Tf 0 g 608 416 Td (Existing walls) Tj ET
 BT /F1 9 Tf 0 g 608 396 Td (Proposed walls) Tj ET
 BT /F1 9 Tf 0.35 g 560 376 Td (Shaded: renovation scope) Tj ET
 BT /F1 9 Tf 0.35 g 560 360 Td (Not to be used for construction.) Tj ET
-BT /F2 24 Tf 0.78 0.16 0.16 rg 0.9781 0.2079 -0.2079 0.9781 104 92 Tm (SYNTHETIC SAMPLE) Tj ET
-BT /F2 12 Tf 0.78 0.16 0.16 rg 0.9781 0.2079 -0.2079 0.9781 116 74 Tm (Caldova Home Loans lab) Tj ET
-BT /F1 9 Tf 0.4 g 48 18 Td (Synthetic document for the Microsoft Ignite PREL40 lab. Fictional applicant and property; not a real plan.) Tj ET
+BT /F1 7 Tf 0.55 g 48 18 Td (AI generated sample) Tj ET
 endstream
 endobj
 7 0 obj
-<< /Title (HL-1042 floor plan - synthetic sample) /Producer (PREL40 data generator) /CreationDate (D:20261020000000Z) >>
+<< /Title (HL-1042 floor plan) /Producer (PREL40 data generator) /CreationDate (D:20261020000000Z) >>
 endobj
 xref
 0 8
@@ -97,9 +95,9 @@ xref
 0000000257 00000 n 
 0000000354 00000 n 
 0000000456 00000 n 
-0000002717 00000 n 
+0000002435 00000 n 
 trailer
 << /Size 8 /Root 1 0 R /Info 7 0 R >>
 startxref
-2853
+2552
 %%EOF

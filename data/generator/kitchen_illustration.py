@@ -2,8 +2,8 @@
 # Interim illustration of the HL-1042 kitchen for the storage checkpoint:
 #   data/samples/HL-1042-kitchen-current.jpg
 #
-# Planned to be replaced by an AI-generated photo (image-gen skill), stamped the
-# same way. Requires Pillow:
+# Planned to be replaced by an AI-generated photo (image-gen skill), with the
+# same small "AI generated sample" caption. Requires Pillow:
 #   pip install pillow && python3 data/generator/kitchen_illustration.py
 
 from pathlib import Path
@@ -61,15 +61,7 @@ for y in range(940, H, 64):
 # Caption bar
 d.rectangle([0, H - 92, W, H], fill=(30, 30, 30))
 d.text((40, H - 76), "HL-1042 · Current kitchen, before renovation", font=font(34, True), fill=(255, 255, 255))
-d.text((40, H - 34), "Synthetic illustration for the Microsoft Ignite PREL40 lab. Fictional property.", font=font(22), fill=(210, 210, 210))
-# Stamp
-stamp = Image.new('RGBA', (1060, 220), (0, 0, 0, 0))
-sd = ImageDraw.Draw(stamp)
-sd.rounded_rectangle([6, 6, 1054, 214], radius=18, outline=(200, 40, 40, 235), width=10)
-sd.text((48, 28), "SYNTHETIC SAMPLE", font=font(92, True), fill=(200, 40, 40, 235))
-sd.text((52, 142), "Caldova Home Loans lab", font=font(48, True), fill=(200, 40, 40, 235))
-stamp = stamp.rotate(14, expand=True, resample=Image.BICUBIC)
-img.paste(stamp, (260, 230), stamp)
+d.text((40, H - 32), "AI generated sample", font=font(18), fill=(170, 170, 170))
 out = sys.argv[1] if len(sys.argv) > 1 else str(Path(__file__).resolve().parents[1] / "samples" / "HL-1042-kitchen-current.jpg")
 img.save(out, 'JPEG', quality=86, optimize=True, progressive=True)
 print(out)

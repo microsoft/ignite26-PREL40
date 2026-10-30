@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Writes the synthetic HL-1042 floor plan used in the storage checkpoint:
+// Writes the HL-1042 sample floor plan used in the storage checkpoint:
 //   data/samples/HL-1042-floor-plan.pdf
 //
 // Dependency-free: the PDF is assembled by hand from vector drawing operators
@@ -80,14 +80,7 @@ function contentStream() {
   ops.push(text(560, 376, 9, 'Shaded: renovation scope', { gray: 0.35 }));
   ops.push(text(560, 360, 9, 'Not to be used for construction.', { gray: 0.35 }));
 
-  // Synthetic sample stamp in the open space beside the extension.
-  const angle = (12 * Math.PI) / 180;
-  const c = Math.cos(angle).toFixed(4);
-  const s = Math.sin(angle).toFixed(4);
-  ops.push(`BT /F2 24 Tf 0.78 0.16 0.16 rg ${c} ${s} -${s} ${c} 104 92 Tm (SYNTHETIC SAMPLE) Tj ET`);
-  ops.push(`BT /F2 12 Tf 0.78 0.16 0.16 rg ${c} ${s} -${s} ${c} 116 74 Tm (Caldova Home Loans lab) Tj ET`);
-
-  ops.push(text(48, 18, 9, 'Synthetic document for the Microsoft Ignite PREL40 lab. Fictional applicant and property; not a real plan.', { gray: 0.4 }));
+  ops.push(text(48, 18, 7, 'AI generated sample', { gray: 0.55 }));
   return ops.join('\n');
 }
 
@@ -100,7 +93,7 @@ export function renderFloorPlanPdf() {
     '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>',
     '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>',
     `<< /Length ${Buffer.byteLength(content, 'latin1')} >>\nstream\n${content}\nendstream`,
-    '<< /Title (HL-1042 floor plan - synthetic sample) /Producer (PREL40 data generator) /CreationDate (D:20261020000000Z) >>',
+    '<< /Title (HL-1042 floor plan) /Producer (PREL40 data generator) /CreationDate (D:20261020000000Z) >>',
   ];
 
   let pdf = '%PDF-1.4\n%\xE2\xE3\xCF\xD3\n';

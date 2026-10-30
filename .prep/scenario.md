@@ -183,7 +183,7 @@ Keep the layers distinct in the narrative:
   - Typed fields: `case_id`, `officer_email`, `category`.
   - The attendee asks Copilot for the folder's access rule (`officer_email` equals the caller's email) and reviews it.
 - The case detail page gets an upload panel and a list of the case's files with authorized download.
-- The attendee uploads the supplied samples, `data/samples/HL-1042-floor-plan.pdf` and `data/samples/HL-1042-kitchen-current.jpg` (currently a stamped illustration; replace it with an AI-generated photo once an image-model key is available). The checklist item turns to Received (`received_via: upload`), and a reload keeps both the files and the status.
+- The attendee uploads the supplied samples, `data/samples/HL-1042-floor-plan.pdf` and `data/samples/HL-1042-kitchen-current.jpg` (currently an illustration; replace it with an AI-generated photo once an image-model key is available). The checklist item turns to Received (`received_via: upload`), and a reload keeps both the files and the status.
 - Only a successful upload marks the item Received. Prefixes organize files; the folder rule is the authorization boundary.
 - Negative check: uploading a file stamped with Morgan's email is rejected.
 - Photos and plans are never sent to the AI model. They support an administrative step, not a valuation.
@@ -272,7 +272,7 @@ Redeploying to the same app item keeps the app's data. At checkpoint 5, the atte
 | `src/checkpoints/cp2-portfolio/`, `cp4-photos/`, `cp5-brief/` | Code snapshots used for catch-up and as the instructor solution. Not template entries. |
 | `data/generator/` | `generate.mjs` (SQL, manifest, fixtures), `samples.mjs` (floor-plan PDF), `kitchen_illustration.py` (interim kitchen image), and their tests. |
 | `data/portfolio-seed.sql` | Generated, committed source dataset. |
-| `data/samples/` | HL-1042 floor plan (PDF) and current-state photo (JPEG), plainly labeled synthetic. |
+| `data/samples/` | HL-1042 floor plan (PDF) and current-state photo (JPEG), each with a small "AI generated sample" caption. |
 | `infra/foundry/` | Per-attendee Foundry deployment for the lab environment. |
 | `instructions/` | Attendee guidance, one page per part/checkpoint. |
 

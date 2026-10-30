@@ -33,4 +33,4 @@ node --test data/generator/*.test.mjs
 
 The generator uses a fixed seed and name-based UUIDs, so its output is byte-for-byte reproducible. The tests fail if a committed file no longer matches the generator.
 
-The kitchen image is an interim illustration drawn by `generator/kitchen_illustration.py` (requires Pillow). Replace it with an AI-generated photo, stamped the same way, when an image-model key is available.
+The kitchen image is an interim illustration drawn by `generator/kitchen_illustration.py` (requires Pillow). Both samples carry a small "AI generated sample" caption. Replace the kitchen illustration with an AI-generated photo, captioned the same way, when an image-model key is available.
