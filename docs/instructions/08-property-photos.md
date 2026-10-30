@@ -35,8 +35,7 @@ Rayfin storage keeps files in OneLake, in folders that you declare in code. Like
 
     ![Changes button above the chat input area](../../img/github-copilot-changes-button.png)
 
-
-1. Find folder file in **rayfin/storage/**, and look for the access rule. Its policy compares the caller's email claim with the file's field: `claims.email.eq(item.officer_email)`.
+1. Find the folder file in **rayfin/storage/**, and look for the access rule. Its policy compares the caller's email claim with the file's field: `claims.email.eq(item.officer_email)`.
 
     This is the same rule shape as the case entities you explored in Exercise 5: the storage service checks it on every upload, list, download, and delete, whatever the frontend does.
 
