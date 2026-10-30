@@ -21,7 +21,7 @@ Each checkpoint also completes the ones before it.
 On the lab VM, the easiest way to run a checkpoint is the `/lab-checkpoint` skill. The lab instructions don't mention it: proctors share it with attendees who need to catch up, and self-paced attendees can use it too. In a new chat in the GitHub Copilot app:
 
 - `/lab-checkpoint list` shows the checkpoints.
-- `/lab-checkpoint <checkpoint>`, for example `/lab-checkpoint 4`, asks you to confirm, then installs the dependencies if needed and runs the checkpoint. For checkpoint 4, it also offers to add the app as a project.
+- `/lab-checkpoint <checkpoint>`, for example `/lab-checkpoint 4`, asks you to confirm, then installs the dependencies if needed and runs the checkpoint. For checkpoint 4 and later, it also adds the app as a project in the GitHub Copilot app, if it isn't one yet.
 
 The skill never runs on its own: only when you type the command. To run a checkpoint from a terminal instead, read on.
 
@@ -124,7 +124,7 @@ The checkpoint does everything in checkpoint 3, then:
 If the app folder already exists, the checkpoint keeps it as is, and deploys it again only if it has new commits since the last deployment. It takes about five minutes the first time. When it ends with **Done**, it shows the hosted app URL. Before you continue with Exercise 5, do these steps from Exercise 4 in the GitHub Copilot app:
 
 1. If the checkpoint installed the plugin, restart the app so it loads it.
-1. Add the `home-loan-desk` folder as a project.
+1. Add the `home-loan-desk` folder as a project. The `/lab-checkpoint` skill does it for you.
 1. Create a new session in the **home-loan-desk** project, and change **New worktree** to **Current checkout**.
 
 If the plugin install fails, the checkpoint shows a warning and deploys the app anyway. Install the plugin from the app, as in Exercise 4, Task 1.

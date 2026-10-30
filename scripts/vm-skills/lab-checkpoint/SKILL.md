@@ -28,7 +28,7 @@ Reply with the table above, then: "Run `/lab-checkpoint <checkpoint>` to set the
 1. Ask the user to confirm with the ask_user tool, with the choices "Yes, run it" and "No, cancel". In the question, say:
    - which exercises the checkpoint completes,
    - that it skips the steps already done; if the portfolio data or the semantic model don't match the lab, it resets them, so changes made to them by hand are lost,
-   - for checkpoint 4 and later: that it installs the rayfin plugin, and creates the app in `%USERPROFILE%\home-loan-desk`, or reuses the folder if it already exists,
+   - for checkpoint 4 and later: that it installs the rayfin plugin, and creates the app in `%USERPROFILE%\home-loan-desk`, or reuses the folder if it already exists, then adds it as a project in the GitHub Copilot app if it isn't one yet,
    - for checkpoint 6 and later: that it adds the code changes of the exercises from Exercise 6 on to the app as Git commits, then deploys it again. It stops if the app already has other changes to the same files,
    - for checkpoint 8: that it sets the Foundry endpoint and API key secrets of the app, from the gpt-6-luna deployment it finds in Azure,
    - that a browser window may open to sign in: pick the lab account,
@@ -55,7 +55,7 @@ Reply with the table above, then: "Run `/lab-checkpoint <checkpoint>` to set the
    - With anything else: show the error line, and say "Run `/lab-checkpoint <checkpoint>` again, or ask a lab proctor for help." Stop there.
 
 4. When it ends with **Done** or **Already at checkpoint**, reply with a short summary and the links it printed. If it printed a WARN line for the plugin, tell the user to install the rayfin plugin from the app, as in Exercise 4, Task 1. For checkpoint 4 and later:
-   - Offer to add the app folder as a project in the GitHub Copilot app, and do it if the user agrees.
+   - Make sure the app folder it printed is a project in the GitHub Copilot app: list the projects with the list_repositories tool, and if none has that folder as its path, add it with the add_repository tool and its `path`. Don't ask first, and don't tell the user to add it themselves. If adding fails, tell the user to add the folder as a project, as in Exercise 4.
    - Tell the user to create a new session in the **home-loan-desk** project, and change **New worktree** to **Current checkout**.
    - If it says to restart the app, tell the user to restart the GitHub Copilot app first, so it loads the rayfin plugin.
    - For checkpoint 8: if it printed that the Foundry secrets aren't set, tell the user to set them as in Exercise 8, Task 1, in a terminal they open themselves, then run `/lab-checkpoint 8` again. Never ask for the endpoint or API key in the chat, and never pass them in a command.
