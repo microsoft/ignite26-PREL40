@@ -755,10 +755,8 @@ index 18e9d59..43911bc 100644
    - name: caldovaportfolio
      type: fabric-semanticmodel
      config:
--      workspaceId: {{WORKSPACE_ID}}
--      itemId: {{SEMANTIC_MODEL_ID}}
-+      workspaceId: {{WORKSPACE_ID}}
-+      itemId: {{SEMANTIC_MODEL_ID}}
+       workspaceId: {{WORKSPACE_ID}}
+       itemId: {{SEMANTIC_MODEL_ID}}
      auth:
        type: delegated
      version: "1"

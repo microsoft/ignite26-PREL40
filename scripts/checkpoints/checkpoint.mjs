@@ -19,8 +19,11 @@
 //              dependencies if they changed, and deploys the app again.
 //   --to 7  Everything above, then the app changes of Exercise 7, the same way. The attendee uploads the
 //           HL-1042 sample files in the app.
+//   --to 8  Everything above, then the app changes of Exercise 8 (Rayfin Functions and the handoff brief), the same
+//           way, and the FOUNDRY_ENDPOINT and FOUNDRY_API_KEY secrets of the deployed app: from the FOUNDRY_ENDPOINT
+//           and FOUNDRY_API_KEY environment variables, the gpt-6-luna deployment found in Azure, or a terminal prompt.
 //
-// Usage: npm install, then node checkpoint.mjs --to <3|4|6|7> [options]. Run with --help for the options.
+// Usage: npm install, then node checkpoint.mjs --to <3|4|6|7|8> [options]. Run with --help for the options.
 // Lab folder: C:\LabFiles on the lab VM. On another machine, pass --lab-dir or set PREL40_LABFILES (see lab.mjs).
 // Sign-in: uses the Azure CLI if you're signed in with `az login`, otherwise opens a browser.
 
@@ -29,6 +32,7 @@ import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createInterface } from 'node:readline';
 import { parseArgs } from 'node:util';
 import { Connection, Request } from 'tedious';
 import { apply as applyPatches, BASE_CHECKPOINT, INITIAL_COMMIT, latestCheckpoint, resetApp, TAG_PREFIX } from './app-patches.mjs';
@@ -46,16 +50,22 @@ const CHECKPOINTS = {
   4: { label: 'Exercises 2 to 4', next: 'Exercise 5' },
   6: { label: 'Exercises 2 to 6', next: 'Exercise 7' },
   7: { label: 'Exercises 2 to 7', next: 'Exercise 8' },
+  8: { label: 'Exercises 2 to 8', next: 'the conclusion' },
 };
+// Exercise 8, Task 1: the Foundry model deployment the handoff brief function calls, and its secrets.
+const FOUNDRY_MODEL = 'gpt-6-luna';
+const FOUNDRY_SECRETS = ['FOUNDRY_ENDPOINT', 'FOUNDRY_API_KEY'];
 
 const FABRIC_API = 'https://api.fabric.microsoft.com/v1';
 const POWERBI_API = 'https://api.powerbi.com/v1.0/myorg';
+const ARM = 'https://management.azure.com';
 const ONELAKE = 'https://onelake.dfs.fabric.microsoft.com';
 const SCOPES = {
   fabric: 'https://api.fabric.microsoft.com/.default',
   powerbi: 'https://analysis.windows.net/powerbi/api/.default',
   sql: 'https://database.windows.net/.default',
   storage: 'https://storage.azure.com/.default',
+  arm: 'https://management.azure.com/.default',
 };
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
@@ -472,15 +482,17 @@ function quote(arg) {
   return process.platform === 'win32' && /[\s"&|<>^]/.test(arg) ? `"${arg.replace(/"/g, '\\"')}"` : arg;
 }
 
-// capture: collect the output instead of showing it. tee: show it and also collect it.
-function runCommand(command, args, { cwd, capture = false, tee = false } = {}) {
+// capture: collect the output instead of showing it. tee: show it and also collect it. input: write it to stdin.
+function runCommand(command, args, { cwd, capture = false, tee = false, input } = {}) {
   return new Promise((done, fail) => {
     const windows = process.platform === 'win32';
+    const stdin = input !== undefined ? 'pipe' : capture ? 'ignore' : 'inherit';
     const child = spawn(command, windows ? args.map(quote) : args, {
       cwd,
       shell: windows,
-      stdio: capture ? ['ignore', 'pipe', 'pipe'] : tee ? ['inherit', 'pipe', 'pipe'] : 'inherit',
+      stdio: capture ? [stdin, 'pipe', 'pipe'] : tee ? [stdin, 'pipe', 'pipe'] : [stdin, 'inherit', 'inherit'],
     });
+    if (input !== undefined) child.stdin.end(input);
     let output = '';
     if (capture || tee) {
       child.stdout.on('data', (chunk) => {
@@ -612,6 +624,98 @@ function findDeployment(appDir, workspaceId) {
   return Object.values(deployments).find((entry) => entry.fabricWorkspaceId === workspaceId && entry.hostingUrl);
 }
 
+// ---------------------------------------------------------------------------
+// Exercise 8: Foundry secrets
+
+async function armList(getToken, url) {
+  const items = [];
+  for (let next = url; next; ) {
+    const { json } = await request(getToken, 'GET', next, { scope: SCOPES.arm });
+    items.push(...(json?.value ?? []));
+    next = json?.nextLink;
+  }
+  return items;
+}
+
+// The endpoint and key of the one Foundry resource the user can see with a gpt-6-luna deployment and key access.
+async function findFoundryInAzure(getToken) {
+  const api = 'api-version=2024-10-01';
+  const usable = [];
+  const keyless = [];
+  for (const subscription of await armList(getToken, `${ARM}/subscriptions?api-version=2022-12-01`)) {
+    const accounts = await armList(getToken, `${ARM}/subscriptions/${subscription.subscriptionId}/providers/Microsoft.CognitiveServices/accounts?${api}`).catch(() => []);
+    for (const account of accounts.filter((a) => a.kind === 'AIServices' || a.kind === 'OpenAI')) {
+      const deployments = await armList(getToken, `${ARM}${account.id}/deployments?${api}`).catch(() => []);
+      if (!deployments.some((deployment) => deployment.name === FOUNDRY_MODEL)) continue;
+      (account.properties?.disableLocalAuth ? keyless : usable).push(account);
+    }
+  }
+  if (usable.length !== 1) {
+    const names = (list) => list.map((account) => account.name).join(', ');
+    if (usable.length > 1) log(`  Found several Foundry resources with a ${FOUNDRY_MODEL} deployment: ${names(usable)}.`);
+    else if (keyless.length) log(`  Found ${names(keyless)} with a ${FOUNDRY_MODEL} deployment, but API keys are disabled on it.`);
+    else log(`  Found no Foundry resource with a ${FOUNDRY_MODEL} deployment in your Azure subscriptions.`);
+    return null;
+  }
+  const [account] = usable;
+  const { json } = await request(getToken, 'POST', `${ARM}${account.id}/listKeys?${api}`, { scope: SCOPES.arm, allow: [400, 403] });
+  if (!json?.key1) {
+    log(`  Found ${account.name}, but couldn't read its API key: ${json?.error?.message ?? 'no key returned'}.`);
+    return null;
+  }
+  const base =
+    account.properties?.endpoints?.['OpenAI Language Model Instance API'] ??
+    `https://${account.properties?.customSubDomainName ?? account.name}.openai.azure.com/`;
+  return { FOUNDRY_ENDPOINT: new URL('openai/v1/responses', base).href, FOUNDRY_API_KEY: json.key1, source: `${account.name} in Azure` };
+}
+
+// Reads a line from the terminal. With `hidden`, doesn't echo what's typed.
+function promptLine(question, { hidden = false } = {}) {
+  return new Promise((done) => {
+    const rl = createInterface({ input: process.stdin, output: process.stderr, terminal: true });
+    if (hidden) rl._writeToOutput = (text) => text.startsWith(question) && process.stderr.write(question);
+    rl.question(question, (answer) => {
+      rl.close();
+      if (hidden) process.stderr.write('\n');
+      done(answer.trim());
+    });
+  });
+}
+
+// From the environment, then Azure, then the terminal. Values never go in arguments or logs.
+async function foundrySecrets(getToken) {
+  const { FOUNDRY_ENDPOINT, FOUNDRY_API_KEY } = process.env;
+  if (FOUNDRY_ENDPOINT && FOUNDRY_API_KEY) return { FOUNDRY_ENDPOINT, FOUNDRY_API_KEY, source: 'the FOUNDRY_ENDPOINT and FOUNDRY_API_KEY environment variables' };
+  log(`Looking for the ${FOUNDRY_MODEL} deployment in Microsoft Foundry...`);
+  const found = await findFoundryInAzure(getToken).catch((error) => {
+    log(`  Couldn't search Azure: ${error.message.split('\n')[0]}`);
+    return null;
+  });
+  if (found) return found;
+  if (!process.stdin.isTTY) return null;
+  log(`Copy them from the ${FOUNDRY_MODEL} deployment details in Microsoft Foundry (https://ai.azure.com), as in Exercise 8, Task 1.`);
+  log('Leave a value empty to skip setting the secrets.');
+  const endpoint = await promptLine('  OpenAI-compatible endpoint (ends with /openai/v1/responses): ');
+  if (!endpoint) return null;
+  const apiKey = await promptLine('  API key (hidden): ', { hidden: true });
+  return apiKey ? { FOUNDRY_ENDPOINT: endpoint, FOUNDRY_API_KEY: apiKey, source: 'your input' } : null;
+}
+
+// The names of the secrets set on the app's active deployment.
+async function deployedSecretNames(appDir) {
+  const output = await runCommand('npx', ['rayfin', '--json', 'secret', 'list'], { cwd: appDir, capture: true }).catch((error) => error.output ?? '');
+  const line = output.split('\n').reverse().find((text) => text.trim().startsWith('{'));
+  try {
+    return JSON.parse(line).secrets?.map((secret) => secret.name) ?? [];
+  } catch {
+    return [];
+  }
+}
+
+async function setSecret(appDir, name, value) {
+  await runCommand('npx', ['rayfin', 'secret', 'set', name, '--stdin'], { cwd: appDir, capture: true, input: value });
+}
+
 // Static hosting is protected, so the app may answer with a redirect to sign in: anything but a server error is fine.
 async function isResponding(url, { retries = 0 } = {}) {
   for (let attempt = 0; ; attempt++) {
@@ -649,6 +753,7 @@ const STEPS = [
   { name: 'app', checkpoint: 4, label: 'Exercise 4: home-loan-desk app' },
   { name: 'deploy', checkpoint: 4, label: 'Exercise 4: deployment' },
   { name: 'code', checkpoint: 6, label: 'Exercise 6 and later: app changes' },
+  { name: 'secrets', checkpoint: 8, label: 'Exercise 8: Foundry secrets' },
 ];
 
 function loadState(statePath) {
@@ -817,6 +922,7 @@ async function main() {
   saveState(statePath, state);
 
   let restartApp = false;
+  let secretsMissing = false;
   if (to >= 4) {
     const claims = tokenClaims(await getToken(SCOPES.fabric));
     const tenantId = values.tenant ?? claims.tid;
@@ -898,9 +1004,34 @@ async function main() {
         record('code', { checkpoint: to });
       }
       await deploy(`Exercise ${to}: redeployment`, { again: true });
-      progress.checkpoint = Math.max(progress.checkpoint, to);
+      progress.checkpoint = Math.max(progress.checkpoint, Math.min(to, 7));
       saveState(statePath, state);
     }
+
+    // The secrets live on the deployed app, so the state can't tell: always check them.
+    if (to >= 8) {
+      step(steps.secrets.label);
+      const deployedNames = await deployedSecretNames(appDir);
+      const missing = FOUNDRY_SECRETS.filter((name) => !deployedNames.includes(name));
+      if (!values.force && !redo.has('secrets') && missing.length === 0) {
+        log('Skipping: the deployed app already has both secrets.');
+        record('secrets');
+      } else {
+        const secrets = await foundrySecrets(getToken);
+        if (secrets) {
+          log(`Setting ${FOUNDRY_SECRETS.join(' and ')} on the deployed app, from ${secrets.source}...`);
+          for (const name of FOUNDRY_SECRETS) await setSecret(appDir, name, secrets[name]);
+          log('  PASS  Both secrets are set.');
+          record('secrets');
+        } else {
+          forget('secrets');
+          secretsMissing = true;
+          log(`  WARN  The secrets aren't set: the handoff brief shows a configuration error until they are.`);
+        }
+      }
+    }
+    if (!secretsMissing) progress.checkpoint = Math.max(progress.checkpoint, to);
+    saveState(statePath, state);
   }
 
   log(`\nDone. ${checkpoint.label} are set up.`);
@@ -916,6 +1047,12 @@ async function main() {
     const samples = [join(labDir, 'data', 'samples'), join(scriptDir, '..', '..', 'data', 'samples')].map((dir) => resolve(dir)).find(existsSync) ?? join(labDir, 'data', 'samples');
     log("\nThe checkpoint doesn't upload HL-1042's files. To have them, upload them in the app's HL-1042 case, as in");
     log(`Exercise 7, Task 3: ${join(samples, 'HL-1042-floor-plan.pdf')} and ${join(samples, 'HL-1042-kitchen-current.jpg')}.`);
+  }
+  if (secretsMissing) {
+    log(`\nThe Foundry secrets aren't set. Set them as in Exercise 8, Task 1: in ${appDir}, run`);
+    log(`"npx rayfin secret set FOUNDRY_ENDPOINT" and "npx rayfin secret set FOUNDRY_API_KEY", and paste the values from`);
+    log(`the ${FOUNDRY_MODEL} deployment in Microsoft Foundry when asked. Or set the FOUNDRY_ENDPOINT and FOUNDRY_API_KEY`);
+    log('environment variables, or run the checkpoint again in a terminal to type them. Then run the checkpoint again.');
   }
   log(`\nThen continue with ${checkpoint.next}.`);
 }

@@ -12,6 +12,7 @@ All checkpoints run with the same script, [`checkpoint.mjs`](checkpoint.mjs). Pi
 | `node checkpoint.mjs --to 4` | Exercises 2 to 4: everything above, plus the Rayfin plugin and the Home Loan Operations Desk app, created and deployed | Exercise 5 |
 | `node checkpoint.mjs --to 6` | Exercises 2 to 6: everything above, plus the semantic model connector and the portfolio page in the app, committed and deployed again | Exercise 7 |
 | `node checkpoint.mjs --to 7` | Exercises 2 to 7: everything above, plus private file storage and the case files panel in the app, committed and deployed again | Exercise 8 |
+| `node checkpoint.mjs --to 8` | Exercises 2 to 8: everything above, plus Rayfin Functions and the AI handoff brief in the app, committed and deployed again, and the Foundry secrets | The conclusion |
 
 Each checkpoint also completes the ones before it.
 
@@ -158,6 +159,26 @@ The checkpoint does everything in checkpoint 6, then adds the app changes of Exe
 
 The checkpoint doesn't upload HL-1042's files. To have them, upload `HL-1042-floor-plan.pdf` and `HL-1042-kitchen-current.jpg` from `C:\LabFiles\data\samples` in the app, as in Exercise 7, Task 3. Exercise 8 works without them. Then continue with Exercise 8.
 
+## Checkpoint 8: AI handoff brief
+
+Run:
+
+```powershell
+node checkpoint.mjs --to 8
+```
+
+The checkpoint does everything in checkpoint 7, then:
+
+1. Adds the app changes of Exercise 8 the same way, as a commit tagged `lab/checkpoint-8`: Rayfin Functions with the handoff brief function, and the review and save experience on the case page. It installs the new dependencies, and deploys the app again.
+1. Sets the `FOUNDRY_ENDPOINT` and `FOUNDRY_API_KEY` secrets of the deployed app, unless it already has both. It takes the values from, in order:
+    - The `FOUNDRY_ENDPOINT` and `FOUNDRY_API_KEY` environment variables, if both are set.
+    - The one Microsoft Foundry resource with a `gpt-6-luna` deployment and API keys enabled in your Azure subscriptions: its OpenAI-compatible endpoint (`https://<resource>.openai.azure.com/openai/v1/responses`) and first key. It signs in to Azure the same way as for Fabric.
+    - A prompt in the terminal, with the key hidden, when you run it in a terminal.
+
+    The values never appear in the output, a file, or a command line. If it can't get them, the checkpoint deploys the app anyway, and explains how to set them, as in Exercise 8, Task 1. Until they're set, the handoff brief shows a configuration error. Run the checkpoint again once they're set to finish it.
+
+When it ends with **Done**, continue with the conclusion. To set the secrets again, for example after you created another Foundry resource, add `--redo secrets`.
+
 ## Run a checkpoint again
 
 Each run saves its progress for each workspace in `.state.json`, in the lab folder's `checkpoints` folder (`C:\LabFiles\checkpoints\.state.json` on the VM). When you run a checkpoint again:
@@ -168,7 +189,7 @@ Each run saves its progress for each workspace in `.state.json`, in the lab fold
 
 The state file is local: it doesn't notice changes made in the browser or in another folder. To run steps again anyway:
 
-- `--redo <step,...>` runs the steps you list, even if they're done. The steps are `database`, `seed`, `model`, `plugin`, `app`, `deploy` and `code`. For example, `--redo seed` resets the portfolio data, and then refreshes the semantic model. `--redo database` and `--redo app` reuse the database or app folder if it exists: they never delete anything. `--redo code` replaces the app's code changes since checkpoint 4 with the checkpoint's, and keeps yours in a backup branch.
+- `--redo <step,...>` runs the steps you list, even if they're done. The steps are `database`, `seed`, `model`, `plugin`, `app`, `deploy`, `code` and `secrets`. For example, `--redo seed` resets the portfolio data, and then refreshes the semantic model. `--redo database` and `--redo app` reuse the database or app folder if it exists: they never delete anything. `--redo code` replaces the app's code changes since checkpoint 4 with the checkpoint's, and keeps yours in a backup branch.
 - `--force` runs every step up to the checkpoint, as if it were the first run. It doesn't replace app code changes: only `--redo code` does.
 
 To start over in a workspace, delete its entry from `.state.json`, or delete the file. The VM update keeps the file.
@@ -177,7 +198,7 @@ To start over in a workspace, delete its entry from `.state.json`, or delete the
 
 | Option | What it does |
 | --- | --- |
-| `--to <checkpoint>` | Required. How far to go: `3`, `4`, `6` or `7`. |
+| `--to <checkpoint>` | Required. How far to go: `3`, `4`, `6`, `7` or `8`. |
 | `-w`, `--workspace <name\|id>` | Use this workspace, or create it if no workspace has this name. By default, the checkpoint picks the one workspace whose name starts with `PREL40-homeloans`. |
 | `--capacity <name\|id>` | Create the workspace on this capacity. By default, the checkpoint uses your one active Fabric capacity, and stops if you have several. |
 | `-t`, `--tenant <id>` | Sign in to this Microsoft Entra tenant. Use it when your Azure CLI default tenant isn't the lab tenant. |
@@ -185,7 +206,7 @@ To start over in a workspace, delete its entry from `.state.json`, or delete the
 | `--app-dir <path>` | Create or reuse the app in this folder (checkpoint 4 and later). By default, it's `%USERPROFILE%\home-loan-desk` on the VM, and `<lab folder>/home-loan-desk` elsewhere. |
 | `--sql <path>` | Use another seed script. By default, the checkpoint uses `data/portfolio-seed.sql` in the lab folder, or in the repository. |
 | `--skip-seed` | Keep the existing data and only deploy and check the semantic model. |
-| `--redo <step,...>` | Run these steps again, even if an earlier run did them: `database`, `seed`, `model`, `plugin`, `app`, `deploy`, `code`. See [Run a checkpoint again](#run-a-checkpoint-again). |
+| `--redo <step,...>` | Run these steps again, even if an earlier run did them: `database`, `seed`, `model`, `plugin`, `app`, `deploy`, `code`, `secrets`. See [Run a checkpoint again](#run-a-checkpoint-again). |
 | `--force` | Run every step again, as if it were the first run. |
 | `-h`, `--help` | Show the checkpoints and options. |
 
@@ -211,7 +232,7 @@ From Exercise 6 on, the exercises change the app. Store those changes as Git pat
     npm run patch:capture -- <N>
     ```
 
-    It saves the commits since the previous `lab/checkpoint-*` tag (or since the initial commit) as `app/<NN>-<slug>.patch`, and tags the app's HEAD `lab/checkpoint-<N>`. It replaces workspace-specific values with placeholders: `{{WORKSPACE_ID}}`, `{{TENANT_ID}}`, `{{HOSTING_URL}}` and `{{APP_ITEM_ID}}` from the app's deployments (`rayfin/.deployments.json`), and `{{SQL_DATABASE_ID}}` and `{{SEMANTIC_MODEL_ID}}` from `.state.json`. It uses the values of every workspace the app was deployed to, so if you deployed it to another workspace along the way, the changes that switch IDs become placeholders on both sides, and still apply to any app. If the changes add or remove another GUID, `fabricapps.net` URL or publishable key, the capture stops: replace it with `--placeholder NAME=<value>`, or keep it with `--allow <value>` if it's the same for everyone. Changes you haven't committed aren't captured, and the script lists them.
+    It saves the commits since the previous `lab/checkpoint-*` tag (or since the initial commit) as `app/<NN>-<slug>.patch`, and tags the app's HEAD `lab/checkpoint-<N>`. It replaces workspace-specific values with placeholders: `{{WORKSPACE_ID}}`, `{{TENANT_ID}}`, `{{HOSTING_URL}}` and `{{APP_ITEM_ID}}` from the app's deployments (`rayfin/.deployments.json`), and `{{SQL_DATABASE_ID}}` and `{{SEMANTIC_MODEL_ID}}` from `.state.json`. It uses the values of every workspace the app was deployed to, so if you deployed it to another workspace along the way, the changes that only switch IDs become unchanged lines, and the patch still applies to any app. If the changes add or remove another GUID, `fabricapps.net` URL or publishable key, the capture stops: replace it with `--placeholder NAME=<value>`, or keep it with `--allow <value>` if it's the same for everyone. Changes you haven't committed aren't captured, and the script lists them.
 
 1. Check the patches on a fresh app:
 
@@ -223,7 +244,7 @@ From Exercise 6 on, the exercises change the app. Store those changes as Git pat
 
 1. Commit the patch file.
 
-To apply the patches to another app at checkpoint 4 or later, run `npm run patch:apply -- <N>`. It applies the patches after the app's latest `lab/checkpoint-*` tag, up to `<N>`, with that app's values, and tags each one. If the app has uncommitted changes, it stops, except for the redirect URIs that `rayfin up` adds to `rayfin.yml`, which it keeps. If a patch doesn't apply, it puts the app back as it was.
+To apply the patches to another app at checkpoint 4 or later, run `npm run patch:apply -- <N>`. It applies the patches after the app's latest `lab/checkpoint-*` tag, up to `<N>`, with that app's values, and tags each one. If the app has uncommitted changes, it stops, except for the redirect URIs that `rayfin up` adds to `rayfin.yml`, which it keeps, and the quotes it removes when it rewrites the file. If a patch doesn't apply, it puts the app back as it was.
 
 To change a patch, apply the patches up to the one before it, redo the changes, and capture again with the same number: it replaces the patch, and keeps its name unless you pass `--name <slug>`. Then capture the later patches again on top, or check they still apply with `npm run patch:verify`.
 

@@ -179,6 +179,54 @@ function captureValues(appDir, statePath, overrides) {
   return pairs.filter(([, value]) => value && !seen.has(value.toLowerCase()) && seen.add(value.toLowerCase()));
 }
 
+// With placeholders, a change that only switches workspaces (removed and added lines that are now the same) is
+// noise: make those lines context, and drop the hunks and files left without changes.
+function dropNoopChanges(text) {
+  const lines = text.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    if (!lines[i].startsWith('-') || lines[i].startsWith('--- ') || lines[i] === '---') continue;
+    let removed = i;
+    while (removed < lines.length && lines[removed].startsWith('-') && !lines[removed].startsWith('--- ')) removed++;
+    let added = removed;
+    while (added < lines.length && lines[added].startsWith('+') && !lines[added].startsWith('+++ ')) added++;
+    const count = removed - i;
+    const same = added - removed === count && lines.slice(i, removed).every((line, k) => line.slice(1) === lines[removed + k].slice(1));
+    if (same) {
+      lines.splice(removed, count);
+      for (let k = i; k < removed; k++) lines[k] = ` ${lines[k].slice(1)}`;
+    }
+    i = (same ? removed : added) - 1;
+  }
+
+  // Split into file sections and hunks; keep only hunks with changes, and files with hunks or other changes.
+  const out = [];
+  let section = null;
+  const flushSection = () => {
+    if (!section) return;
+    const hunks = section.hunks.filter((hunk) => hunk.slice(1).some((line) => /^[+-]/.test(line)));
+    const binaryOrMode = section.hunks.length === 0;
+    if (hunks.length || binaryOrMode) out.push(...section.header, ...hunks.flat());
+    section = null;
+  };
+  for (const line of lines) {
+    if (line.startsWith('diff --git ')) {
+      flushSection();
+      section = { header: [line], hunks: [] };
+    } else if (section && line.startsWith('@@')) {
+      section.hunks.push([line]);
+    } else if (section && section.hunks.length && /^([ +-\\]|$)/.test(line) && !/^-- ?$/.test(line)) {
+      section.hunks.at(-1).push(line);
+    } else if (section && !section.hunks.length) {
+      section.header.push(line);
+    } else {
+      flushSection();
+      out.push(line);
+    }
+  }
+  flushSection();
+  return out.join('\n');
+}
+
 function capture(n, options) {
   const { defaultAppDir, statePath } = resolveLabDir(options['lab-dir']);
   const appDir = resolve(options['app-dir'] ?? defaultAppDir);
@@ -216,6 +264,8 @@ function capture(n, options) {
     }
   }
 
+  text = dropNoopChanges(text);
+
   const allowed = new Set((options.allow ?? []).map((value) => value.toLowerCase()));
   const leaks = new Set();
   // Removed lines count too: a value left there makes the patch apply only to this app.
@@ -247,12 +297,17 @@ function capture(n, options) {
 }
 
 // Rayfin adds the hosting URL (and 127.0.0.1) to allowedRedirectUris when it deploys, without committing it.
+// It also rewrites the file, which can drop the quotes around values: those changes don't count.
 function onlyRedirectUris(appDir, dirty) {
   if (dirty !== 'M rayfin/rayfin.yml') return false;
   const changes = git(appDir, ['diff', '-U0', '--', 'rayfin/rayfin.yml'])
     .split('\n')
     .filter((line) => /^[+-]/.test(line) && !/^(\+\+\+|---) /.test(line));
-  return changes.length > 0 && changes.every((line) => /^\+\s*-\s*https?:\/\/\S+\s*$/.test(line));
+  const unquoted = (line) => line.slice(1).replace(/:\s+(["'])(.*)\1\s*$/, ': $2');
+  const removed = changes.filter((line) => line.startsWith('-')).map(unquoted);
+  const added = changes.filter((line) => line.startsWith('+') && !/^\+\s*-\s*https?:\/\/\S+\s*$/.test(line)).map(unquoted);
+  const redirects = changes.length - removed.length - added.length;
+  return redirects > 0 && removed.length === added.length && removed.every((line) => added.includes(line));
 }
 
 // The allowedRedirectUris items in rayfin.yml, and the line after which to add more.
