@@ -1,0 +1,721 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: sinedied <noda@free.fr>
+Date: Fri, 30 Oct 2026 09:41:30 +0100
+Subject: [PATCH] Complete exercise 7
+
+---
+ package-lock.json                             |  11 ++
+ packages/frontend/package.json                |   1 +
+ packages/frontend/src/App.spec.tsx            |   1 +
+ packages/frontend/src/lab/lab-store.ts        |  21 ++-
+ packages/frontend/src/lab/seeder.spec.ts      |  19 +++
+ packages/frontend/src/lab/seeder.ts           |   7 +-
+ packages/frontend/src/lib/format.ts           |   4 +-
+ .../frontend/src/lib/rayfin-client.spec.ts    |   4 +
+ packages/frontend/src/lib/rayfin-client.ts    |  25 ++-
+ .../pages/case-detail/case-detail-page.tsx    |  13 ++
+ .../src/pages/case-detail/checklist-panel.tsx |   2 +-
+ .../src/pages/case-detail/files-panel.tsx     | 149 ++++++++++++++++++
+ packages/frontend/src/services/case-files.ts  | 121 ++++++++++++++
+ packages/frontend/src/services/cases.ts       |   5 +
+ packages/shared/src/index.ts                  |  16 ++
+ rayfin/rayfin.yml                             |   6 +-
+ rayfin/storage/CasePhoto.ts                   |  21 +++
+ rayfin/storage/schema.ts                      |   7 +
+ 18 files changed, 416 insertions(+), 17 deletions(-)
+ create mode 100644 packages/frontend/src/pages/case-detail/files-panel.tsx
+ create mode 100644 packages/frontend/src/services/case-files.ts
+ create mode 100644 rayfin/storage/CasePhoto.ts
+ create mode 100644 rayfin/storage/schema.ts
+
+diff --git a/package-lock.json b/package-lock.json
+index 9ae7a18..f8c5969 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -2084,6 +2084,16 @@
+         }
+       }
+     },
++    "node_modules/@microsoft/rayfin-storage": {
++      "version": "1.36.2",
++      "resolved": "https://registry.npmjs.org/@microsoft/rayfin-storage/-/rayfin-storage-1.36.2.tgz",
++      "integrity": "sha512-lS9trJQEDw7rxn5N/kJUnuvqBgpKoHKCQIKF80K8Qu5PmuL9zEfp00n+aDuAQHN9s+koEKrjjCTUBCfmHbZ3JQ==",
++      "license": "MIT",
++      "dependencies": {
++        "@microsoft/rayfin-core": "1.36.2",
++        "@microsoft/rayfin-lib": "1.36.2"
++      }
++    },
+     "node_modules/@microsoft/rayfin-tools-common": {
+       "version": "1.36.2",
+       "resolved": "https://registry.npmjs.org/@microsoft/rayfin-tools-common/-/rayfin-tools-common-1.36.2.tgz",
+@@ -11926,6 +11936,7 @@
+         "@microsoft/rayfin-connectors": "^1.36.2",
+         "@microsoft/rayfin-data": "1.36.2",
+         "@microsoft/rayfin-lib": "1.36.2",
++        "@microsoft/rayfin-storage": "1.36.2",
+         "@rayfin-app/shared": "*",
+         "@tailwindcss/vite": "^4.3.0",
+         "clsx": "^2.1.1",
+diff --git a/packages/frontend/package.json b/packages/frontend/package.json
+index 64f0372..29c9b06 100644
+--- a/packages/frontend/package.json
++++ b/packages/frontend/package.json
+@@ -26,6 +26,7 @@
+     "@microsoft/rayfin-connectors": "^1.36.2",
+     "@microsoft/rayfin-data": "1.36.2",
+     "@microsoft/rayfin-lib": "1.36.2",
++    "@microsoft/rayfin-storage": "1.36.2",
+     "@rayfin-app/shared": "*",
+     "@tailwindcss/vite": "^4.3.0",
+     "clsx": "^2.1.1",
+diff --git a/packages/frontend/src/App.spec.tsx b/packages/frontend/src/App.spec.tsx
+index b003b38..a4428a5 100644
+--- a/packages/frontend/src/App.spec.tsx
++++ b/packages/frontend/src/App.spec.tsx
+@@ -55,6 +55,7 @@ function storeWith(seeded: boolean, missing?: string) {
+       rows.set(entity, [...(rows.get(entity) ?? []), { id: String(record.id) }]);
+     }),
+     remove: vi.fn(async () => {}),
++    removeCaseFiles: vi.fn(async () => 0),
+   };
+   return fake;
+ }
+diff --git a/packages/frontend/src/lab/lab-store.ts b/packages/frontend/src/lab/lab-store.ts
+index 9a40086..e408627 100644
+--- a/packages/frontend/src/lab/lab-store.ts
++++ b/packages/frontend/src/lab/lab-store.ts
+@@ -1,5 +1,6 @@
+-import type { RayfinClient } from '@microsoft/rayfin-client';
+-import type { UniversalAppSchema } from '@rayfin-app/shared';
++import { CASE_PHOTOS_FOLDER } from '@rayfin-app/shared';
++
++import type { AppClient } from '@/lib/rayfin-client';
+ 
+ import type { LabEntity, LabStore, VisibleRecord } from './seeder';
+ 
+@@ -37,7 +38,7 @@ const VISIBLE_FIELDS: Record<LabEntity, string[]> = {
+ };
+ 
+ /** A {@link LabStore} backed by the signed-in officer's Rayfin client. */
+-export function createRayfinLabStore(client: RayfinClient<UniversalAppSchema>): LabStore {
++export function createRayfinLabStore(client: AppClient): LabStore {
+   const entityClient = (entity: LabEntity) =>
+     client.data[entity] as unknown as SeedableEntityClient;
+ 
+@@ -63,5 +64,19 @@ export function createRayfinLabStore(client: RayfinClient<UniversalAppSchema>):
+     async remove(entity, id) {
+       await entityClient(entity).delete({ id });
+     },
++    async removeCaseFiles(caseId) {
++      const folder = client.storage[CASE_PHOTOS_FOLDER];
++      let removed = 0;
++      let continuation: string | undefined;
++      do {
++        const page = await folder.list({ prefix: caseId, limit: PAGE_SIZE, continuation });
++        for (const file of page.items) {
++          await folder.delete(file.name, { prefix: caseId });
++          removed++;
++        }
++        continuation = page.continuation;
++      } while (continuation);
++      return removed;
++    },
+   };
+ }
+diff --git a/packages/frontend/src/lab/seeder.spec.ts b/packages/frontend/src/lab/seeder.spec.ts
+index 28e5a96..e73a180 100644
+--- a/packages/frontend/src/lab/seeder.spec.ts
++++ b/packages/frontend/src/lab/seeder.spec.ts
+@@ -66,6 +66,14 @@ class FakeStore implements LabStore {
+     this.table(entity).delete(id);
+   }
+ 
++  readonly files = new Map<string, string[]>();
++
++  async removeCaseFiles(caseId: string) {
++    const removed = this.files.get(caseId)?.length ?? 0;
++    this.files.delete(caseId);
++    return removed;
++  }
++
+   count(entity: LabEntity) {
+     return this.table(entity).size;
+   }
+@@ -181,6 +189,17 @@ describe('resetLabData', () => {
+   });
+ });
+ 
++describe('resetLabData files', () => {
++  it("deletes the officer's uploaded files for each lab case", async () => {
++    const store = new FakeStore(OFFICER);
++    await restoreLabData(store, labFixtures, OFFICER);
++    store.files.set(hl1042.id, ['a1b2c3d4-roof.jpg']);
++
++    await resetLabData(store, labFixtures, OFFICER);
++    expect(store.files.has(hl1042.id)).toBe(false);
++  });
++});
++
+ describe('isDuplicateKeyError', () => {
+   it('recognizes the deployed data API duplicate-key message', () => {
+     expect(
+diff --git a/packages/frontend/src/lab/seeder.ts b/packages/frontend/src/lab/seeder.ts
+index be73840..a7f9a1b 100644
+--- a/packages/frontend/src/lab/seeder.ts
++++ b/packages/frontend/src/lab/seeder.ts
+@@ -24,6 +24,8 @@ export interface LabStore {
+   listVisible(entity: LabEntity): Promise<VisibleRecord[]>;
+   create(entity: LabEntity, record: Record<string, unknown>): Promise<void>;
+   remove(entity: LabEntity, id: string): Promise<void>;
++  /** Delete the files the officer uploaded for a case; returns how many were removed. */
++  removeCaseFiles(caseId: string): Promise<number>;
+ }
+ 
+ export interface SeedProgress {
+@@ -264,7 +266,7 @@ export async function restoreLabData(
+ 
+ /**
+  * Delete the officer's own lab cases and everything attached to them (including
+- * notes and tasks added during the lab), then restore the original lab data.
++ * notes, tasks, and uploaded files added during the lab), then restore the original lab data.
+  * Cases assigned to someone else are invisible to the officer and untouched.
+  */
+ export async function resetLabData(
+@@ -289,6 +291,9 @@ export async function resetLabData(
+     if (labCaseIds.has(row.id)) doomed.push({ entity: 'CaseWorkspace', id: row.id });
+   }
+ 
++  onProgress({ done: 0, total: 0, label: 'Removing uploaded files' });
++  for (const caseId of labCaseIds) await store.removeCaseFiles(caseId);
++
+   let done = 0;
+   const total = doomed.length;
+   const removeOne = async (item: { entity: LabEntity; id: string }) => {
+diff --git a/packages/frontend/src/lib/format.ts b/packages/frontend/src/lib/format.ts
+index 01ec9b8..f8937c6 100644
+--- a/packages/frontend/src/lib/format.ts
++++ b/packages/frontend/src/lib/format.ts
+@@ -40,8 +40,8 @@ export const CHECKLIST_LABELS: Record<ChecklistCategory, string> = {
+ };
+ 
+ /**
+- * Checklist categories that arrive as files. The starter can't receive them
+- * yet: the storage checkpoint adds private uploads and marks them received.
++ * Checklist categories that arrive as files. They are marked received only
++ * after a successful upload, never by hand.
+  */
+ export const UPLOAD_ONLY_CATEGORIES: ReadonlySet<ChecklistCategory> = new Set([
+   'renovation-plans-photos',
+diff --git a/packages/frontend/src/lib/rayfin-client.spec.ts b/packages/frontend/src/lib/rayfin-client.spec.ts
+index de87eff..cce321e 100644
+--- a/packages/frontend/src/lib/rayfin-client.spec.ts
++++ b/packages/frontend/src/lib/rayfin-client.spec.ts
+@@ -26,6 +26,10 @@ vi.mock('@microsoft/rayfin-client', () => ({
+   resolveRayfinConfig,
+ }));
+ 
++vi.mock('@microsoft/rayfin-storage', () => ({
++  createStorageClient: () => ({}),
++}));
++
+ describe('getRayfinClient', () => {
+   beforeEach(() => {
+     vi.resetModules();
+diff --git a/packages/frontend/src/lib/rayfin-client.ts b/packages/frontend/src/lib/rayfin-client.ts
+index 3b9d6a2..be21c21 100644
+--- a/packages/frontend/src/lib/rayfin-client.ts
++++ b/packages/frontend/src/lib/rayfin-client.ts
+@@ -9,19 +9,34 @@ import {
+   ConnectorsRayfinClient,
+   resolveRayfinConfig,
+ } from '@microsoft/rayfin-client';
+-import type { UniversalAppSchema } from '@rayfin-app/shared';
++import { createStorageClient, type StorageClient } from '@microsoft/rayfin-storage';
++import type { AppStorageSchema, UniversalAppSchema } from '@rayfin-app/shared';
+ import {
+   connectorConfigs,
+   connectorRuntimes,
+   type AppConnectorsSchema,
+ } from './connectors';
+ 
+-export type AppClient = ConnectorsRayfinClient<
++type AppConnectorsClient = ConnectorsRayfinClient<
+   UniversalAppSchema,
+   Record<string, never>,
+   AppConnectorsSchema
+ >;
+ 
++/** The data, auth, connector, and private file storage client. */
++export interface AppClient extends AppConnectorsClient {
++  readonly storage: StorageClient<AppStorageSchema>;
++}
++
++class RayfinAppClient
++  extends ConnectorsRayfinClient<UniversalAppSchema, Record<string, never>, AppConnectorsSchema>
++  implements AppClient
++{
++  readonly storage: StorageClient<AppStorageSchema> = createStorageClient<AppStorageSchema>(
++    this.apiClient
++  );
++}
++
+ let _client: Promise<AppClient> | undefined;
+ 
+ export class MissingRayfinConfigError extends Error {
+@@ -59,11 +74,7 @@ async function createClient(): Promise<AppClient> {
+     ]);
+   }
+ 
+-  return new ConnectorsRayfinClient<
+-    UniversalAppSchema,
+-    Record<string, never>,
+-    AppConnectorsSchema
+-  >(
++  return new RayfinAppClient(
+     {
+       baseUrl: resolved.baseUrl,
+       publishableKey: resolved.publishableKey,
+diff --git a/packages/frontend/src/pages/case-detail/case-detail-page.tsx b/packages/frontend/src/pages/case-detail/case-detail-page.tsx
+index 2788411..0f7518f 100644
+--- a/packages/frontend/src/pages/case-detail/case-detail-page.tsx
++++ b/packages/frontend/src/pages/case-detail/case-detail-page.tsx
+@@ -24,6 +24,9 @@ import {
+   REVIEW_STATUS_LABELS,
+   STAGE_LABELS,
+ } from '@/lib/format';
++import {
++  PROPERTY_FILES_CATEGORY,
++} from '@/services/case-files';
+ import {
+   createNote,
+   createTask,
+@@ -34,10 +37,12 @@ import {
+   setTaskStatus,
+   updateChecklistItem,
+   updateReviewStatus,
++  uploadReceiptPatch,
+ } from '@/services/cases';
+ 
+ import { BriefPanel } from './brief-panel';
+ import { ChecklistPanel } from './checklist-panel';
++import { FilesPanel } from './files-panel';
+ import { NotesPanel } from './notes-panel';
+ import { TasksPanel } from './tasks-panel';
+ 
+@@ -134,6 +139,14 @@ function CaseWorkspaceView({ initialCase }: { initialCase: CaseWorkspaceRecord }
+       <div className="grid gap-400 lg:grid-cols-5">
+         <div className="flex flex-col gap-400 lg:col-span-3">
+           <ChecklistPanel checklist={checklist} />
++          <FilesPanel
++            caseId={caseId}
++            onUploaded={async () => {
++              const item = checklist.items.find((i) => i.category === PROPERTY_FILES_CATEGORY);
++              if (item && item.status !== 'received') await checklist.update(item.id, uploadReceiptPatch());
++            }}
++            requireEmail={requireEmail}
++          />
+           <NotesPanel
+             notes={notes}
+             onAdd={async (body) => {
+diff --git a/packages/frontend/src/pages/case-detail/checklist-panel.tsx b/packages/frontend/src/pages/case-detail/checklist-panel.tsx
+index 26e9666..ce74b5d 100644
+--- a/packages/frontend/src/pages/case-detail/checklist-panel.tsx
++++ b/packages/frontend/src/pages/case-detail/checklist-panel.tsx
+@@ -74,7 +74,7 @@ function ChecklistRow({
+       </div>
+       {!isReceived && uploadOnly ? (
+         <span
+-          title="File uploads aren't enabled yet"
++          title="Marked received when a file is uploaded under Property files"
+           className="inline-flex items-center gap-100 rounded-full bg-muted px-200 py-100-nudge text-200 text-muted-foreground"
+         >
+           <UploadCloud aria-hidden="true" className="icon-size-100" />
+diff --git a/packages/frontend/src/pages/case-detail/files-panel.tsx b/packages/frontend/src/pages/case-detail/files-panel.tsx
+new file mode 100644
+index 0000000..b274a33
+--- /dev/null
++++ b/packages/frontend/src/pages/case-detail/files-panel.tsx
+@@ -0,0 +1,149 @@
++import { useRef, useState, type FormEvent } from 'react';
++import { Download, FileText } from 'lucide-react';
++
++import { Panel } from '@/components/panel';
++import { buttonStyles } from '@/components/styles';
++import { EmptyState, ErrorState, LoadingState } from '@/components/states';
++import { useAsyncData } from '@/hooks/use-async-data';
++import { formatDateTime } from '@/lib/format';
++import {
++  describeStorageError,
++  displayName,
++  downloadCaseFile,
++  listCaseFiles,
++  uploadCaseFile,
++  validateCaseFile,
++  type CaseFile,
++} from '@/services/case-files';
++
++function formatSize(bytes: number): string {
++  return bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
++}
++
++export function FilesPanel({
++  caseId,
++  requireEmail,
++  onUploaded,
++}: {
++  caseId: string;
++  requireEmail: () => string;
++  /** Runs after a successful upload; a rejection is shown as an error. */
++  onUploaded: () => Promise<void>;
++}) {
++  const files = useAsyncData(() => listCaseFiles(caseId), [caseId]);
++  const input = useRef<HTMLInputElement>(null);
++  const [selected, setSelected] = useState<File | null>(null);
++  const [uploading, setUploading] = useState(false);
++  const [uploadError, setUploadError] = useState<string | null>(null);
++  const [downloading, setDownloading] = useState<string | null>(null);
++  const [downloadError, setDownloadError] = useState<string | null>(null);
++
++  const submit = async (event: FormEvent) => {
++    event.preventDefault();
++    if (!selected) return;
++    setUploadError(null);
++    const problem = validateCaseFile(selected);
++    if (problem) {
++      setUploadError(problem);
++      return;
++    }
++    setUploading(true);
++    try {
++      await uploadCaseFile(caseId, requireEmail(), selected);
++    } catch (error) {
++      setUploadError(describeStorageError(error));
++      setUploading(false);
++      return;
++    }
++    setSelected(null);
++    if (input.current) input.current.value = '';
++    files.reload();
++    try {
++      await onUploaded();
++    } catch (error) {
++      setUploadError(`The file was uploaded, but the checklist wasn't updated: ${describeStorageError(error)}`);
++    } finally {
++      setUploading(false);
++    }
++  };
++
++  const download = async (file: CaseFile) => {
++    setDownloading(file.name);
++    setDownloadError(null);
++    try {
++      const blob = await downloadCaseFile(caseId, file.name);
++      const url = URL.createObjectURL(blob);
++      const link = document.createElement('a');
++      link.href = url;
++      link.download = displayName(file.name);
++      document.body.appendChild(link);
++      link.click();
++      link.remove();
++      URL.revokeObjectURL(url);
++    } catch (error) {
++      setDownloadError(describeStorageError(error));
++    } finally {
++      setDownloading(null);
++    }
++  };
++
++  return (
++    <Panel title="Property files">
++      <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-200">
++        <label htmlFor="case-file" className="text-200 font-medium text-foreground">
++          Renovation plans or current-state photos
++        </label>
++        <input
++          ref={input}
++          id="case-file"
++          type="file"
++          accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
++          onChange={(e) => {
++            setSelected(e.target.files?.[0] ?? null);
++            setUploadError(null);
++          }}
++          className="w-full cursor-pointer rounded-lg border border-dashed border-input bg-card p-200 text-200 text-muted-foreground transition-colors hover:border-muted-foreground/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring file:mr-300 file:h-9 file:cursor-pointer file:rounded-lg file:border-0 file:bg-primary file:px-400 file:text-300 file:font-medium file:text-primary-foreground file:shadow-[0_1px_2px_rgb(16_24_40/0.1)] file:transition-colors hover:file:bg-primary/90"
++        />
++        <p className="text-200 text-muted-foreground">JPEG, PNG, or PDF, up to 5 MB.</p>
++        <div className="flex justify-end">
++          <button type="submit" disabled={!selected || uploading} className={buttonStyles.primary}>
++            {uploading ? 'Uploading…' : 'Upload file'}
++          </button>
++        </div>
++      </form>
++
++      {uploadError ? <ErrorState title="Couldn't upload the file" message={uploadError} /> : null}
++      {downloadError ? <ErrorState title="Couldn't download the file" message={downloadError} /> : null}
++      {files.status === 'loading' ? <LoadingState rows={2} label="Loading files" /> : null}
++      {files.status === 'error' ? (
++        <ErrorState title="Couldn't list the files" message={files.error} onRetry={files.reload} />
++      ) : null}
++      {files.status === 'ready' && files.data.length === 0 ? <EmptyState title="No files yet" /> : null}
++      {files.status === 'ready' && files.data.length > 0 ? (
++        <ul className="flex flex-col">
++          {files.data.map((file) => (
++            <li key={file.id} className="flex items-center gap-300 border-t border-border py-300">
++              <FileText aria-hidden="true" className="icon-size-300 shrink-0 text-muted-foreground" />
++              <div className="min-w-0 flex-1">
++                <p className="truncate text-300 font-medium text-foreground">{displayName(file.name)}</p>
++                <p className="text-200 text-muted-foreground">
++                  {formatSize(file.size)}
++                  {file.uploadedAt ? ` · ${formatDateTime(file.uploadedAt)}` : ''}
++                </p>
++              </div>
++              <button
++                type="button"
++                onClick={() => void download(file)}
++                disabled={downloading === file.name}
++                className={buttonStyles.secondary}
++              >
++                <Download aria-hidden="true" className="icon-size-100" />
++                {downloading === file.name ? 'Downloading…' : 'Download'}
++              </button>
++            </li>
++          ))}
++        </ul>
++      ) : null}
++    </Panel>
++  );
++}
+diff --git a/packages/frontend/src/services/case-files.ts b/packages/frontend/src/services/case-files.ts
+new file mode 100644
+index 0000000..21ff761
+--- /dev/null
++++ b/packages/frontend/src/services/case-files.ts
+@@ -0,0 +1,121 @@
++import {
++  CASE_FILE_MAX_BYTES,
++  CASE_FILE_TYPES,
++  CASE_PHOTOS_FOLDER,
++  type ChecklistCategory,
++} from '@rayfin-app/shared';
++import { isStorageError } from '@microsoft/rayfin-storage';
++
++import { getRayfinClient } from '@/lib/rayfin-client';
++
++/**
++ * Private property files for a case. Every call runs as the signed-in officer,
++ * so the folder's access rule (`officer_email` must be the caller's email) is
++ * what decides what can be listed, downloaded, uploaded, or deleted. Each
++ * case's files live under their own prefix: its case ID.
++ */
++
++export const PROPERTY_FILES_CATEGORY: ChecklistCategory = 'renovation-plans-photos';
++
++const LIST_LIMIT = 100;
++
++export interface CaseFile {
++  id: string;
++  name: string;
++  size: number;
++  contentType?: string;
++  uploadedAt?: string;
++}
++
++const MIME_BY_EXTENSION: Record<string, (typeof CASE_FILE_TYPES)[number]> = {
++  jpg: 'image/jpeg',
++  jpeg: 'image/jpeg',
++  png: 'image/png',
++  pdf: 'application/pdf',
++};
++
++/** The file's content type if it is JPEG, PNG, or PDF; otherwise `null`. */
++export function allowedContentType(file: Pick<File, 'name' | 'type'>): string | null {
++  const declared = file.type.toLowerCase();
++  if ((CASE_FILE_TYPES as readonly string[]).includes(declared)) return declared;
++  if (declared) return null;
++  const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
++  return MIME_BY_EXTENSION[extension] ?? null;
++}
++
++/** An error message for a file that can't be uploaded, or `null` when it can. */
++export function validateCaseFile(file: File): string | null {
++  if (!allowedContentType(file)) return `${file.name}: only JPEG, PNG, and PDF files can be uploaded.`;
++  if (file.size === 0) return `${file.name}: the file is empty.`;
++  if (file.size > CASE_FILE_MAX_BYTES) return `${file.name}: files can be at most 5 MB.`;
++  return null;
++}
++
++/** A storage-safe, collision-free object name that keeps the original file name readable. */
++export function objectNameFor(fileName: string): string {
++  const safe = fileName
++    .normalize('NFKD')
++    .replace(/[^A-Za-z0-9._-]+/g, '-')
++    .replace(/^[-.]+|-+$/g, '')
++    .slice(-80);
++  return `${crypto.randomUUID().slice(0, 8)}-${safe || 'file'}`;
++}
++
++/** The display name: the object name without its uniqueness prefix. */
++export function displayName(objectName: string): string {
++  return objectName.replace(/^[0-9a-f]{8}-/, '');
++}
++
++/** Storage errors carry a support-friendly code and correlation ID; keep both. */
++export function describeStorageError(error: unknown): string {
++  if (isStorageError(error)) {
++    const detail = error.message || 'The storage request failed.';
++    return `${detail} (${error.code}, ref ${error.correlationId})`;
++  }
++  return error instanceof Error && error.message ? error.message : 'The storage request failed.';
++}
++
++export async function listCaseFiles(caseId: string): Promise<CaseFile[]> {
++  const client = await getRayfinClient();
++  const files: CaseFile[] = [];
++  let continuation: string | undefined;
++  do {
++    const page = await client.storage[CASE_PHOTOS_FOLDER].list({
++      prefix: caseId,
++      limit: LIST_LIMIT,
++      continuation,
++    });
++    for (const item of page.items) {
++      files.push({
++        id: item.id,
++        name: item.name,
++        size: item.size,
++        contentType: item.contentType,
++        uploadedAt: item.createdAt,
++      });
++    }
++    continuation = page.continuation;
++  } while (continuation);
++  return files.sort((a, b) => (b.uploadedAt ?? '').localeCompare(a.uploadedAt ?? ''));
++}
++
++/** Uploads one file for the case, stamped with the case, officer, and category. */
++export async function uploadCaseFile(caseId: string, officerEmail: string, file: File): Promise<void> {
++  const problem = validateCaseFile(file);
++  if (problem) throw new Error(problem);
++  const client = await getRayfinClient();
++  await client.storage[CASE_PHOTOS_FOLDER].upload(objectNameFor(file.name), file, {
++    prefix: caseId,
++    contentType: allowedContentType(file)!,
++    fields: { case_id: caseId, officer_email: officerEmail, category: PROPERTY_FILES_CATEGORY },
++  });
++}
++
++/** Downloads through an authorized, short-lived link and returns the bytes as a Blob. */
++export async function downloadCaseFile(caseId: string, name: string): Promise<Blob> {
++  const client = await getRayfinClient();
++  const result = await client.storage[CASE_PHOTOS_FOLDER].download(name, { prefix: caseId });
++  return new Response(result.stream, {
++    headers: result.contentType ? { 'Content-Type': result.contentType } : undefined,
++  }).blob();
++}
+diff --git a/packages/frontend/src/services/cases.ts b/packages/frontend/src/services/cases.ts
+index bac10b7..b3a1c30 100644
+--- a/packages/frontend/src/services/cases.ts
++++ b/packages/frontend/src/services/cases.ts
+@@ -122,6 +122,11 @@ export function recordedReceiptPatch(): ChecklistPatch {
+   return { status: 'received', received_on: fromIsoDate(todayIsoDate()), received_via: 'recorded' };
+ }
+ 
++/** The patch for marking a document received because a file was uploaded for it. */
++export function uploadReceiptPatch(): ChecklistPatch {
++  return { status: 'received', received_on: fromIsoDate(todayIsoDate()), received_via: 'upload' };
++}
++
+ export async function listNotes(caseId: string): Promise<CaseNoteRecord[]> {
+   const client = await getRayfinClient();
+   return client.data.CaseNote.select([...NOTE_FIELDS])
+diff --git a/packages/shared/src/index.ts b/packages/shared/src/index.ts
+index 4eb4107..7946e2b 100644
+--- a/packages/shared/src/index.ts
++++ b/packages/shared/src/index.ts
+@@ -137,6 +137,22 @@ export type UniversalAppSchema = {
+   ChecklistItem: ChecklistItemRecord;
+ };
+ 
++/** The folder that holds a case's property files, and its limits. */
++export const CASE_PHOTOS_FOLDER = 'case-photos';
++export const CASE_FILE_TYPES = ['image/jpeg', 'image/png', 'application/pdf'] as const;
++export const CASE_FILE_MAX_BYTES = 5 * 1024 * 1024;
++
++/** Typed metadata stamped on every file in `case-photos`. */
++export interface CasePhotoFields {
++  case_id: string;
++  officer_email: string;
++  category: string;
++}
++
++export type AppStorageSchema = {
++  'case-photos': CasePhotoFields;
++};
++
+ /** Who a lab fixture is assigned to; resolved to an email at seed time. */
+ export type FixtureOwner = 'attendee' | 'colleague';
+ 
+diff --git a/rayfin/rayfin.yml b/rayfin/rayfin.yml
+index 18e9d59..43911bc 100644
+--- a/rayfin/rayfin.yml
++++ b/rayfin/rayfin.yml
+@@ -29,15 +29,15 @@ services:
+     embedded:
+       only: false
+   storage:
+-    enabled: false
++    enabled: true
+   functions:
+     enabled: false
+ connectors:
+   - name: caldovaportfolio
+     type: fabric-semanticmodel
+     config:
+-      workspaceId: {{WORKSPACE_ID}}
+-      itemId: {{SEMANTIC_MODEL_ID}}
++      workspaceId: {{WORKSPACE_ID}}
++      itemId: {{SEMANTIC_MODEL_ID}}
+     auth:
+       type: delegated
+     version: "1"
+diff --git a/rayfin/storage/CasePhoto.ts b/rayfin/storage/CasePhoto.ts
+new file mode 100644
+index 0000000..4f8f8d6
+--- /dev/null
++++ b/rayfin/storage/CasePhoto.ts
+@@ -0,0 +1,21 @@
++import { role, text, uuid } from '@microsoft/rayfin-core';
++import { ContentTypes, StorageObject, blob, mb } from '@microsoft/rayfin-core/experimental';
++
++/**
++ * Private case files (photos and PDFs). Files can be read, uploaded, and
++ * deleted only when the stored `officer_email` is the signed-in officer's
++ * email claim.
++ */
++@blob({
++  name: 'case-photos',
++  maxSize: mb(5),
++  allowedContentTypes: [ContentTypes.Jpeg, ContentTypes.Png, ContentTypes.Pdf],
++})
++@role('authenticated', ['create', 'read', 'delete'], {
++  policy: (claims, item) => claims.email.eq(item.officer_email),
++})
++export class CasePhoto extends StorageObject {
++  @uuid() case_id!: string;
++  @text({ max: 254 }) officer_email!: string;
++  @text({ max: 60 }) category!: string;
++}
+diff --git a/rayfin/storage/schema.ts b/rayfin/storage/schema.ts
+new file mode 100644
+index 0000000..592bd37
+--- /dev/null
++++ b/rayfin/storage/schema.ts
+@@ -0,0 +1,7 @@
++import { CasePhoto } from './CasePhoto.js';
++
++export type AppStorageSchema = {
++  'case-photos': CasePhoto;
++};
++
++export const schema = [CasePhoto];

@@ -60,6 +60,7 @@ Options:
                               Repeatable. Values found automatically: WORKSPACE_ID, TENANT_ID, HOSTING_URL and
                               APP_ITEM_ID from rayfin/.deployments.json; SQL_DATABASE_ID and SEMANTIC_MODEL_ID
                               from the checkpoint state (<lab folder>/checkpoints/.state.json) for that workspace.
+                              Capture uses the values of every deployment of the app; apply, the active one.
   --allow <value>             Keep this GUID or URL in the patch (capture). Repeatable.
   --keep                      Keep the temp app, even if the checks pass (verify).
   -h, --help                  Show this help.`;
@@ -142,24 +143,40 @@ function parsePlaceholders(entries = []) {
   return values;
 }
 
-// This app's workspace-specific values, from its last deployment and the checkpoint state.
+// A deployment's workspace-specific values, with the database and model IDs from the checkpoint state.
+function deploymentValues(deployment, state, workspaceId = deployment?.fabricWorkspaceId) {
+  const steps = state?.workspaces?.[workspaceId]?.steps;
+  return {
+    WORKSPACE_ID: deployment?.fabricWorkspaceId,
+    TENANT_ID: deployment?.fabricTenantId,
+    HOSTING_URL: deployment?.hostingUrl,
+    APP_ITEM_ID: deployment?.fabricItemId,
+    SQL_DATABASE_ID: steps?.database?.id,
+    SEMANTIC_MODEL_ID: steps?.model?.id,
+  };
+}
+
+const readDeployments = (appDir) => readJson(join(appDir, 'rayfin', '.deployments.json'));
+
+// This app's workspace-specific values (apply), from its last deployment and the checkpoint state.
 function appValues(appDir, statePath, overrides) {
-  const deployments = readJson(join(appDir, 'rayfin', '.deployments.json'));
+  const deployments = readDeployments(appDir);
   const deployment = deployments?.deployments?.[deployments.active] ?? Object.values(deployments?.deployments ?? {})[0];
-  const values = {};
-  if (deployment) {
-    Object.assign(values, {
-      WORKSPACE_ID: deployment.fabricWorkspaceId,
-      TENANT_ID: deployment.fabricTenantId,
-      HOSTING_URL: deployment.hostingUrl,
-      APP_ITEM_ID: deployment.fabricItemId,
-    });
-  }
-  const workspaceId = overrides.WORKSPACE_ID ?? values.WORKSPACE_ID;
-  const steps = (statePath && readJson(statePath))?.workspaces?.[workspaceId]?.steps;
-  if (steps) Object.assign(values, { SQL_DATABASE_ID: steps.database?.id, SEMANTIC_MODEL_ID: steps.model?.id });
-  Object.assign(values, overrides);
+  const state = statePath && readJson(statePath);
+  const values = { ...deploymentValues(deployment, state, overrides.WORKSPACE_ID ?? deployment?.fabricWorkspaceId), ...overrides };
   return Object.fromEntries(Object.entries(values).filter(([, value]) => value));
+}
+
+// Every value to replace with a placeholder (capture): from all the app's deployments, since the author may have
+// deployed it to several workspaces along the way, and their checkpoint state. Overrides come first.
+function captureValues(appDir, statePath, overrides) {
+  const state = statePath && readJson(statePath);
+  const pairs = Object.entries(overrides);
+  for (const deployment of Object.values(readDeployments(appDir)?.deployments ?? {})) {
+    pairs.push(...Object.entries(deploymentValues(deployment, state)));
+  }
+  const seen = new Set();
+  return pairs.filter(([, value]) => value && !seen.has(value.toLowerCase()) && seen.add(value.toLowerCase()));
 }
 
 function capture(n, options) {
@@ -188,21 +205,22 @@ function capture(n, options) {
   const commits = git(appDir, ['rev-list', '--reverse', `${base}..HEAD`]).split('\n').filter(Boolean);
   if (!commits.length) throw new UserError(`No commits since ${baseN === null ? 'the initial commit' : base}. Commit the checkpoint ${n} changes first.`);
 
-  const values = appValues(appDir, statePath, parsePlaceholders(options.placeholder));
+  const values = captureValues(appDir, statePath, parsePlaceholders(options.placeholder));
   let text = git(appDir, ['format-patch', '--stdout', '--zero-commit', '--no-signature', `${base}..HEAD`]) + '\n';
-  const used = [];
-  for (const [name, value] of Object.entries(values).sort((a, b) => b[1].length - a[1].length)) {
+  const used = new Set();
+  for (const [name, value] of values.sort((a, b) => b[1].length - a[1].length)) {
     const pattern = new RegExp(escapeRegExp(value), 'gi');
     if (pattern.test(text)) {
-      used.push(name);
+      used.add(name);
       text = text.replace(pattern, `{{${name}}}`);
     }
   }
 
   const allowed = new Set((options.allow ?? []).map((value) => value.toLowerCase()));
   const leaks = new Set();
+  // Removed lines count too: a value left there makes the patch apply only to this app.
   for (const line of text.split('\n')) {
-    if (!line.startsWith('+') || line.startsWith('+++')) continue;
+    if (!/^[+-]/.test(line) || /^(\+\+\+|---)( |$)/.test(line)) continue;
     for (const pattern of LEAKS) for (const match of line.match(pattern) ?? []) if (!allowed.has(match.toLowerCase())) leaks.add(match);
   }
   if (leaks.size) {
@@ -223,7 +241,7 @@ function capture(n, options) {
   git(appDir, ['tag', '-f', `${TAG_PREFIX}${n}`]);
 
   log(`Saved ${commits.length} commit(s) since ${baseN === null ? 'the initial commit' : base} to ${path}.`);
-  log(`Placeholders: ${used.length ? used.map((name) => `{{${name}}}`).join(', ') : 'none'}.`);
+  log(`Placeholders: ${used.size ? [...used].map((name) => `{{${name}}}`).join(', ') : 'none'}.`);
   log(`Tagged the app's HEAD ${TAG_PREFIX}${n}.`);
   log(`\nNext, check the patches apply to a fresh app and build: npm run patch:verify`);
 }
@@ -391,7 +409,12 @@ function verify(n, options) {
     for (const patch of patches) {
       for (const [, name] of readFileSync(patch.path, 'utf8').matchAll(/\{\{([A-Z][A-Z0-9_]*)\}\}/g)) values[name] ??= DUMMY_OTHER;
     }
+    const before = git(appDir, ['rev-parse', 'HEAD']);
     apply(upTo, options, { appDir, values });
+    if (git(appDir, ['diff', '--name-only', before, 'HEAD']).split('\n').some((file) => /(^|\/)package(-lock)?\.json$/.test(file))) {
+      log('\nnpm install (the patches change the dependencies)');
+      run('npm', ['install', '--no-audit', '--no-fund'], appDir);
+    }
 
     const scripts = readJson(join(appDir, 'package.json'))?.scripts ?? {};
     for (const script of ['typecheck', 'build', 'test'].filter((name) => scripts[name])) {

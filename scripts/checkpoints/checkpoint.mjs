@@ -17,8 +17,10 @@
 //   --to 6  Everything above, then Exercise 6:
 //           7. applies the app changes from ./app (see app-patches.mjs) as Git commits, installs the
 //              dependencies if they changed, and deploys the app again.
+//   --to 7  Everything above, then the app changes of Exercise 7, the same way. The attendee uploads the
+//           HL-1042 sample files in the app.
 //
-// Usage: npm install, then node checkpoint.mjs --to <3|4|6> [options]. Run with --help for the options.
+// Usage: npm install, then node checkpoint.mjs --to <3|4|6|7> [options]. Run with --help for the options.
 // Lab folder: C:\LabFiles on the lab VM. On another machine, pass --lab-dir or set PREL40_LABFILES (see lab.mjs).
 // Sign-in: uses the Azure CLI if you're signed in with `az login`, otherwise opens a browser.
 
@@ -43,6 +45,7 @@ const CHECKPOINTS = {
   3: { label: 'Exercises 2 and 3', next: 'Exercise 4' },
   4: { label: 'Exercises 2 to 4', next: 'Exercise 5' },
   6: { label: 'Exercises 2 to 6', next: 'Exercise 7' },
+  7: { label: 'Exercises 2 to 7', next: 'Exercise 8' },
 };
 
 const FABRIC_API = 'https://api.fabric.microsoft.com/v1';
@@ -645,7 +648,7 @@ const STEPS = [
   { name: 'plugin', checkpoint: 4, label: 'Exercise 4: Rayfin plugin' },
   { name: 'app', checkpoint: 4, label: 'Exercise 4: home-loan-desk app' },
   { name: 'deploy', checkpoint: 4, label: 'Exercise 4: deployment' },
-  { name: 'code', checkpoint: 6, label: 'Exercise 6: portfolio analytics' },
+  { name: 'code', checkpoint: 6, label: 'Exercise 6 and later: app changes' },
 ];
 
 function loadState(statePath) {
@@ -856,7 +859,7 @@ async function main() {
     saveState(statePath, state);
 
     if (to >= 6) {
-      step(steps.code.label);
+      step(`Exercise${to > 6 ? `s 6 to ${to}` : ' 6'}: app changes`);
       const at = latestCheckpoint(appDir) ?? BASE_CHECKPOINT;
       if (!redo.has('code') && at >= to) {
         log(`Skipping: the app already has the changes up to checkpoint ${at}.`);
@@ -908,6 +911,11 @@ async function main() {
     if (restartApp) log(`  ${n++}. Restart the app so it loads the rayfin plugin.`);
     log(`  ${n++}. Add the ${appDir} folder as a project.`);
     log(`  ${n++}. Create a new session in the home-loan-desk project, and change New worktree to Current checkout.`);
+  }
+  if (to >= 7) {
+    const samples = [join(labDir, 'data', 'samples'), join(scriptDir, '..', '..', 'data', 'samples')].map((dir) => resolve(dir)).find(existsSync) ?? join(labDir, 'data', 'samples');
+    log("\nThe checkpoint doesn't upload HL-1042's files. To have them, upload them in the app's HL-1042 case, as in");
+    log(`Exercise 7, Task 3: ${join(samples, 'HL-1042-floor-plan.pdf')} and ${join(samples, 'HL-1042-kitchen-current.jpg')}.`);
   }
   log(`\nThen continue with ${checkpoint.next}.`);
 }

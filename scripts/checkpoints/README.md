@@ -11,6 +11,7 @@ All checkpoints run with the same script, [`checkpoint.mjs`](checkpoint.mjs). Pi
 | `node checkpoint.mjs --to 3` | Exercises 2 and 3: the SQL database, its data, and the semantic model | Exercise 4 |
 | `node checkpoint.mjs --to 4` | Exercises 2 to 4: everything above, plus the Rayfin plugin and the Home Loan Operations Desk app, created and deployed | Exercise 5 |
 | `node checkpoint.mjs --to 6` | Exercises 2 to 6: everything above, plus the semantic model connector and the portfolio page in the app, committed and deployed again | Exercise 7 |
+| `node checkpoint.mjs --to 7` | Exercises 2 to 7: everything above, plus private file storage and the case files panel in the app, committed and deployed again | Exercise 8 |
 
 Each checkpoint also completes the ones before it.
 
@@ -145,6 +146,18 @@ If the app already has the changes, for example from an earlier run, it skips th
 
 If you already changed the app's code yourself, for example by doing part of Exercise 6, the changes may not apply. The checkpoint then stops and leaves the app as it was. If your app works, continue with the lab. Otherwise, run it again with `--redo code`: it saves your commits in a `lab/backup-<date>` branch, puts the app's code back as it was after checkpoint 4, then adds the changes. Commit or stash your uncommitted changes first.
 
+## Checkpoint 7: property photos
+
+Run:
+
+```powershell
+node checkpoint.mjs --to 7
+```
+
+The checkpoint does everything in checkpoint 6, then adds the app changes of Exercise 7 the same way, as a commit tagged `lab/checkpoint-7`: the private storage folder with its access rule, and the files panel on the case page. It installs the new dependencies, and deploys the app again, which creates the storage folder in Fabric. If the app is already at checkpoint 6, it starts there.
+
+The checkpoint doesn't upload HL-1042's files. To have them, upload `HL-1042-floor-plan.pdf` and `HL-1042-kitchen-current.jpg` from `C:\LabFiles\data\samples` in the app, as in Exercise 7, Task 3. Exercise 8 works without them. Then continue with Exercise 8.
+
 ## Run a checkpoint again
 
 Each run saves its progress for each workspace in `.state.json`, in the lab folder's `checkpoints` folder (`C:\LabFiles\checkpoints\.state.json` on the VM). When you run a checkpoint again:
@@ -164,7 +177,7 @@ To start over in a workspace, delete its entry from `.state.json`, or delete the
 
 | Option | What it does |
 | --- | --- |
-| `--to <checkpoint>` | Required. How far to go: `3`, `4` or `6`. |
+| `--to <checkpoint>` | Required. How far to go: `3`, `4`, `6` or `7`. |
 | `-w`, `--workspace <name\|id>` | Use this workspace, or create it if no workspace has this name. By default, the checkpoint picks the one workspace whose name starts with `PREL40-homeloans`. |
 | `--capacity <name\|id>` | Create the workspace on this capacity. By default, the checkpoint uses your one active Fabric capacity, and stops if you have several. |
 | `-t`, `--tenant <id>` | Sign in to this Microsoft Entra tenant. Use it when your Azure CLI default tenant isn't the lab tenant. |
@@ -198,7 +211,7 @@ From Exercise 6 on, the exercises change the app. Store those changes as Git pat
     npm run patch:capture -- <N>
     ```
 
-    It saves the commits since the previous `lab/checkpoint-*` tag (or since the initial commit) as `app/<NN>-<slug>.patch`, and tags the app's HEAD `lab/checkpoint-<N>`. It replaces workspace-specific values with placeholders: `{{WORKSPACE_ID}}`, `{{TENANT_ID}}`, `{{HOSTING_URL}}` and `{{APP_ITEM_ID}}` from the app's last deployment (`rayfin/.deployments.json`), and `{{SQL_DATABASE_ID}}` and `{{SEMANTIC_MODEL_ID}}` from `.state.json`. If the changes add another GUID, `fabricapps.net` URL or publishable key, the capture stops: replace it with `--placeholder NAME=<value>`, or keep it with `--allow <value>` if it's the same for everyone. Changes you haven't committed aren't captured, and the script lists them.
+    It saves the commits since the previous `lab/checkpoint-*` tag (or since the initial commit) as `app/<NN>-<slug>.patch`, and tags the app's HEAD `lab/checkpoint-<N>`. It replaces workspace-specific values with placeholders: `{{WORKSPACE_ID}}`, `{{TENANT_ID}}`, `{{HOSTING_URL}}` and `{{APP_ITEM_ID}}` from the app's deployments (`rayfin/.deployments.json`), and `{{SQL_DATABASE_ID}}` and `{{SEMANTIC_MODEL_ID}}` from `.state.json`. It uses the values of every workspace the app was deployed to, so if you deployed it to another workspace along the way, the changes that switch IDs become placeholders on both sides, and still apply to any app. If the changes add or remove another GUID, `fabricapps.net` URL or publishable key, the capture stops: replace it with `--placeholder NAME=<value>`, or keep it with `--allow <value>` if it's the same for everyone. Changes you haven't committed aren't captured, and the script lists them.
 
 1. Check the patches on a fresh app:
 
@@ -206,7 +219,7 @@ From Exercise 6 on, the exercises change the app. Store those changes as Git pat
     npm run patch:verify
     ```
 
-    It creates an app from the lab template in a temp folder, like checkpoint 4, applies all the patches with dummy values, and runs the app's `typecheck`, `build` and `test` scripts. Add a checkpoint number to stop at that patch, and `--keep` to keep the app. It takes under a minute.
+    It creates an app from the lab template in a temp folder, like checkpoint 4, applies all the patches with dummy values, installs the dependencies if the patches change them, and runs the app's `typecheck`, `build` and `test` scripts. Add a checkpoint number to stop at that patch, and `--keep` to keep the app. It takes under a minute.
 
 1. Commit the patch file.
 
