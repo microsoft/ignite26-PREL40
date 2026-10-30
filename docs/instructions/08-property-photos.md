@@ -43,9 +43,7 @@ Rayfin storage keeps files in OneLake, in folders that you declare in code. Like
 
 The **Document checklist** on the case page marks **Renovation plans / current-state photos** as **Upload only**, waiting for storage. Now ask Copilot to add the upload experience.
 
-1. In the same session, switch to **Plan** mode, and set the Copilot Fusion effort level to **High**, like in Exercise 6.
-
-1. Enter the following prompt, then press **Enter**:
+1. In the same session, switch to **Plan** mode, enter the following prompt, then press **Enter**:
 
     ```text
     Add property files to the case detail page, using the case-photos storage folder:
