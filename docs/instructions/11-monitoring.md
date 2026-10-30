@@ -10,9 +10,6 @@ By completing this exercise, you will:
 
 You don't need to add any code to get these metrics: they're collected on the server for every deployed app.
 
-> [!NOTE]
-> App Metrics is in preview. The cards and their names may differ slightly from these instructions.
-
 ## Task 1: Open your app's metrics
 
 App Metrics is part of the app's management view, in the Microsoft Fabric portal.
@@ -22,6 +19,8 @@ App Metrics is part of the app's management view, in the Microsoft Fabric portal
 1. In the workspace item list, select the **home-loan-desk** app to open it.
 
 1. If the running app opens, select **Manage app**.
+
+    ![Manage app button in Microsoft Fabric](../../img/fabric-manage-app-button.png)
 
 1. In the left navigation, select **Metrics**.
 
@@ -48,7 +47,7 @@ Each card answers a different question. Look at each one, and compare it with wh
 
 1. Notice the time axis of the charts. Charts use UTC time, and **Last 24 hours** ends at the start of the current hour: activity from the last few minutes doesn't show yet.
 
-    > [!NOTE]
+    > [!INFO]
     > If a card shows **No metric data is available for this time range**, no data was returned for that range. A value of `0` next to this message doesn't confirm that nothing happened. Activity from the first part of the lab is old enough to appear.
 
 ## Task 3: Know what the metrics don't cover
@@ -57,23 +56,15 @@ App Metrics gives you a quick view of your app's health, from the server side. I
 
 1. Review what's out of scope for App Metrics:
 
-    | You won't find in App Metrics | Where to look instead |
-    | --- | --- |
-    | Browser load and rendering times | Browser performance tools |
-    | Individual errors or request traces | Your app's own logging |
-    | Calls to your Microsoft Foundry model, and their token usage | Microsoft Foundry |
-    | Semantic model query activity | The semantic model, in Microsoft Fabric |
-    | Capacity units consumed by the app | The Microsoft Fabric Capacity Metrics app |
+    | You won't find in App Metrics                                | Where to look instead                     |
+    | ------------------------------------------------------------ | ----------------------------------------- |
+    | Browser load and rendering times                             | Browser performance tools                 |
+    | Individual errors or request traces                          | Your app's own logging                    |
+    | Calls to your Microsoft Foundry model, and their token usage | Microsoft Foundry                         |
+    | Semantic model query activity                                | The semantic model, in Microsoft Fabric   |
+    | Capacity units consumed by the app                           | The Microsoft Fabric Capacity Metrics app |
 
-1. *(Optional)* In the GitHub Copilot app, open a new session in the **home-loan-desk** project, and enter the following prompt, then press **Enter**:
-
-    ```text
-    Where do I find this app's App Metrics in Microsoft Fabric, and what does each card measure and not measure? Don't change any code.
-    ```
-
-    Compare the agent's answer with what you saw in the portal.
-
-    > [!NOTE]
+    > [!INFO]
     > The App Metrics are operational metrics about the app itself. They're unrelated to the portfolio measures from your semantic model, such as **Open applications** or **Stalled applications**.
 
-Select **Next →** to check your knowledge of what you built.
+Select **Next →** to continue.
