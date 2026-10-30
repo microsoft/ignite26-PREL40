@@ -19,7 +19,11 @@ The model call must run on the server, where the endpoint and API key stay out o
 
 1. Select **Models** in the left menu, then select the **gpt-6-luna** deployment.
 
+    ![Models tab in Microsoft Foundry](../../img/foundry-models-tab.png)
+
 1. Select the **Details** details. Keep this tab open so you can copy the OpenAI-compatible endpoint and API key when the CLI asks for them.
+
+    ![Foundry model details](../../img/foundry-model-details.png)
 
     > [!IMPORTANT]
     > The endpoint to copy ends with `/openai/v1/responses`. It's different from the Foundry project endpoint, which contains `/api/projects/`.
