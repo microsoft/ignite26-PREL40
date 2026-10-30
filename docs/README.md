@@ -13,6 +13,7 @@ Build data-rich apps in Microsoft Fabric.
 6. [Explore the Home Loan Operations Desk app](./instructions/06-explore-app.md)
 7. [Add portfolio analytics from the semantic model](./instructions/07-portfolio-analytics.md)
 8. [Add property photos with Rayfin storage](./instructions/08-property-photos.md)
+9. [Generate an AI-assisted handoff brief](./instructions/09-ai-handoff-brief.md)
 13. [Conclusion](./instructions/13-conclusion.md)
 
 The questions for the knowledge checks are in [knowledge-checks.md](./knowledge-checks.md).
