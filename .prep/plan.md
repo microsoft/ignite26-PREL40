@@ -16,7 +16,7 @@ Legend: ✅ done, 🚧 in progress, ⬜ not started.
 - ✅ `09-ai-handoff-brief.md`: Set the Foundry secrets, add the `generateCaseBrief` function, generate a brief that flags HL-1042's contradiction, and save a reviewed task.
 - ✅ `10-access-control.md`: Prove access control with UI-only checks: unauthenticated API call, protected hosting, HL-1103 in the database but not in the app, and Copilot explains why notes or uploads stamped with Morgan's email are refused.
 - ⬜ `11-rbac.md` (deferred): Add a manager role with Rayfin RBAC so only managers can open the portfolio page (`#/manager`). Waiting for RBAC/custom claims in the published Rayfin packages. => work will be done in a separate branch, and the pages after it are renumbered then.
-- 🚧 `11-monitoring.md`: Tour the app's App Metrics in Fabric and learn what they do and don't measure. Written from the docs; needs review and screenshots.
+- ✅ `11-monitoring.md`: Tour the app's App Metrics in Fabric and learn what they do and don't measure.
 - 🚧 `12-knowledge-check-app.md`: Knowledge check on access policies, storage rules, functions, and secrets (3 questions, `check2` activity group). Needs review.
 - 🚧 `13-bonus.md`: **Optional bonus:** HL-1088 brief contrast, UI customization, SQL source connector (preview), Fabric deep linking (preview), and a new app from scratch. Needs review.
 - 🚧 `14-conclusion.md`: Recap the app end to end, responsible-AI points (HL-1088), and production gaps. Needs review.
