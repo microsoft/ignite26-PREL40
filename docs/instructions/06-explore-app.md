@@ -71,7 +71,7 @@ You can read the project files without leaving the GitHub Copilot app, side by s
 
 Now look at the app the way a loan officer at Caldova Home Loans would see it.
 
-1. In Microsoft Edge, go back to the tab with the deployed Home Loan Operations Desk app from Exercise 4.
+1. In the browser, go back to the tab with the deployed Home Loan Operations Desk app from Exercise 4.
 
 1. On **My cases**, look at the summary at the top: how many cases are **Assigned** to you, how many are **Stalled**, and the **Snapshot** date of the data.
 

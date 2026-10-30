@@ -75,7 +75,7 @@ The storage folder is created in Fabric when you deploy, so redeploy the app bef
 
 1. Wait for the agent to report a successful deployment.
 
-1. In Microsoft Edge, go back to the tab with the deployed app, then reload the page.
+1. In the browser, go back to the tab with the deployed app, then reload the page.
 
 1. Open **HL-1042**, from **My cases** or with the **Go to case** box.
 

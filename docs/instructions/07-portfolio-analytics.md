@@ -13,7 +13,7 @@ By completing this exercise, you will:
 
 The connector needs your workspace ID and the semantic model ID. Both are in the semantic model's URL.
 
-1. In Microsoft Edge, open the Microsoft Fabric tab, then go to your **PREL40-homeloans-@lab.LabInstance.Id** workspace.
+1. In the browser, open the Microsoft Fabric tab, then go to your **PREL40-homeloans-@lab.LabInstance.Id** workspace.
 
 1. In the workspace item list, select **CaldovaPortfolio**, with the type **Semantic model**, to open its details page.
 
@@ -96,7 +96,7 @@ The **Portfolio** page already has empty measure cards and placeholders, waiting
     > [!NOTE]
     > Redeploying to the same app keeps its data, so your lab cases are still there.
 
-1. In Microsoft Edge, go back to the tab with the deployed app, then reload the page.
+1. In the browser, go back to the tab with the deployed app, then reload the page.
 
 1. In the header, select **Portfolio**, which is now enabled.
 

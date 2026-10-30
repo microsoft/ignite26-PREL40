@@ -13,7 +13,7 @@ By completing this exercise, you will:
 
 Create the model directly from the replicated data in OneLake.
 
-1. In Microsoft Edge, return to the **CaldovaHomeLoans** SQL analytics endpoint you opened at the end of Exercise 2.
+1. In the browser, return to the **CaldovaHomeLoans** SQL analytics endpoint you opened at the end of Exercise 2.
 
 1. Select **New semantic model** in the toolbar.
 

@@ -101,7 +101,7 @@ Deploying creates a Fabric App item in your workspace, provisions a managed SQL 
 
 ## Task 4: Open the deployed app
 
-1. In Microsoft Edge, open the hosted app URL from the previous task in a new tab.
+1. In the browser, open the hosted app URL from the previous task in a new tab.
 
 1. Select **Sign in**. Since you already have an active sign-in session, you're signed in without entering credentials again.
 

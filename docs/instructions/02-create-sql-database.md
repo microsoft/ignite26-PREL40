@@ -34,7 +34,7 @@ Run the seed script to create the four portfolio tables and fill them with data.
     > [!NOTE]
     > The script creates the **Branch**, **LoanProduct**, **Date**, and **LoanApplication** tables. If they already exist, it drops and re-creates them, so it's safe to run again. All branches, amounts, and applications are synthetic.
 
-1. Return to the **CaldovaHomeLoans** database in Microsoft Edge and select **New Query** in the toolbar.
+1. Return to the **CaldovaHomeLoans** database in the browser and select **New Query** in the toolbar.
 
 1. Select the query editor, then press **Ctrl+V** to paste the script.
 
