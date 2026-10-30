@@ -56,7 +56,7 @@ The **Document checklist** on the case page marks **Renovation plans / current-s
     - When I reset my lab cases, also delete my uploaded files.
     ```
 
-1. Once the plan is generated, review the proposed changes and the task list in the *Plan* canvas, then select **Approve plan and continue**.
+1. Once the plan is generated, review the proposed changes and the task list in the *Plan* canvas, then select **Approve and implement this plan**.
 
 1. Wait for the agent to finish, this can take several minutes.
 

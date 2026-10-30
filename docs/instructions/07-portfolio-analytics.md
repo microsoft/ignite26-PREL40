@@ -71,7 +71,7 @@ The **Portfolio** page already has empty measure cards and placeholders, waiting
     Ensures measures come from the semantic model and are not calculated in JavaScript.
     ```
 
-1. Once the plan is generated, you should be able to review the proposed changes and see the task list in the *Plan* canvas on the right panel. Review the changes, and select **Approve plan and continue** to start the implementation.
+1. Once the plan is generated, you should be able to review the proposed changes and see the task list in the *Plan* canvas on the right panel. Review the changes, and select **Approve and implement this plan** to start the implementation.
 
     > [!INFO]
     > When you approve the plan, Copilot will automatically switch to **Autopilot** mode to implement the changes. In this mode, it will never ask you questions and will carry out the tasks as specified until the work is complete. 
