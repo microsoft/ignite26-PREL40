@@ -35,7 +35,7 @@ Fill in the sections below yourself, then:
 ## 🔥PREL40: Build data-rich apps in Microsoft Fabric
 ### Session description
 
-Add your session description here. Keep it concise — 2-3 sentences about what attendees will learn and why it matters.
+Discover how Microsoft Fabric enables developers and AI coding agents to build enterprise-ready, data-rich applications faster. Using Rayfin, SQL database in Fabric, Power BI, and more, learn how to go from prompt to production with a unified platform for application data, analytics, and AI. See how operational and analytical workloads work together to simplify development, eliminate data silos, and deliver intelligent application experiences.
 
 ### 🚀 Getting started
 
