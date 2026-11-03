@@ -21,7 +21,7 @@ The model call must run on the server, where the endpoint and API key stay out o
 
     ![Models tab in Microsoft Foundry](../../img/foundry-models-tab.png)
 
-1. Select the **Details** details. Keep this tab open so you can copy the OpenAI-compatible endpoint and API key when the CLI asks for them.
+1. Select the **Details**. Keep this tab open so you can copy the OpenAI-compatible endpoint and API key when the CLI asks for them.
 
     ![Foundry model details](../../img/foundry-model-details.png)
 

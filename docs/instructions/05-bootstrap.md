@@ -66,7 +66,7 @@ The lab template is a working, secure starter that we'll use to get faster to th
     ![Select New worktree and change to Current checkout](../../img/github-copilot-new-worktree.png)
 
     > [!TIP]
-    > By default, GitHub Copilot app creates a new worktree for each session. This allows you to work on multiple features simultaneously without interfering with each other. Since we'll work on a single feature at a time in this lab, working directlty in the current project checkout simplifies the workflow.
+    > By default, GitHub Copilot app creates a new worktree for each session. This allows you to work on multiple features simultaneously without interfering with each other. Since we'll work on a single feature at a time in this lab, working directly in the current project checkout simplifies the workflow.
 
 ## Task 3: Sign in to Rayfin and deploy the app
 

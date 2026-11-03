@@ -64,7 +64,7 @@ The **Portfolio** page already has empty measure cards and placeholders, waiting
     - Show the distribution of open and stalled applications by stage as a chart.
     - List stalled applications with case number, branch, product, stage, and days in stage. Tag the cases I can see in My cases as "Assigned to you" with a link to the case, and show the others as "Not assigned to you" without a link.
     - Show the snapshot as-of date.
-    Ensures measures come from the semantic model and are not calculated in JavaScript.
+    Ensure measures come from the semantic model and are not calculated in JavaScript.
     ```
 
 1. Once the plan is generated, you should be able to review the proposed changes and see the task list in the *Plan* canvas on the right panel. Review the changes, and select **Approve and implement this plan** to start the implementation.
