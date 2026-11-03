@@ -38,14 +38,13 @@ Ask Copilot to add the connector and read the model's metadata before it writes 
 
 1. Go back to your Fabric tab with the semantic model open, copy the URL from the address bar and paste it into the prompt. Press **Enter** to continue.
 
-1. Read the agent's summary. It should report:
+1. Read the agent's summary. It should confirm that the semantic model is connected to the app, and list:
 
-    - A new connector of type `fabric-semanticmodel` in **rayfin/rayfin.yml**, with `delegated` authentication.
-    - A typed schema for the connector in **rayfin/connectors/**.
-    - The **Branch**, **Date**, **LoanApplication**, and **LoanProduct** tables, and the four measures you created in Exercise 3: **Open applications**, **Requested amount in pipeline**, **Average days in current stage**, and **Stalled applications**.
+    - The **Branch**, **Date**, **LoanApplication**, and **LoanProduct** tables.
+    - The four measures you created in Exercise 3: **Open applications**, **Requested amount in pipeline**, **Average days in current stage**, and **Stalled applications**.
 
     > [!INFO]
-    > With delegated authentication, the app queries the model as the signed-in user. Only people with access to the semantic model can see the portfolio, whatever the app allows.
+    > The app queries the model as the signed-in user. Only people with access to the semantic model can see the portfolio, whatever the app allows.
 
 ## Task 3: Build the portfolio page
 
@@ -74,7 +73,7 @@ The **Portfolio** page already has empty measure cards and placeholders, waiting
 
 1. Wait for the agent to finish, this can take several minutes.
 
-1. In the **Files** panel, open **packages/frontend/src/pages/manager-page.tsx** and the files it imports. Notice that the DAX queries reference the measures by name, such as `[Open applications]`, instead of recalculating them.
+1. Select the **Changes** button above the chat input area to see the files that the agent modified. You don't need to read the code: notice that the portfolio page asks the semantic model for each measure by name, such as **Open applications**, instead of recalculating it in the app.
 
     > [!INFO]
     > Defining measures once in the model is the point: the app, your Power BI reports, and any data agent all get the same numbers.

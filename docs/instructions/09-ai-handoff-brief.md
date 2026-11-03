@@ -68,18 +68,10 @@ Now add a trusted function that reads the case as the signed-in officer and call
 
 1. Wait for the agent to finish, this can take several minutes.
 
-1. Select the **Changes** button above the chat input area.
+1. Select the **Changes** button above the chat input area to see the files that the agent modified. You don't need to read the code, but keep two points in mind:
 
-1. Open **packages/functions/src/function_app.ts** and the helper files it imports. Confirm that:
-
-    - `generateCaseBrief` receives only a case ID.
-    - Data is read with `ctx.getDataClient()`, so the existing entity policies apply to the caller.
-    - The function reads `FOUNDRY_ENDPOINT` and `FOUNDRY_API_KEY` from `ctx.Secrets`.
-    - The model receives no tools and no uploaded files.
-    - Returned note IDs are checked against the notes that were supplied to the model.
-
-    > [!NOTE]
-    > Function authentication and data authorization are separate. The signed-in user can invoke the function, and `ctx.getDataClient()` preserves that user's identity when the function reads the app database.
+    - The model call runs on the server. The Foundry endpoint and API key are read from the deployment secrets, so they never appear in the app code or in the browser.
+    - The function reads the case data as the signed-in officer, so the same access rules apply: it can't read a case that you can't open in the app.
 
 ## Task 3: Add the review and save experience
 
@@ -96,9 +88,7 @@ The case page already shows missing documents and a disabled **Generate handoff 
 
 1. Wait for the agent to finish.
 
-1. In the **Changes** view, open **packages/frontend/src/pages/case-detail/brief-panel.tsx** and the case service changes. Confirm that the panel calls the generated typed Functions client and doesn't contain the Foundry endpoint or API key.
-
-1. Confirm that **Save as note** and **Create task** are user actions. The model can suggest text, but it can't write a note, create a task, or change the case by itself.
+1. Read the agent's summary. Notice that **Save as note** and **Create task** are actions the officer must select. The model can suggest text, but it can't write a note, create a task, or change the case by itself.
 
 ## Task 4: Redeploy and review the HL-1042 brief
 

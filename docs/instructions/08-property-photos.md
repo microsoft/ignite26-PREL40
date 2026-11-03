@@ -25,11 +25,7 @@ Rayfin storage keeps files in OneLake, in folders that you declare in code. Like
     Don't change the app pages yet. Summarize the folder and its access rule.
     ```
 
-1. Read the agent's summary. It should report:
-
-    - Storage enabled with `services.storage.enabled: true` in **rayfin/rayfin.yml**.
-    - A new folder class for `case-photos` in **rayfin/storage/**, registered in the storage schema.
-    - The `@microsoft/rayfin-storage` package, at the same version as the other Rayfin packages.
+1. Read the agent's summary. It should confirm that storage is turned on for the app, and that a private **case-photos** folder was added with an access rule.
 
 1. Select the **Changes** button just above the chat input area to quickly see the files that were modified by the agent.
 
