@@ -1,19 +1,19 @@
 ---
 name: check-setup
-description: Checks that the PREL40 lab environment is ready (GitHub Copilot app, Node.js, npm, Git, and the lab files in C:\LabFiles) and reports a pass/fail table. Run only when the user invokes /check-setup. Do not use for troubleshooting the lab app, Fabric, or Rayfin projects.
+description: Checks that the PREL40 lab environment is ready (GitHub Copilot, Node.js, npm, Git, and the lab files in C:\LabFiles) and reports a pass/fail table. Run only when the user invokes /check-setup. Do not use for troubleshooting the lab app, Fabric, or Rayfin projects.
 disable-model-invocation: true
 allowed-tools: "*"
 ---
 
 # Lab setup check
 
-1. Run the check script from this skill's base directory, once, in a new Windows PowerShell process:
+1. Run the check script from this skill's base directory, once:
 
-   ```powershell
-   powershell -NoProfile -ExecutionPolicy Bypass -File "<skill base directory>/check-setup.ps1" -LabRoot "C:\LabFiles"
+   ```shell
+   node "<skill base directory>/scripts/check-setup.mjs" --lab-root "C:\LabFiles"
    ```
 
-   If `powershell` isn't available, run the same command with `pwsh`.
+   If `node` isn't found, don't run anything else: reply "❌ Node.js: not found. Install Node.js 24.", then end as in step 3.
 
 2. Reply with the table the script prints. Replace `PASS` with ✅, `FAIL` with ❌, and `INFO` with ℹ️. Keep every row and its details.
 
@@ -25,4 +25,3 @@ allowed-tools: "*"
 
 - Run only the check script. Don't install anything, run other diagnostics, or try to fix a failed check.
 - The script exits with code 1 when a check fails. That's the expected result, not an error to investigate.
-- Don't call the script with `&` or `.\`: the VM's execution policy can block it.
