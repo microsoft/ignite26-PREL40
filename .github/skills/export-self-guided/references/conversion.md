@@ -20,8 +20,10 @@ description: Build a secure, AI-assisted app with Microsoft Fabric, Rayfin, and 
 level: intermediate
 authors:
   - Yohan Lasorsa
+  - Mehrsa Golestaneh
 contacts:
   - '@sinedied'
+  - mgolestaneh@microsoft.com
 duration_minutes: 180
 tags: fabric, rayfin, github copilot, semantic model, sql, foundry, ai
 navigation_levels: 2
