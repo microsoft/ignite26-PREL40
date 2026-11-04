@@ -64,24 +64,21 @@ Instead of passing `--lab-dir` on every run, set the `PREL40_LABFILES` environme
 
 Otherwise, it stops and asks for `--lab-dir`.
 
-To get the same lab files and skills as on the VM, run the VM update with the same environment variable. It installs the files in the lab folder, and points the `/lab-checkpoint` and `/check-setup` skills to it. `/check-setup` needs PowerShell (`pwsh`) on macOS and Linux.
+To get the same lab files and skills as on the VM, run [`setup-lab.mjs`](../setup-lab.mjs) from the repository root, with Node.js. It installs the files in the lab folder, and points the `/lab-checkpoint` and `/check-setup` skills to it. It leaves your Copilot permission mode unchanged (see the [scripts README](../README.md#set-up-the-lab-outside-the-vm)).
 
 ```shell
-PREL40_LABFILES=~/prel40-lab pwsh -NoProfile -File scripts/dist/prel40-vm-update.ps1
+node scripts/setup-lab.mjs --lab-dir ~/prel40-lab
 ```
 
-Build `scripts/dist/prel40-vm-update.ps1` first with `node scripts/publish-vm-update.mjs --no-upload`.
-
-For a lab instance inside this repository, use `.workspace` at its root as the lab folder: Git ignores it. From the repository root:
+Without `--lab-dir` or `PREL40_LABFILES`, the lab folder is `.workspace` at the repository root: Git ignores it. For a lab instance inside this repository, from the repository root:
 
 ```shell
-node scripts/publish-vm-update.mjs --no-upload
-PREL40_LABFILES="$PWD/.workspace" pwsh -NoProfile -File scripts/dist/prel40-vm-update.ps1
+node scripts/setup-lab.mjs
 npm install --prefix .workspace/checkpoints
 node .workspace/checkpoints/checkpoint.mjs --to 4
 ```
 
-The checkpoint finds the lab folder from its own location, and creates the app in `.workspace/home-loan-desk`, with its own Git repository. The template and data in `.workspace` are copies: run the update again after you change them in the repository.
+The checkpoint finds the lab folder from its own location, and creates the app in `.workspace/home-loan-desk`, with its own Git repository. The template and data in `.workspace` are copies: run `node scripts/setup-lab.mjs` again after you change them in the repository.
 
 ## Checkpoint 3: database and semantic model
 
