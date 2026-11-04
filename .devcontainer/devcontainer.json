@@ -1,0 +1,24 @@
+{
+  "name": "PREL40",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:24",
+  "features": {
+    "ghcr.io/devcontainers/features/azure-cli:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "8gb"
+  },
+  "remoteEnv": {
+    "PREL40_LABFILES": "${containerWorkspaceFolder}/.workspace"
+  },
+  "postCreateCommand": "node scripts/setup-lab.mjs --allow-all",
+  "waitFor": "postCreateCommand",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "chat.tools.global.autoApprove": true
+      }
+    }
+  }
+}
