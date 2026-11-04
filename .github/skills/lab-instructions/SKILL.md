@@ -1,6 +1,6 @@
 ---
 name: lab-instructions
-description: Use when writing, editing, reviewing, or restructuring the hands-on lab instructions in docs/instructions/*.md, or when compiling them into docs/skillable.md to paste into Skillable. Covers Skillable Markdown (@lab tokens, credentials, type-text, !IMAGE, alert blocks, activities, page breaks), the lab writing style, and the compile script. Triggers include lab instructions, lab steps, exercise or task page, Skillable, skillable.md, compile or build the instructions, @lab token, lab screenshot. Do not use for the root README or session metadata (initialize/finalize workflows), the app code in src/, or slides.
+description: Use when writing, editing, reviewing, or restructuring the hands-on lab instructions in docs/instructions/*.md, or when compiling them into docs/skillable.md to paste into Skillable. Covers Skillable Markdown (@lab tokens, credentials, type-text, !IMAGE, alert blocks, activities, page breaks), the lab writing style, and the compile script. Triggers include lab instructions, lab steps, exercise or task page, Skillable, skillable.md, compile or build the instructions, @lab token, lab screenshot. Do not use for the root README or session metadata (initialize/finalize workflows), the self-guided MOAW workshop in docs/self-guided/ (use export-self-guided), the app code in src/, or slides.
 compatibility: The compile script needs Python 3.8+ (standard library only) and must run from the repository root.
 ---
 
@@ -24,6 +24,7 @@ Sources are `docs/instructions/NN-slug.md`: GitHub-readable Markdown, one file p
     Options: `--strict` exits 1 on any warning; `--image-folder <id>` overrides the Skillable image folder (default `instructions360463`); `--src` and `--out` override the paths.
 6. Fix every `path:line: warning:` in the sources, then recompile until no warnings remain.
 7. Report the page count and list the images from the JSON `images` field that are new or changed, so the user uploads them to the Skillable image folder.
+8. Once the changes are committed, suggest updating the self-guided workshop with the `export-self-guided` skill, so `docs/self-guided/workshop.md` stays in sync.
 
 ## Gotchas
 
