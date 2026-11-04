@@ -47,7 +47,7 @@ Each card answers a different question. Look at each one, and compare it with wh
 
 1. Notice the time axis of the charts. Charts use UTC time, and **Last 24 hours** ends at the start of the current hour: activity from the last few minutes doesn't show yet.
 
-    > [!INFO]
+    > [!NOTE]
     > If a card shows **No metric data is available for this time range**, no data was returned for that range. A value of `0` next to this message doesn't confirm that nothing happened. Activity from the first part of the lab is old enough to appear.
 
 ## Task 3: Know what the metrics don't cover
@@ -64,7 +64,7 @@ App Metrics gives you a quick view of your app's health, from the server side. I
     | Semantic model query activity                                | The semantic model, in Microsoft Fabric   |
     | Capacity units consumed by the app                           | The Microsoft Fabric Capacity Metrics app |
 
-    > [!INFO]
+    > [!NOTE]
     > The App Metrics are operational metrics about the app itself. They're unrelated to the portfolio measures from your semantic model, such as **Open applications** or **Stalled applications**.
 
 Select **Next →** to continue.

@@ -39,7 +39,7 @@ In Exercise 6, you connected a semantic model to read shared measures. Rayfin co
 
 1. Confirm that the five Caldova Home Loans branches are listed with their region.
 
-    > [!INFO]
+    > [!NOTE]
     > The semantic model connector runs DAX queries over shared measures. SQL source connectors return table rows as typed entities, with their own access rules, which suits reference data like branches.
 
 ## Task 3: Share a link to a case within Fabric portal (Preview)

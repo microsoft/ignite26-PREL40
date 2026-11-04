@@ -56,7 +56,7 @@ The data API and the hosted frontend should both refuse anyone who isn't signed 
     - The data API returns an authorization error, such as `AUTH_NOT_AUTHORIZED`, and no case data.
     - The hosted app URL returns **401** with a sign-in page, instead of the app's files.
 
-    > [!INFO]
+    > [!NOTE]
     > The publishable key in the project configuration only identifies the app. It isn't a credential, so it doesn't give access to any data.
 
     > [!TIP]
@@ -80,7 +80,7 @@ Case **HL-1103** is assigned to your colleague Morgan Lee. The lab seeded it wit
 
     ![SQL database child item under the home-loan-desk app](../../img/fabric-sql-database-child-item.png)
 
-    > [!INFO]
+    > [!NOTE]
     > The app's database is managed by Rayfin, and is read-only in the portal. Its schema only changes when you deploy the app.
 
 1. In the database **Explorer**, expand **home-loan-desk**, **dbo**, then **Tables**, and select the **CaseWorkspace** table to preview its rows.

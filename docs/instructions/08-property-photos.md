@@ -54,7 +54,7 @@ The **Document checklist** on the case page marks **Renovation plans / current-s
 
 1. Wait for the agent to finish, this can take several minutes.
 
-    > [!INFO]
+    > [!NOTE]
     > The prefix only organizes the files by case. The folder's access rule is what protects them: another officer can't list or download your files, even with the right prefix.
 
 ## Task 3: Redeploy and upload HL-1042's files

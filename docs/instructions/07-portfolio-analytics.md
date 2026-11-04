@@ -43,7 +43,7 @@ Ask Copilot to add the connector and read the model's metadata before it writes 
     - The **Branch**, **Date**, **LoanApplication**, and **LoanProduct** tables.
     - The four measures you created in Exercise 3: **Open applications**, **Requested amount in pipeline**, **Average days in current stage**, and **Stalled applications**.
 
-    > [!INFO]
+    > [!NOTE]
     > The app queries the model as the signed-in user. Only people with access to the semantic model can see the portfolio, whatever the app allows.
 
 ## Task 3: Build the portfolio page
@@ -68,14 +68,14 @@ The **Portfolio** page already has empty measure cards and placeholders, waiting
 
 1. Once the plan is generated, you should be able to review the proposed changes and see the task list in the *Plan* canvas on the right panel. Review the changes, and select **Approve and implement this plan** to start the implementation.
 
-    > [!INFO]
+    > [!NOTE]
     > When you approve the plan, Copilot will automatically switch to **Autopilot** mode to implement the changes. In this mode, it will never ask you questions and will carry out the tasks as specified until the work is complete. 
 
 1. Wait for the agent to finish, this can take several minutes.
 
 1. Select the **Changes** button above the chat input area to see the files that the agent modified. You don't need to read the code: notice that the portfolio page asks the semantic model for each measure by name, such as **Open applications**, instead of recalculating it in the app.
 
-    > [!INFO]
+    > [!NOTE]
     > Defining measures once in the model is the point: the app, your Power BI reports, and any data agent all get the same numbers.
 
 ## Task 4: Redeploy and check the portfolio
