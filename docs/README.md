@@ -21,3 +21,8 @@ Build data-rich apps in Microsoft Fabric.
 14. [Conclusion](./instructions/14-conclusion.md)
 
 The questions for the knowledge checks are in [knowledge-checks.md](./knowledge-checks.md).
+
+## Outside the Skillable VM
+
+- [Set up your lab environment](./setup.md): follow the lab in GitHub Codespaces or on your own machine, with your Skillable lab resources or your own.
+- [Self-guided workshop](https://aka.ms/ws?src=gh:microsoft/ignite26-PREL40/main/docs/self-guided/): the same lab, adapted to your own GitHub Copilot, Microsoft Fabric, and Microsoft Foundry resources.
