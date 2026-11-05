@@ -16,6 +16,7 @@
  * Emits {"ok":false} and exits nonzero on failure.
  */
 
+import { existsSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
@@ -78,9 +79,10 @@ async function workspacePackages() {
     for (const entry of entries) {
       if (!entry.isDirectory()) continue;
       const directory = path.join(container, entry.name);
-      const packageManifest = await readJson(
-        path.join(directory, 'package.json')
-      );
+      const manifestPath = path.join(directory, 'package.json');
+      // Generated folders such as packages/auth (dynamic claims) aren't packages.
+      if (!existsSync(manifestPath)) continue;
+      const packageManifest = await readJson(manifestPath);
       if (packageManifest !== undefined) {
         packages.push({ directory, manifest: packageManifest });
       }
