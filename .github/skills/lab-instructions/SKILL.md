@@ -1,6 +1,6 @@
 ---
 name: lab-instructions
-description: Use when writing, editing, reviewing, or restructuring the hands-on lab instructions in docs/instructions/*.md, or when compiling them into docs/skillable.md to paste into Skillable. Covers Skillable Markdown (@lab tokens, credentials, type-text, !IMAGE, alert blocks, activities, page breaks), the lab writing style, and the compile script. Triggers include lab instructions, lab steps, exercise or task page, Skillable, skillable.md, compile or build the instructions, @lab token, lab screenshot. Do not use for the root README or session metadata (initialize/finalize workflows), the self-guided MOAW workshop in docs/self-guided/ (use export-self-guided), the app code in src/, or slides.
+description: Use when writing, editing, reviewing, or restructuring the hands-on lab instructions in docs/instructions/*.md, when bootstrapping them in a new repo, or when compiling them into docs/skillable.md to paste into Skillable. Covers Skillable Markdown (@lab tokens, credentials, type-text, !IMAGE, alert blocks, activities, page breaks), the lab writing style, and the compile script. Triggers include lab instructions, lab steps, exercise or task page, Skillable, skillable.md, compile or build the instructions, @lab token, lab screenshot, bootstrap or set up the lab instructions in a new repo. Do not use for the root README or session metadata (initialize/finalize workflows), the self-guided MOAW workshop in docs/self-guided/ (use export-self-guided), the app code in src/, or slides.
 compatibility: The compile script needs Python 3.8+ (standard library only) and must run from the repository root.
 ---
 
@@ -8,6 +8,15 @@ compatibility: The compile script needs Python 3.8+ (standard library only) and 
 
 Sources are `docs/instructions/NN-slug.md`: GitHub-readable Markdown, one file per Skillable page.
 `docs/skillable.md` is generated and gitignored. Never edit it; change the sources and recompile.
+
+## Bootstrap a new repo
+
+Only when `docs/instructions/` doesn't exist yet:
+
+1. Ask, one question at a time: the session code, a one-line lab description, the scenario and what attendees will build, and the Skillable image folder ID.
+2. Copy [assets/README.md](assets/README.md) to `docs/README.md` and [assets/00-intro.md](assets/00-intro.md) to `docs/instructions/00-intro.md`. Replace `{{SESSION_CODE}}` and `{{DESCRIPTION}}`, and draft `{{LAB_OVERVIEW}}` from the answers: what the lab teaches, the scenario, what attendees will build, and what they'll do in the exercises. Leave the rest of the intro as is.
+3. Set `DEFAULT_IMAGE_FOLDER` in `scripts/compile_skillable.py` to the image folder ID.
+4. Compile and fix warnings (steps 5 and 6 below).
 
 ## Procedure
 
