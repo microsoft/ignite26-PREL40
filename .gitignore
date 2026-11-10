@@ -430,6 +430,7 @@ FodyWeavers.xsd
 
 # Local development notes
 /TODO.md
+/.prep/
 
 # PREL40 Rayfin starter template (src/home-loan-desk)
 # Re-include the npm workspace packages hidden by the NuGet "packages" rule above.

@@ -1,5 +1,5 @@
 # Infrastructure
 
-<!-- IGNITE TEMPLATE PLACEHOLDER: remove this folder when the session needs no infrastructure. -->
-
-Use this folder for deployment or runtime infrastructure, including Skillable-specific files when needed.
+| Path | What it is |
+| --- | --- |
+| [`foundry/`](foundry/README.md) | Bicep template that deploys the Microsoft Foundry project and `gpt-6-luna` model used by the handoff brief, in Skillable or your own Azure subscription. |
