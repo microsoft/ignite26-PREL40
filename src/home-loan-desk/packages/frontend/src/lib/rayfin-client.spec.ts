@@ -7,23 +7,27 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { clientConstructor, resolveRayfinConfig } = vi.hoisted(() => ({
-  clientConstructor: vi.fn(),
+const { clientConstructor, resolveRayfinConfig, authFactory, dataFactory, connectorsFactory } = vi.hoisted(() => ({
+  clientConstructor: vi.fn(() => ({})),
   resolveRayfinConfig: vi.fn(),
+  authFactory: vi.fn(),
+  dataFactory: vi.fn(),
+  connectorsFactory: vi.fn(),
 }));
 
 vi.mock('@microsoft/rayfin-client', () => ({
-  RayfinClient: class {
-    constructor(config: unknown) {
-      clientConstructor(config);
-    }
-  },
-  ConnectorsRayfinClient: class {
-    constructor(config: unknown) {
-      clientConstructor(config);
-    }
-  },
+  RayfinClient: { create: clientConstructor },
   resolveRayfinConfig,
+}));
+
+vi.mock('@microsoft/rayfin-auth', () => ({
+  browserSession: vi.fn(() => authFactory),
+}));
+vi.mock('@microsoft/rayfin-data', () => ({
+  dataService: vi.fn(() => dataFactory),
+}));
+vi.mock('@microsoft/rayfin-connectors', () => ({
+  connectorsService: vi.fn(() => connectorsFactory),
 }));
 
 describe('getRayfinClient', () => {
@@ -108,6 +112,42 @@ describe('getRayfinClient', () => {
     await expect(getRayfinClient()).rejects.toThrow(
       'Missing required Rayfin configuration'
     );
+    expect(clientConstructor).not.toHaveBeenCalled();
+  });
+
+  it('accepts explicit same-origin routing and composes only the existing services', async () => {
+    resolveRayfinConfig.mockResolvedValue({
+      baseUrl: '',
+      publishableKey: 'pk-same-origin',
+    });
+    const { browserSession } = await import('@microsoft/rayfin-auth');
+    const { connectorsService } = await import('@microsoft/rayfin-connectors');
+    const { connectorConfigs, connectorRuntimes } = await import('./connectors');
+    const { getRayfinClient } = await import('./rayfin-client');
+
+    await getRayfinClient();
+
+    expect(browserSession).toHaveBeenCalledWith({ storage: true });
+    expect(connectorsService).toHaveBeenCalledWith({
+      configs: connectorConfigs,
+      runtime: connectorRuntimes,
+    });
+    expect(clientConstructor).toHaveBeenCalledWith({
+      baseUrl: '',
+      publishableKey: 'pk-same-origin',
+      runtimeConfig: undefined,
+      auth: authFactory,
+      services: { data: dataFactory, connectors: connectorsFactory },
+    });
+  });
+
+  it('rejects a whitespace-only key before composing a client', async () => {
+    resolveRayfinConfig.mockResolvedValue({ baseUrl: '', publishableKey: '  ' });
+    const { getRayfinClient } = await import('./rayfin-client');
+
+    await expect(getRayfinClient()).rejects.toMatchObject({
+      missing: ['publishableKey'],
+    });
     expect(clientConstructor).not.toHaveBeenCalled();
   });
 });

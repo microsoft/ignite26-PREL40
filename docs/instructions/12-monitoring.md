@@ -1,4 +1,4 @@
-# Exercise 10: Review your app's metrics in Microsoft Fabric
+# Exercise 11: Review your app's metrics in Microsoft Fabric
 
 Your app is deployed, and you've used it throughout the lab. Before you hand it to other loan officers, you need to know whether it's used, whether its data requests fail, and how long they take. In this exercise, you open the built-in **App Metrics** of your app in the Microsoft Fabric portal, and learn what they do and don't measure.
 

@@ -15,10 +15,11 @@ Build data-rich apps in Microsoft Fabric.
 8. [Add property photos with Rayfin storage](./instructions/08-property-photos.md)
 9. [Generate an AI-assisted handoff brief](./instructions/09-ai-handoff-brief.md)
 10. [Prove that the app refuses unauthorized access](./instructions/10-access-control.md)
-11. [Review your app's metrics in Microsoft Fabric](./instructions/11-monitoring.md)
-12. [Knowledge check: Securing and extending the app](./instructions/12-knowledge-check-app.md)
-13. [(Optional) Explore more with Rayfin](./instructions/13-bonus.md)
-14. [Conclusion](./instructions/14-conclusion.md)
+11. [Control AI brief generation with a custom claim](./instructions/11-custom-claims.md)
+12. [Review your app's metrics in Microsoft Fabric](./instructions/12-monitoring.md)
+13. [Knowledge check: Securing and extending the app](./instructions/13-knowledge-check-app.md)
+14. [(Optional) Explore more with Rayfin](./instructions/14-bonus.md)
+15. [Conclusion](./instructions/15-conclusion.md)
 
 The questions for the knowledge checks are in [knowledge-checks.md](./knowledge-checks.md).
 

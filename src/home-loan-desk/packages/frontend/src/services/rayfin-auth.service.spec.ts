@@ -180,7 +180,7 @@ describe('bootstrapAuth with incomplete configuration', () => {
 
     expect((await bootstrap()).config).toEqual({
       kind: 'incomplete',
-      missing: ['apiUrl', 'publishableKey'],
+      missing: ['publishableKey'],
     });
   });
 

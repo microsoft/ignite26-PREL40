@@ -13,7 +13,7 @@
     "build": "tsc -b"
   },
   "dependencies": {
-    "@microsoft/rayfin-core": "1.36.2",
+    "@microsoft/rayfin-core": "2.0.0-beta.0",
     "@rayfin-app/shared": "*"
   },
   "devDependencies": {

@@ -41,7 +41,7 @@ Used on the [Knowledge check: Data and semantic model](instructions/04-knowledge
 
 ## Securing and extending the app
 
-Used on the [Knowledge check: Securing and extending the app](instructions/12-knowledge-check-app.md) page.
+Used on the [Knowledge check: Securing and extending the app](instructions/13-knowledge-check-app.md) page.
 
 ### Question 1
 

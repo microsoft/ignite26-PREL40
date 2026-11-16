@@ -2,8 +2,6 @@ id: home-loan-desk
 name: home-loan-desk
 version: 1.0.0
 services:
-  connectors:
-    enabled: true
   auth:
     enabled: true
     fabric:

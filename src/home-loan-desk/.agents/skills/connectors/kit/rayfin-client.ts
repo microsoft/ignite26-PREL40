@@ -5,10 +5,10 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-import {
-  ConnectorsRayfinClient,
-  resolveRayfinConfig,
-} from '@microsoft/rayfin-client';
+import { browserSession } from '@microsoft/rayfin-auth';
+import { RayfinClient, resolveRayfinConfig } from '@microsoft/rayfin-client';
+import { connectorsService } from '@microsoft/rayfin-connectors';
+import { dataService } from '@microsoft/rayfin-data';
 import type { UniversalAppSchema } from '@rayfin-app/shared';
 import {
   connectorConfigs,
@@ -16,11 +16,7 @@ import {
   type AppConnectorsSchema,
 } from './connectors';
 
-export type AppClient = ConnectorsRayfinClient<
-  UniversalAppSchema,
-  Record<string, never>,
-  AppConnectorsSchema
->;
+export type AppClient = Awaited<ReturnType<typeof createClient>>;
 
 let _client: Promise<AppClient> | undefined;
 
@@ -43,7 +39,7 @@ export async function getRayfinClient(): Promise<AppClient> {
   return _client;
 }
 
-async function createClient(): Promise<AppClient> {
+async function createClient() {
   const resolved = await resolveRayfinConfig({
     apiUrl: import.meta.env.VITE_RAYFIN_API_URL,
     publishableKey: import.meta.env.VITE_RAYFIN_PUBLISHABLE_KEY,
@@ -52,25 +48,25 @@ async function createClient(): Promise<AppClient> {
     portalUrl: import.meta.env.VITE_FABRIC_PORTAL_URL,
   });
 
-  if (!resolved.baseUrl || !resolved.publishableKey) {
+  const { baseUrl, publishableKey, runtimeConfig } = resolved;
+  if (typeof baseUrl !== 'string' || !publishableKey?.trim()) {
     throw new MissingRayfinConfigError([
-      ...(!resolved.baseUrl ? ['apiUrl'] : []),
-      ...(!resolved.publishableKey ? ['publishableKey'] : []),
+      ...(typeof baseUrl !== 'string' ? ['apiUrl'] : []),
+      ...(!publishableKey?.trim() ? ['publishableKey'] : []),
     ]);
   }
 
-  return new ConnectorsRayfinClient<
-    UniversalAppSchema,
-    Record<string, never>,
-    AppConnectorsSchema
-  >(
-    {
-      baseUrl: resolved.baseUrl,
-      publishableKey: resolved.publishableKey,
-      authStorage: true,
-      runtimeConfig: resolved.runtimeConfig,
-      connectors: connectorConfigs,
+  return RayfinClient.create({
+    baseUrl,
+    publishableKey,
+    runtimeConfig,
+    auth: browserSession({ storage: true }),
+    services: {
+      data: dataService<UniversalAppSchema>(),
+      connectors: connectorsService<AppConnectorsSchema>({
+        configs: connectorConfigs,
+        runtime: connectorRuntimes,
+      }),
     },
-    connectorRuntimes
-  );
+  });
 }

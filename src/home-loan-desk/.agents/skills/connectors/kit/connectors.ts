@@ -6,13 +6,13 @@
 //-----------------------------------------------------------------------
 
 import type {
-  ConnectorConfig,
+  ConnectorConfigs,
   ConnectorsRuntime,
 } from '@microsoft/rayfin-connectors';
 
 /** Replaced with named connector types by `rayfin connector add`. */
 export type AppConnectorsSchema = Record<string, never>;
 
-export const connectorConfigs: Record<string, ConnectorConfig> = {};
+export const connectorConfigs = {} satisfies ConnectorConfigs<AppConnectorsSchema>;
 
 export const connectorRuntimes: ConnectorsRuntime = {};

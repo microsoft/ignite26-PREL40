@@ -125,4 +125,4 @@ The access rules check the record being written, not only the record being read.
     > [!TIP]
     > Access rules have limits. A rule checks one record at a time, so it can't confirm that a note's case belongs to you. And because the fields a rule reads must stay writable, an officer could hand their own record to someone else. In production, you'd create child records through a server function that checks case ownership first. We'll come back to this in the conclusion.
 
-Select **Next →** to review your app's metrics in Microsoft Fabric.
+Select **Next →** to control AI brief generation with a custom claim.

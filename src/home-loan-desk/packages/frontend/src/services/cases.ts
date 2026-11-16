@@ -1,3 +1,4 @@
+import type { GraphQLResponseValue } from '@microsoft/rayfin-data';
 import type {
   CaseNoteRecord,
   CaseTaskRecord,
@@ -67,22 +68,52 @@ const CHECKLIST_FIELDS = [
 /** The lab has a handful of cases per officer, well under one page. */
 const LIST_LIMIT = 100;
 
+function dateValue(value: Date | string): Date {
+  return value instanceof Date ? value : new Date(value);
+}
+
+function caseRecord(row: GraphQLResponseValue<CaseWorkspaceRecord>): CaseWorkspaceRecord {
+  return {
+    ...row,
+    stage_started_on: dateValue(row.stage_started_on),
+    snapshot_date: dateValue(row.snapshot_date),
+    created_at: dateValue(row.created_at),
+  };
+}
+
+function noteRecord(row: GraphQLResponseValue<CaseNoteRecord>): CaseNoteRecord {
+  return {
+    ...row,
+    is_ai_generated: row.is_ai_generated === true || row.is_ai_generated === 'true',
+    created_at: dateValue(row.created_at),
+  };
+}
+
+function taskRecord(row: GraphQLResponseValue<CaseTaskRecord>): CaseTaskRecord {
+  return {
+    ...row,
+    due_on: row.due_on == null ? row.due_on : dateValue(row.due_on),
+    created_at: dateValue(row.created_at),
+  };
+}
+
 export async function listMyCases(): Promise<CaseWorkspaceRecord[]> {
   const client = await getRayfinClient();
-  return client.data.CaseWorkspace.select([...CASE_FIELDS])
+  const rows = await client.data.CaseWorkspace.select(CASE_FIELDS)
     .orderBy({ case_number: 'asc' })
     .first(LIST_LIMIT)
     .execute();
+  return rows.map(caseRecord);
 }
 
 /** Returns `null` both when the case doesn't exist and when it isn't yours. */
 export async function findCaseByNumber(caseNumber: string): Promise<CaseWorkspaceRecord | null> {
   const client = await getRayfinClient();
-  const rows = await client.data.CaseWorkspace.select([...CASE_FIELDS])
+  const rows = await client.data.CaseWorkspace.select(CASE_FIELDS)
     .where({ case_number: { eq: caseNumber } })
     .first(1)
     .execute();
-  return rows[0] ?? null;
+  return rows[0] ? caseRecord(rows[0]) : null;
 }
 
 /** The response carries only the changed fields; merge it into the case you hold. */
@@ -96,9 +127,13 @@ export async function updateReviewStatus(
 
 export async function listChecklist(caseId?: string): Promise<ChecklistItemRecord[]> {
   const client = await getRayfinClient();
-  const query = client.data.ChecklistItem.select([...CHECKLIST_FIELDS]);
+  const query = client.data.ChecklistItem.select(CHECKLIST_FIELDS);
   const filtered = caseId ? query.where({ case_id: { eq: caseId } }) : query;
-  return filtered.orderBy({ sort_order: 'asc' }).first(LIST_LIMIT * 5).execute();
+  const rows = await filtered.orderBy({ sort_order: 'asc' }).first(LIST_LIMIT * 5).execute();
+  return rows.map((row) => ({
+    ...row,
+    received_on: row.received_on == null ? row.received_on : dateValue(row.received_on),
+  }));
 }
 
 export type ChecklistPatch = Partial<
@@ -114,7 +149,14 @@ export async function updateChecklistItem(
   patch: ChecklistPatch
 ): Promise<Partial<ChecklistItemRecord>> {
   const client = await getRayfinClient();
-  return client.data.ChecklistItem.update({ id: itemId }, patch);
+  const saved = await client.data.ChecklistItem.update({ id: itemId }, patch);
+  const { received_on, ...fields } = saved;
+  return {
+    ...fields,
+    ...(received_on === undefined
+      ? {}
+      : { received_on: received_on === null ? null : dateValue(received_on) }),
+  };
 }
 
 /** The patch for recording, by hand, that a document arrived today. */
@@ -124,11 +166,12 @@ export function recordedReceiptPatch(): ChecklistPatch {
 
 export async function listNotes(caseId: string): Promise<CaseNoteRecord[]> {
   const client = await getRayfinClient();
-  return client.data.CaseNote.select([...NOTE_FIELDS])
+  const rows = await client.data.CaseNote.select(NOTE_FIELDS)
     .where({ case_id: { eq: caseId } })
     .orderBy({ created_at: 'desc' })
     .first(LIST_LIMIT)
     .execute();
+  return rows.map(noteRecord);
 }
 
 export async function createNote(
@@ -137,7 +180,7 @@ export async function createNote(
   body: string
 ): Promise<CaseNoteRecord> {
   const client = await getRayfinClient();
-  return client.data.CaseNote.create({
+  const saved = await client.data.CaseNote.create({
     case_id: caseId,
     officer_email: officerEmail,
     author_email: officerEmail,
@@ -145,13 +188,15 @@ export async function createNote(
     is_ai_generated: false,
     created_at: new Date(),
   });
+  return noteRecord(saved);
 }
 
 export async function listTasks(caseId?: string): Promise<CaseTaskRecord[]> {
   const client = await getRayfinClient();
-  const query = client.data.CaseTask.select([...TASK_FIELDS]);
+  const query = client.data.CaseTask.select(TASK_FIELDS);
   const filtered = caseId ? query.where({ case_id: { eq: caseId } }) : query;
-  return filtered.orderBy({ created_at: 'asc' }).first(LIST_LIMIT * 5).execute();
+  const rows = await filtered.orderBy({ created_at: 'asc' }).first(LIST_LIMIT * 5).execute();
+  return rows.map(taskRecord);
 }
 
 export async function createTask(
@@ -161,7 +206,7 @@ export async function createTask(
   dueOn: string | null
 ): Promise<CaseTaskRecord> {
   const client = await getRayfinClient();
-  return client.data.CaseTask.create({
+  const saved = await client.data.CaseTask.create({
     case_id: caseId,
     officer_email: officerEmail,
     title,
@@ -169,6 +214,7 @@ export async function createTask(
     status: 'open',
     created_at: new Date(),
   });
+  return taskRecord(saved);
 }
 
 /** The response carries only the changed fields; merge it into the row you hold. */

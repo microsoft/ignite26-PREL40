@@ -25,8 +25,8 @@
     "validate:visual:preview": "node scripts/validate-visual.mjs --allow-incomplete"
   },
   "devDependencies": {
-    "@microsoft/rayfin-cli": "1.36.2",
-    "@microsoft/rayfin-guide": "1.36.2",
+    "@microsoft/rayfin-cli": "2.0.0-beta.0",
+    "@microsoft/rayfin-guide": "2.0.0-beta.0",
     "typescript": "~5.7.2"
   },
   "rayfinScriptBases": {

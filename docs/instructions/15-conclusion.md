@@ -16,6 +16,8 @@ Congratulations! In this lab, you built a data-rich app in Microsoft Fabric, fro
 
 1. Proved that the app refuses unauthorized access, and reviewed its metrics in Microsoft Fabric.
 
+1. If your workspace supports custom claims, controlled AI brief generation with a server-issued permission while preserving each officer's case-access rules.
+
 ## Using AI responsibly
 
 The handoff brief was designed to assist a person, not to replace one:

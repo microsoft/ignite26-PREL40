@@ -66,6 +66,16 @@ Run from the workspace root:
 
 Every `@microsoft/rayfin-*` package is pinned to the version this lab was tested with. Don't upgrade them during the lab.
 
+The application targets **Rayfin `2.0.0-beta.0`** with TypeScript 5.7.
+Its browser client explicitly composes browser-session authentication, app data,
+and the existing connector registry; Functions and Storage remain disabled.
+Case services normalize date and boolean wire values before returning records
+to the UI. No data-schema migration is required for this client upgrade.
+Use Node.js 20, 22, or 24 for installation and local validation; Node.js 26
+is outside the beta CLI's engine range. `npm run build` projects local Rayfin
+environment configuration but does not deploy. Do not use `npm run dev` or
+`npm run rayfin:up` as local-only upgrade checks: they can use remote resources.
+
 ## Prerequisites
 
 - Node.js 20, 22, or 24

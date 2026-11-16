@@ -1,5 +1,4 @@
-import type { RayfinClient } from '@microsoft/rayfin-client';
-import type { UniversalAppSchema } from '@rayfin-app/shared';
+import type { AppClient } from '@/lib/rayfin-client';
 
 import type { LabEntity, LabStore, VisibleRecord } from './seeder';
 
@@ -37,7 +36,7 @@ const VISIBLE_FIELDS: Record<LabEntity, string[]> = {
 };
 
 /** A {@link LabStore} backed by the signed-in officer's Rayfin client. */
-export function createRayfinLabStore(client: RayfinClient<UniversalAppSchema>): LabStore {
+export function createRayfinLabStore(client: Pick<AppClient, 'data'>): LabStore {
   const entityClient = (entity: LabEntity) =>
     client.data[entity] as unknown as SeedableEntityClient;
 
